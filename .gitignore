@@ -3,7 +3,6 @@
 
 # --- Backend (Maven/Java) ---
 backend/target/
-backend/.mvn/
 *.iml
 
 # --- Frontend (Angular/Node) ---
