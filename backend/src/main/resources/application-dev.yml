@@ -1,0 +1,12 @@
+spring:
+  config:
+    activate:
+      on-profile: dev
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:barbearia}
+    username: ${DB_USER:barbearia}
+    password: ${DB_PASSWORD:barbearia}
+
+logging:
+  level:
+    com.barbearia: DEBUG

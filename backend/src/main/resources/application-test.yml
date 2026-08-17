@@ -1,0 +1,11 @@
+spring:
+  config:
+    activate:
+      on-profile: test
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+logging:
+  level:
+    com.barbearia: DEBUG

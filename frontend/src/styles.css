@@ -1,0 +1,11 @@
+/* Estilos globais do Sistema para Barbearia */
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", Arial, sans-serif;
+}
