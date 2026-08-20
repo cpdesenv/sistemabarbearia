@@ -1,0 +1,84 @@
+<section class="profissional-formulario">
+  <h1>{{ modoEdicao ? 'Editar profissional' : 'Novo profissional' }}</h1>
+
+  @if (carregando()) {
+    <mat-spinner diameter="32" />
+  } @else {
+    <mat-card>
+      <mat-card-content>
+        <form [formGroup]="formulario" (ngSubmit)="salvar()" class="profissional-formulario__form">
+          <mat-form-field appearance="outline">
+            <mat-label>Nome</mat-label>
+            <input matInput formControlName="nome" />
+            @if (formulario.controls.nome.invalid && formulario.controls.nome.touched) {
+              <mat-error>O nome é obrigatório.</mat-error>
+            }
+          </mat-form-field>
+
+          <div class="profissional-formulario__grade">
+            <mat-form-field appearance="outline">
+              <mat-label>E-mail</mat-label>
+              <input matInput type="email" formControlName="email" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Telefone</mat-label>
+              <input matInput formControlName="telefone" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Cor na agenda</mat-label>
+              <input matInput type="color" formControlName="corAgenda" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Comissão padrão (%)</mat-label>
+              <input matInput type="number" formControlName="comissaoPercentualPadrao" />
+              @if (
+                formulario.controls.comissaoPercentualPadrao.invalid &&
+                formulario.controls.comissaoPercentualPadrao.touched
+              ) {
+                <mat-error>Informe um valor entre 0 e 100.</mat-error>
+              }
+            </mat-form-field>
+          </div>
+
+          <h2>Serviços que este profissional atende</h2>
+          <p class="profissional-formulario__ajuda">
+            Marque os serviços atendidos. Deixe a comissão em branco para usar a comissão padrão acima.
+          </p>
+
+          <div class="profissional-formulario__servicos">
+            @for (item of servicosSelecionaveis(); track item.servico.uuid) {
+              <div class="profissional-formulario__servico-linha" [formGroup]="item.grupo">
+                <mat-checkbox formControlName="selecionado">{{ item.servico.nome }}</mat-checkbox>
+                <mat-form-field appearance="outline" class="profissional-formulario__comissao-override">
+                  <mat-label>Comissão (%)</mat-label>
+                  <input matInput type="number" formControlName="comissaoPercentual" />
+                </mat-form-field>
+              </div>
+            }
+            @if (servicosSelecionaveis().length === 0) {
+              <p>Nenhum serviço ativo cadastrado ainda.</p>
+            }
+          </div>
+
+          @if (mensagemErro()) {
+            <p class="profissional-formulario__erro" role="alert">{{ mensagemErro() }}</p>
+          }
+
+          <div class="profissional-formulario__acoes">
+            <a mat-stroked-button routerLink="/profissionais">Cancelar</a>
+            <button mat-flat-button color="primary" type="submit" [disabled]="salvando()">
+              @if (salvando()) {
+                <mat-spinner diameter="20" />
+              } @else {
+                Salvar
+              }
+            </button>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  }
+</section>

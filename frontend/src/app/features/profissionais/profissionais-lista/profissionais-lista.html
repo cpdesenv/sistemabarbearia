@@ -1,0 +1,87 @@
+<section class="profissionais">
+  <div class="profissionais__cabecalho">
+    <h1>Profissionais</h1>
+    @if (podeGerenciar()) {
+      <a mat-flat-button color="primary" routerLink="novo">Novo profissional</a>
+    }
+  </div>
+
+  <form [formGroup]="filtro" (ngSubmit)="buscar()" class="profissionais__filtro">
+    <mat-form-field appearance="outline">
+      <mat-label>Buscar por nome</mat-label>
+      <input matInput formControlName="nome" />
+    </mat-form-field>
+
+    <mat-checkbox formControlName="apenasAtivos">Somente ativos</mat-checkbox>
+
+    <button mat-stroked-button type="submit">Filtrar</button>
+  </form>
+
+  @if (carregando()) {
+    <mat-spinner diameter="32" />
+  } @else {
+    <div class="profissionais__tabela-wrapper">
+      <table mat-table [dataSource]="profissionais()" class="profissionais__tabela">
+        <ng-container matColumnDef="cor">
+          <th mat-header-cell *matHeaderCellDef></th>
+          <td mat-cell *matCellDef="let profissional">
+            <span class="profissionais__cor" [style.background-color]="profissional.corAgenda"></span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="nome">
+          <th mat-header-cell *matHeaderCellDef>Nome</th>
+          <td mat-cell *matCellDef="let profissional">{{ profissional.nome }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="contato">
+          <th mat-header-cell *matHeaderCellDef>Contato</th>
+          <td mat-cell *matCellDef="let profissional">
+            {{ profissional.email || '—' }} @if (profissional.telefone) {
+              · {{ profissional.telefone }}
+            }
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="comissao">
+          <th mat-header-cell *matHeaderCellDef>Comissão padrão</th>
+          <td mat-cell *matCellDef="let profissional">{{ profissional.comissaoPercentualPadrao }}%</td>
+        </ng-container>
+
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <td mat-cell *matCellDef="let profissional">
+            <span
+              [class.profissionais__status--ativo]="profissional.ativo"
+              [class.profissionais__status--inativo]="!profissional.ativo"
+            >
+              {{ profissional.ativo ? 'Ativo' : 'Inativo' }}
+            </span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="acoes">
+          <th mat-header-cell *matHeaderCellDef></th>
+          <td mat-cell *matCellDef="let profissional" class="profissionais__acoes">
+            @if (podeGerenciar()) {
+              <a mat-button [routerLink]="[profissional.uuid, 'editar']">Editar</a>
+              <button mat-button (click)="alternarStatus(profissional)">
+                {{ profissional.ativo ? 'Desativar' : 'Ativar' }}
+              </button>
+            }
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="colunas"></tr>
+        <tr mat-row *matRowDef="let row; columns: colunas"></tr>
+      </table>
+    </div>
+
+    <mat-paginator
+      [length]="totalElementos()"
+      [pageSize]="tamanhoPagina()"
+      [pageSizeOptions]="[10, 20, 50]"
+      (page)="mudarPagina($event)"
+    />
+  }
+</section>

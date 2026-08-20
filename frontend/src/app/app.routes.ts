@@ -37,6 +37,31 @@ export const routes: Routes = [
           import('./features/servicos/servicos-formulario/servicos-formulario').then((m) => m.ServicosFormulario),
         canActivate: [roleGuard],
         data: { perfis: ['ADMIN', 'GERENTE'] }
+      },
+      {
+        path: 'profissionais',
+        loadComponent: () =>
+          import('./features/profissionais/profissionais-lista/profissionais-lista').then(
+            (m) => m.ProfissionaisLista
+          )
+      },
+      {
+        path: 'profissionais/novo',
+        loadComponent: () =>
+          import('./features/profissionais/profissionais-formulario/profissionais-formulario').then(
+            (m) => m.ProfissionaisFormulario
+          ),
+        canActivate: [roleGuard],
+        data: { perfis: ['ADMIN', 'GERENTE'] }
+      },
+      {
+        path: 'profissionais/:uuid/editar',
+        loadComponent: () =>
+          import('./features/profissionais/profissionais-formulario/profissionais-formulario').then(
+            (m) => m.ProfissionaisFormulario
+          ),
+        canActivate: [roleGuard],
+        data: { perfis: ['ADMIN', 'GERENTE'] }
       }
     ]
   },

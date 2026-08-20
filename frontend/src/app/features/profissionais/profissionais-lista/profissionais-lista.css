@@ -1,0 +1,47 @@
+.profissionais {
+  padding: 16px;
+}
+
+.profissionais__cabecalho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.profissionais__filtro {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.profissionais__tabela-wrapper {
+  overflow-x: auto;
+}
+
+.profissionais__tabela {
+  width: 100%;
+}
+
+.profissionais__acoes {
+  white-space: nowrap;
+}
+
+.profissionais__cor {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+}
+
+.profissionais__status--ativo {
+  color: var(--mat-sys-primary, #2e7d32);
+  font-weight: 500;
+}
+
+.profissionais__status--inativo {
+  color: var(--mat-sys-error, #b3261e);
+  font-weight: 500;
+}

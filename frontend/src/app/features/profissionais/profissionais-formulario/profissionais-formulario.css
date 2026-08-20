@@ -1,0 +1,51 @@
+.profissional-formulario {
+  padding: 16px;
+  max-width: 720px;
+}
+
+.profissional-formulario__form {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.profissional-formulario__grade {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0 16px;
+}
+
+.profissional-formulario__ajuda {
+  color: var(--mat-sys-on-surface-variant, #666);
+  font-size: 0.875rem;
+  margin: 0 0 8px;
+}
+
+.profissional-formulario__servicos {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.profissional-formulario__servico-linha {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.profissional-formulario__comissao-override {
+  width: 140px;
+}
+
+.profissional-formulario__erro {
+  color: var(--mat-sys-error, #b3261e);
+  margin: 0 0 8px;
+  font-size: 0.875rem;
+}
+
+.profissional-formulario__acoes {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
