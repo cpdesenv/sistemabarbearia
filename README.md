@@ -123,6 +123,45 @@ tentativas/minuto por IP, configurável em `app.rate-limit.login` no
 `application.yml`); ao estourar, a resposta é 429 com
 `"erro":"LIMITE_DE_TENTATIVAS_EXCEDIDO"`.
 
+## Clientes (Fase 3)
+
+CRUD de clientes com telefone normalizado para E.164, validação de CPF,
+detecção de duplicidade por telefone, ficha com histórico (vazio até as
+Fases 4–6 existirem) e conformidade LGPD (consentimento, exportação e
+anonimização de dados).
+
+```bash
+# Criar cliente — telefone e CPF sao normalizados no backend
+curl -X POST http://localhost:8080/api/clientes \
+  -H "Authorization: Bearer <accessToken>" \
+  -H "Content-Type: application/json" \
+  -d '{"nome":"Joao da Silva","telefone":"(19) 99999-8888","cpf":"111.444.777-35","optInWhatsapp":true,"consentimentoLgpd":true}'
+
+# Buscar por nome, telefone ou CPF, com paginacao
+curl "http://localhost:8080/api/clientes?busca=joao&page=0&size=20" \
+  -H "Authorization: Bearer <accessToken>"
+
+# Ficha do cliente (dados + historico — listas vazias nesta fase)
+curl http://localhost:8080/api/clientes/<uuid>/ficha \
+  -H "Authorization: Bearer <accessToken>"
+
+# Exportar dados pessoais (LGPD, art. 18) — ADMIN/GERENTE
+curl http://localhost:8080/api/clientes/<uuid>/exportar-dados \
+  -H "Authorization: Bearer <accessToken>"
+
+# Anonimizar (exclusao LGPD) — mantem a linha, zera os dados pessoais
+curl -X POST http://localhost:8080/api/clientes/<uuid>/anonimizar \
+  -H "Authorization: Bearer <accessToken>" \
+  -H "Content-Type: application/json" \
+  -d '{"motivo":"Solicitacao do titular"}'
+```
+
+Cadastrar com um telefone já existente devolve `409 CLIENTE_DUPLICADO` com os
+dados do cliente já cadastrado (`clienteExistente`), para o painel oferecer
+abrir o cadastro existente em vez de criar um duplicado — o telefone é único
+no banco porque é a chave que a mensageria (Fases 9+) vai usar para
+identificar o cliente.
+
 ## Como executar os testes
 
 Backend (usa Testcontainers — requer Docker disponível para o usuário que

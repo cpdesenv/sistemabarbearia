@@ -1,0 +1,106 @@
+<section class="cliente-ficha">
+  @if (carregando()) {
+    <mat-spinner diameter="32" />
+  } @else if (ficha(); as dados) {
+    <div class="cliente-ficha__cabecalho">
+      <h1>{{ dados.cliente.nome }}</h1>
+      <a mat-stroked-button [routerLink]="['/clientes', dados.cliente.uuid, 'editar']">Editar</a>
+    </div>
+
+    @if (dados.cliente.anonimizado) {
+      <p class="cliente-ficha__aviso" role="status">Este cliente foi anonimizado a pedido (LGPD).</p>
+    }
+
+    <mat-card>
+      <mat-card-content class="cliente-ficha__dados">
+        <div><span class="cliente-ficha__rotulo">Telefone</span>{{ dados.cliente.telefone || '—' }}</div>
+        <div><span class="cliente-ficha__rotulo">WhatsApp</span>{{ dados.cliente.whatsapp || '—' }}</div>
+        <div><span class="cliente-ficha__rotulo">CPF</span>{{ dados.cliente.cpf || '—' }}</div>
+        <div><span class="cliente-ficha__rotulo">E-mail</span>{{ dados.cliente.email || '—' }}</div>
+        <div><span class="cliente-ficha__rotulo">Data de nascimento</span>{{ dados.cliente.dataNascimento || '—' }}</div>
+        <div><span class="cliente-ficha__rotulo">Origem do cadastro</span>{{ dados.cliente.origemCadastro }}</div>
+        <div>
+          <span class="cliente-ficha__rotulo">Endereço</span>
+          {{ dados.cliente.logradouro || '—' }}
+          @if (dados.cliente.numero) { , {{ dados.cliente.numero }} }
+          @if (dados.cliente.bairro) { — {{ dados.cliente.bairro }} }
+          @if (dados.cliente.cidade) { , {{ dados.cliente.cidade }}/{{ dados.cliente.uf }} }
+        </div>
+        <div><span class="cliente-ficha__rotulo">Opt-in WhatsApp</span>{{ dados.cliente.optInWhatsapp ? 'Sim' : 'Não' }}</div>
+        <div><span class="cliente-ficha__rotulo">Consentimento LGPD</span>{{ dados.cliente.consentimentoLgpd ? 'Sim' : 'Não' }}</div>
+        @if (dados.cliente.observacoes) {
+          <div class="cliente-ficha__campo-largo">
+            <span class="cliente-ficha__rotulo">Observações</span>{{ dados.cliente.observacoes }}
+          </div>
+        }
+      </mat-card-content>
+    </mat-card>
+
+    <h2>Histórico</h2>
+    <div class="cliente-ficha__historico">
+      <mat-card>
+        <mat-card-content>
+          <h3>Agendamentos</h3>
+          @if (dados.agendamentos.length === 0) {
+            <p class="cliente-ficha__vazio">Nenhum agendamento ainda — disponível a partir da Fase 4.</p>
+          }
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card>
+        <mat-card-content>
+          <h3>Atendimentos</h3>
+          @if (dados.atendimentos.length === 0) {
+            <p class="cliente-ficha__vazio">Nenhum atendimento ainda — disponível a partir da Fase 5.</p>
+          }
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card>
+        <mat-card-content>
+          <h3>Notas fiscais</h3>
+          @if (dados.notasFiscais.length === 0) {
+            <p class="cliente-ficha__vazio">Nenhuma nota emitida ainda — disponível a partir da Fase 6.</p>
+          }
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    @if (podeGerenciarLgpd() && !dados.cliente.anonimizado) {
+      <h2>LGPD</h2>
+      <div class="cliente-ficha__lgpd">
+        <button mat-stroked-button (click)="exportarDados()" [disabled]="exportando()">
+          @if (exportando()) {
+            <mat-spinner diameter="18" />
+          } @else {
+            Exportar dados do cliente
+          }
+        </button>
+
+        @if (!mostrarAnonimizacao()) {
+          <button mat-stroked-button color="warn" (click)="mostrarAnonimizacao.set(true)">
+            Anonimizar dados (exclusão LGPD)
+          </button>
+        } @else {
+          <form [formGroup]="formularioAnonimizacao" (ngSubmit)="confirmarAnonimizacao()" class="cliente-ficha__form-anonimizacao">
+            <mat-form-field appearance="outline" class="cliente-ficha__campo-largo">
+              <mat-label>Motivo da anonimização</mat-label>
+              <input matInput formControlName="motivo" />
+            </mat-form-field>
+
+            @if (mensagemErro()) {
+              <p class="cliente-ficha__erro" role="alert">{{ mensagemErro() }}</p>
+            }
+
+            <div class="cliente-ficha__acoes-anonimizacao">
+              <button mat-stroked-button type="button" (click)="mostrarAnonimizacao.set(false)">Cancelar</button>
+              <button mat-flat-button color="warn" type="submit" [disabled]="anonimizando()">
+                Confirmar anonimização
+              </button>
+            </div>
+          </form>
+        }
+      </div>
+    }
+  }
+</section>

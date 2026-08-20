@@ -1,0 +1,34 @@
+.clientes {
+  padding: 16px;
+}
+
+.clientes__cabecalho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.clientes__filtro {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.clientes__filtro mat-form-field {
+  min-width: 280px;
+}
+
+.clientes__tabela-wrapper {
+  overflow-x: auto;
+}
+
+.clientes__tabela {
+  width: 100%;
+}
+
+.clientes__acoes {
+  white-space: nowrap;
+}

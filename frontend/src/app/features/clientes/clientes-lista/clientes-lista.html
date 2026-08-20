@@ -1,0 +1,65 @@
+<section class="clientes">
+  <div class="clientes__cabecalho">
+    <h1>Clientes</h1>
+    @if (podeGerenciar()) {
+      <a mat-flat-button color="primary" routerLink="novo">Novo cliente</a>
+    }
+  </div>
+
+  <form [formGroup]="filtro" (ngSubmit)="buscar()" class="clientes__filtro">
+    <mat-form-field appearance="outline">
+      <mat-label>Buscar por nome, telefone ou CPF</mat-label>
+      <input matInput formControlName="busca" />
+    </mat-form-field>
+
+    <button mat-stroked-button type="submit">Filtrar</button>
+  </form>
+
+  @if (carregando()) {
+    <mat-spinner diameter="32" />
+  } @else {
+    <div class="clientes__tabela-wrapper">
+      <table mat-table [dataSource]="clientes()" class="clientes__tabela">
+        <ng-container matColumnDef="nome">
+          <th mat-header-cell *matHeaderCellDef>Nome</th>
+          <td mat-cell *matCellDef="let cliente">{{ cliente.nome }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="telefone">
+          <th mat-header-cell *matHeaderCellDef>Telefone</th>
+          <td mat-cell *matCellDef="let cliente">{{ cliente.telefone || '—' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="email">
+          <th mat-header-cell *matHeaderCellDef>E-mail</th>
+          <td mat-cell *matCellDef="let cliente">{{ cliente.email || '—' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="origem">
+          <th mat-header-cell *matHeaderCellDef>Origem</th>
+          <td mat-cell *matCellDef="let cliente">{{ cliente.origemCadastro }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="acoes">
+          <th mat-header-cell *matHeaderCellDef></th>
+          <td mat-cell *matCellDef="let cliente" class="clientes__acoes">
+            <a mat-button [routerLink]="[cliente.uuid]">Ver ficha</a>
+            @if (podeGerenciar()) {
+              <a mat-button [routerLink]="[cliente.uuid, 'editar']">Editar</a>
+            }
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="colunas"></tr>
+        <tr mat-row *matRowDef="let row; columns: colunas"></tr>
+      </table>
+    </div>
+
+    <mat-paginator
+      [length]="totalElementos()"
+      [pageSize]="tamanhoPagina()"
+      [pageSizeOptions]="[10, 20, 50]"
+      (page)="mudarPagina($event)"
+    />
+  }
+</section>
