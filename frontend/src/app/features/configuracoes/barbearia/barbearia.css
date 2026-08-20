@@ -1,0 +1,28 @@
+.barbearia-config {
+  padding: 16px;
+  max-width: 960px;
+}
+
+.barbearia-config__form {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.barbearia-config__grade {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0 16px;
+}
+
+.barbearia-config__erro {
+  color: var(--mat-sys-error, #b3261e);
+  margin: 0 0 8px;
+  font-size: 0.875rem;
+}
+
+.barbearia-config__sucesso {
+  color: var(--mat-sys-primary, #2e7d32);
+  margin: 0 0 8px;
+  font-size: 0.875rem;
+}

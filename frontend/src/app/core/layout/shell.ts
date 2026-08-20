@@ -12,7 +12,10 @@ interface ItemMenu {
   perfis?: Perfil[];
 }
 
-const ITENS_MENU: ItemMenu[] = [{ rota: '/dashboard', rotulo: 'Dashboard' }];
+const ITENS_MENU: ItemMenu[] = [
+  { rota: '/dashboard', rotulo: 'Dashboard' },
+  { rota: '/configuracoes/barbearia', rotulo: 'Configurações', perfis: ['ADMIN'] },
+];
 
 @Component({
   selector: 'app-shell',

@@ -1,0 +1,118 @@
+<section class="barbearia-config">
+  <h1>Configurações da barbearia</h1>
+
+  @if (carregando()) {
+    <mat-spinner diameter="32" />
+  } @else {
+    <mat-card>
+      <mat-card-content>
+        <form [formGroup]="formulario" (ngSubmit)="salvar()" class="barbearia-config__form">
+          <h2>Dados gerais</h2>
+          <div class="barbearia-config__grade">
+            <mat-form-field appearance="outline">
+              <mat-label>Nome</mat-label>
+              <input matInput formControlName="nome" />
+              @if (formulario.controls.nome.invalid && formulario.controls.nome.touched) {
+                <mat-error>O nome é obrigatório.</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>CNPJ</mat-label>
+              <input matInput formControlName="cnpj" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Telefone</mat-label>
+              <input matInput formControlName="telefone" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>E-mail</mat-label>
+              <input matInput type="email" formControlName="email" />
+            </mat-form-field>
+          </div>
+
+          <h2>Endereço</h2>
+          <div class="barbearia-config__grade">
+            <mat-form-field appearance="outline">
+              <mat-label>Logradouro</mat-label>
+              <input matInput formControlName="logradouro" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Número</mat-label>
+              <input matInput formControlName="numero" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Complemento</mat-label>
+              <input matInput formControlName="complemento" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Bairro</mat-label>
+              <input matInput formControlName="bairro" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Cidade</mat-label>
+              <input matInput formControlName="cidade" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>UF</mat-label>
+              <input matInput formControlName="uf" maxlength="2" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>CEP</mat-label>
+              <input matInput formControlName="cep" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Fuso horário</mat-label>
+              <input matInput formControlName="fusoHorario" />
+              @if (formulario.controls.fusoHorario.invalid && formulario.controls.fusoHorario.touched) {
+                <mat-error>O fuso horário é obrigatório.</mat-error>
+              }
+            </mat-form-field>
+          </div>
+
+          <h2>Políticas de agendamento</h2>
+          <div class="barbearia-config__grade">
+            <mat-form-field appearance="outline">
+              <mat-label>Antecedência mínima para agendar (minutos)</mat-label>
+              <input matInput type="number" formControlName="antecedenciaMinimaAgendamentoMinutos" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Antecedência máxima para agendar (dias)</mat-label>
+              <input matInput type="number" formControlName="antecedenciaMaximaAgendamentoDias" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Antecedência mínima para cancelar (minutos)</mat-label>
+              <input matInput type="number" formControlName="antecedenciaMinimaCancelamentoMinutos" />
+            </mat-form-field>
+          </div>
+
+          @if (mensagemErro()) {
+            <p class="barbearia-config__erro" role="alert">{{ mensagemErro() }}</p>
+          }
+          @if (mensagemSucesso()) {
+            <p class="barbearia-config__sucesso" role="status">{{ mensagemSucesso() }}</p>
+          }
+
+          <button mat-flat-button color="primary" type="submit" [disabled]="salvando()">
+            @if (salvando()) {
+              <mat-spinner diameter="20" />
+            } @else {
+              Salvar
+            }
+          </button>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  }
+</section>
