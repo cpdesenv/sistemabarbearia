@@ -6,6 +6,10 @@ spring:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:barbearia}
     username: ${DB_USER:barbearia}
     password: ${DB_PASSWORD:barbearia}
+  flyway:
+    # Migrations extras (dados de exemplo) so' visiveis no perfil dev — nunca
+    # aplicadas em test nem prod, que usam apenas classpath:db/migration.
+    locations: classpath:db/migration,classpath:db/seed-dev
 
 logging:
   level:
