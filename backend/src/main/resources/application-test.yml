@@ -6,6 +6,12 @@ spring:
     hibernate:
       ddl-auto: validate
 
+app:
+  rate-limit:
+    login:
+      tentativas: 3
+      janela-minutos: 1
+
 logging:
   level:
     com.barbearia: DEBUG

@@ -1,0 +1,29 @@
+.login {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 16px;
+}
+
+.login__card {
+  width: 100%;
+  max-width: 360px;
+}
+
+.login__form {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.login__erro {
+  color: var(--mat-sys-error, #b3261e);
+  margin: 0 0 8px;
+  font-size: 0.875rem;
+}
+
+.login__botao {
+  margin-top: 8px;
+  min-height: 40px;
+}

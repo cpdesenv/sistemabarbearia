@@ -79,6 +79,50 @@ npm start
 Veja [`.env.example`](.env.example). Nunca commite o arquivo `.env` real —
 segredos sempre via variável de ambiente.
 
+Destaques a partir da Fase 1:
+
+- `JWT_SECRET`: chave usada para assinar os tokens de acesso. Em dev, se
+  omitida, um valor padrão inseguro é usado — **gere um valor real com
+  `openssl rand -base64 48` antes de ir para produção** (o backend recusa
+  subir com uma chave de menos de 32 bytes).
+- `ADMIN_EMAIL` / `ADMIN_PASSWORD`: se definidas na primeira subida do banco,
+  uma migration cria o usuário administrador inicial com esse e-mail/senha.
+  Se omitidas, nenhum administrador é criado automaticamente (é assim que a
+  suíte de testes roda, sem depender de nenhuma credencial).
+
+## Autenticação (Fase 1)
+
+Login, renovação de token e logout, testados com o backend rodando (local ou
+via Docker):
+
+```bash
+# Login — devolve access token (15 min), refresh token (7 dias) e o usuário
+curl -X POST http://localhost:8080/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@teste.local","senha":"SenhaAdmin123!"}'
+
+# Renovar (o refresh token antigo é revogado nessa chamada — rotação)
+curl -X POST http://localhost:8080/api/auth/refresh \
+  -H "Content-Type: application/json" \
+  -d '{"refreshToken":"<refreshToken recebido no login>"}'
+
+# Logout — revoga o refresh token informado
+curl -X POST http://localhost:8080/api/auth/logout \
+  -H "Content-Type: application/json" \
+  -d '{"refreshToken":"<refreshToken atual>"}'
+
+# Endpoint protegido sem token → 401 JSON; com token, use:
+curl http://localhost:8080/api/algum-endpoint-futuro \
+  -H "Authorization: Bearer <accessToken recebido no login>"
+```
+
+Erros seguem sempre o mesmo formato JSON:
+`{"timestamp", "status", "erro", "mensagem", "caminho", "campos"}` — `campos`
+só é preenchido em erros de validação (400). O login tem rate limiting (5
+tentativas/minuto por IP, configurável em `app.rate-limit.login` no
+`application.yml`); ao estourar, a resposta é 429 com
+`"erro":"LIMITE_DE_TENTATIVAS_EXCEDIDO"`.
+
 ## Como executar os testes
 
 Backend (usa Testcontainers — requer Docker disponível para o usuário que
@@ -136,6 +180,14 @@ Postgres, deploy via GitHub Actions + SSH — detalhado na Fase 15.
 - **Tool/function calling para o agente de IA** (a partir da Fase 7): o LLM
   nunca decide disponibilidade, preço ou grava dado sozinho — toda regra de
   negócio permanece em Java.
+- **Refresh token opaco e revogável** (não outro JWT): fica em tabela própria
+  com hash SHA-256, é rotacionado a cada uso e pode ser revogado de verdade
+  no logout — um JWT de refresh "stateless" não permitiria isso.
+- **Rate limiting em memória** (Bucket4j) no login, sem depender de Redis —
+  que só entra no projeto a partir da Fase 7 (fila/cache do agente de IA).
+- **Proxy `/api` no Nginx (prod) e no `ng serve` (dev)**: o frontend sempre
+  fala com o backend pela mesma origem, então não há necessidade de liberar
+  CORS.
 - Mais detalhes e o raciocínio completo de cada fase ficam registrados nas
   conversas de revisão de cada fase e neste README, à medida que evoluem.
 

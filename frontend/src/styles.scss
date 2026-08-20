@@ -1,0 +1,29 @@
+@use '@angular/material' as mat;
+
+/*
+ * Tema provisorio (paleta neutra com um acento amarronzado, lembrando couro/
+ * barbearia). Sera trocado pela identidade visual definitiva da barbearia
+ * quando ela existir (ver Fase 19 - dados cadastrais e logo).
+ */
+html {
+  @include mat.theme((
+    color: (
+      theme-type: light,
+      primary: mat.$orange-palette,
+      tertiary: mat.$blue-palette,
+    ),
+    typography: Roboto,
+    density: 0,
+  ));
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", Arial, sans-serif;
+}

@@ -1,11 +1,20 @@
 <div class="shell">
-  <header class="topbar">
+  <mat-toolbar color="primary" class="topbar">
     <span class="topbar__titulo">Sistema para Barbearia</span>
-  </header>
+    <span class="topbar__espaco"></span>
+    @if (usuario(); as usuarioLogado) {
+      <span class="topbar__usuario">{{ usuarioLogado.nome }}</span>
+      <button mat-stroked-button (click)="sair()">Sair</button>
+    }
+  </mat-toolbar>
 
   <div class="shell__corpo">
     <nav class="sidebar">
-      <a class="sidebar__item" routerLink="/dashboard">Dashboard</a>
+      @for (item of itensMenu(); track item.rota) {
+        <a class="sidebar__item" [routerLink]="item.rota" routerLinkActive="sidebar__item--ativo">
+          {{ item.rotulo }}
+        </a>
+      }
     </nav>
 
     <main class="conteudo">

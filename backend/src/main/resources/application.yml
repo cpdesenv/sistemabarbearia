@@ -28,3 +28,13 @@ management:
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:dev-secret-nao-use-em-producao-troque-este-valor-0123456789}
+    access-token-ttl-minutos: ${JWT_ACCESS_TTL_MINUTOS:15}
+    refresh-token-ttl-dias: ${JWT_REFRESH_TTL_DIAS:7}
+  rate-limit:
+    login:
+      tentativas: 5
+      janela-minutos: 1

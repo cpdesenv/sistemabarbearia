@@ -31,11 +31,10 @@ patches de segurança gratuitos para essa linha. A migração para uma linha
 suportada deve ser tratada como um item de trabalho futuro deliberado,
 avaliado quando fizer sentido para o projeto — não uma troca silenciosa.
 
-## Angular Material adiado
+## Tema visual provisório
 
-A Fase 0 entrega o layout base (sidebar + topbar) e as rotas placeholder sem
-Angular Material, para reduzir a superfície de risco do primeiro build (o
-projeto foi montado manualmente, sem `ng new`, pela indisponibilidade de
-Node 22+ e de acesso ao Docker neste ambiente — ver README). O Material será
-adicionado quando o trabalho de UI de verdade começar, com o tema
-customizado da identidade visual da barbearia.
+Desde a Fase 1 o painel usa Angular Material com um tema Material 3 (ver
+`frontend/src/styles.scss`), mas com uma paleta neutra provisória — a
+identidade visual definitiva (logo, cores da marca) só é providenciada pelo
+usuário na Fase 19. Trocar a paleta é uma alteração isolada nesse arquivo,
+sem impacto em nenhum componente.

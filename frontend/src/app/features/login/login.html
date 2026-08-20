@@ -1,4 +1,40 @@
-<section>
-  <h1>Login</h1>
-  <p>Tela de autenticacao sera implementada na Fase 1.</p>
+<section class="login">
+  <mat-card class="login__card">
+    <mat-card-header>
+      <mat-card-title>Sistema para Barbearia</mat-card-title>
+      <mat-card-subtitle>Entre com seu e-mail e senha</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <form [formGroup]="formulario" (ngSubmit)="entrar()" class="login__form">
+        <mat-form-field appearance="outline">
+          <mat-label>E-mail</mat-label>
+          <input matInput type="email" formControlName="email" autocomplete="username" />
+          @if (formulario.controls.email.invalid && formulario.controls.email.touched) {
+            <mat-error>Informe um e-mail valido.</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Senha</mat-label>
+          <input matInput type="password" formControlName="senha" autocomplete="current-password" />
+          @if (formulario.controls.senha.invalid && formulario.controls.senha.touched) {
+            <mat-error>A senha e obrigatoria.</mat-error>
+          }
+        </mat-form-field>
+
+        @if (mensagemErro()) {
+          <p class="login__erro" role="alert">{{ mensagemErro() }}</p>
+        }
+
+        <button mat-flat-button color="primary" type="submit" [disabled]="carregando()" class="login__botao">
+          @if (carregando()) {
+            <mat-spinner diameter="20" />
+          } @else {
+            Entrar
+          }
+        </button>
+      </form>
+    </mat-card-content>
+  </mat-card>
 </section>

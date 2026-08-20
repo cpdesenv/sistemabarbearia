@@ -37,6 +37,11 @@ services:
       DB_NAME: ${DB_NAME:-barbearia}
       DB_USER: ${DB_USER:-barbearia}
       DB_PASSWORD: ${DB_PASSWORD:-barbearia}
+      JWT_SECRET: ${JWT_SECRET:-dev-secret-nao-use-em-producao-troque-este-valor-0123456789}
+      JWT_ACCESS_TTL_MINUTOS: ${JWT_ACCESS_TTL_MINUTOS:-15}
+      JWT_REFRESH_TTL_DIAS: ${JWT_REFRESH_TTL_DIAS:-7}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
     ports:
       - "8080:8080"
     depends_on:

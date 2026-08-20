@@ -39,6 +39,11 @@ services:
       DB_NAME: ${DB_NAME}
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ACCESS_TTL_MINUTOS: ${JWT_ACCESS_TTL_MINUTOS:-15}
+      JWT_REFRESH_TTL_DIAS: ${JWT_REFRESH_TTL_DIAS:-7}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
     depends_on:
       postgres:
         condition: service_healthy
