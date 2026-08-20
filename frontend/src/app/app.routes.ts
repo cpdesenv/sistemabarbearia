@@ -18,6 +18,25 @@ export const routes: Routes = [
           import('./features/configuracoes/barbearia/barbearia').then((m) => m.BarbeariaConfig),
         canActivate: [roleGuard],
         data: { perfis: ['ADMIN'] }
+      },
+      {
+        path: 'servicos',
+        loadComponent: () =>
+          import('./features/servicos/servicos-lista/servicos-lista').then((m) => m.ServicosLista)
+      },
+      {
+        path: 'servicos/novo',
+        loadComponent: () =>
+          import('./features/servicos/servicos-formulario/servicos-formulario').then((m) => m.ServicosFormulario),
+        canActivate: [roleGuard],
+        data: { perfis: ['ADMIN', 'GERENTE'] }
+      },
+      {
+        path: 'servicos/:uuid/editar',
+        loadComponent: () =>
+          import('./features/servicos/servicos-formulario/servicos-formulario').then((m) => m.ServicosFormulario),
+        canActivate: [roleGuard],
+        data: { perfis: ['ADMIN', 'GERENTE'] }
       }
     ]
   },

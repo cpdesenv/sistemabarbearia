@@ -14,6 +14,7 @@ interface ItemMenu {
 
 const ITENS_MENU: ItemMenu[] = [
   { rota: '/dashboard', rotulo: 'Dashboard' },
+  { rota: '/servicos', rotulo: 'Serviços' },
   { rota: '/configuracoes/barbearia', rotulo: 'Configurações', perfis: ['ADMIN'] },
 ];
 

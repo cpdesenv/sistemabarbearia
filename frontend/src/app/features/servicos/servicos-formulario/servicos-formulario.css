@@ -1,0 +1,28 @@
+.servico-formulario {
+  padding: 16px;
+  max-width: 640px;
+}
+
+.servico-formulario__form {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.servico-formulario__grade {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0 16px;
+}
+
+.servico-formulario__erro {
+  color: var(--mat-sys-error, #b3261e);
+  margin: 0 0 8px;
+  font-size: 0.875rem;
+}
+
+.servico-formulario__acoes {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}

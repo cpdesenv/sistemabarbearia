@@ -1,0 +1,40 @@
+.servicos {
+  padding: 16px;
+}
+
+.servicos__cabecalho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.servicos__filtro {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.servicos__tabela-wrapper {
+  overflow-x: auto;
+}
+
+.servicos__tabela {
+  width: 100%;
+}
+
+.servicos__acoes {
+  white-space: nowrap;
+}
+
+.servicos__status--ativo {
+  color: var(--mat-sys-primary, #2e7d32);
+  font-weight: 500;
+}
+
+.servicos__status--inativo {
+  color: var(--mat-sys-error, #b3261e);
+  font-weight: 500;
+}

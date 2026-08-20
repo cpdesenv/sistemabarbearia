@@ -1,0 +1,64 @@
+<section class="servico-formulario">
+  <h1>{{ modoEdicao ? 'Editar serviço' : 'Novo serviço' }}</h1>
+
+  @if (carregando()) {
+    <mat-spinner diameter="32" />
+  } @else {
+    <mat-card>
+      <mat-card-content>
+        <form [formGroup]="formulario" (ngSubmit)="salvar()" class="servico-formulario__form">
+          <mat-form-field appearance="outline">
+            <mat-label>Nome</mat-label>
+            <input matInput formControlName="nome" />
+            @if (formulario.controls.nome.invalid && formulario.controls.nome.touched) {
+              <mat-error>O nome é obrigatório.</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Categoria</mat-label>
+            <input matInput formControlName="categoria" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Descrição</mat-label>
+            <textarea matInput formControlName="descricao" rows="3"></textarea>
+          </mat-form-field>
+
+          <div class="servico-formulario__grade">
+            <mat-form-field appearance="outline">
+              <mat-label>Preço (R$)</mat-label>
+              <input matInput type="number" step="0.01" formControlName="preco" />
+              @if (formulario.controls.preco.invalid && formulario.controls.preco.touched) {
+                <mat-error>Informe um preço maior que zero.</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Duração (minutos)</mat-label>
+              <input matInput type="number" formControlName="duracaoMinutos" />
+              @if (formulario.controls.duracaoMinutos.invalid && formulario.controls.duracaoMinutos.touched) {
+                <mat-error>Informe uma duração de pelo menos 1 minuto.</mat-error>
+              }
+            </mat-form-field>
+          </div>
+
+          @if (mensagemErro()) {
+            <p class="servico-formulario__erro" role="alert">{{ mensagemErro() }}</p>
+          }
+
+          <div class="servico-formulario__acoes">
+            <a mat-stroked-button routerLink="/servicos">Cancelar</a>
+            <button mat-flat-button color="primary" type="submit" [disabled]="salvando()">
+              @if (salvando()) {
+                <mat-spinner diameter="20" />
+              } @else {
+                Salvar
+              }
+            </button>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  }
+</section>
