@@ -4,6 +4,37 @@ Todas as mudanças notáveis deste projeto serão documentadas neste arquivo.
 
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
+## [0.3.0] - Fase 3 — Clientes e histórico
+
+### Adicionado
+
+- CRUD de clientes (`GET/POST/PUT /api/clientes`), com busca por nome,
+  telefone ou CPF e paginação.
+- Normalização automática de telefone para E.164 (`TelefoneNormalizador`,
+  reaproveitável pelas fases de mensageria) e validação de CPF pelo dígito
+  verificador (`CpfValidador`), ambos em `shared/validacao`.
+- Detecção de duplicidade por telefone: cadastro com telefone já existente
+  retorna `409 CLIENTE_DUPLICADO` com os dados do cliente já cadastrado, em
+  vez de criar um duplicado — telefone tem constraint única no banco (é a
+  chave natural que a mensageria usará para identificar o cliente).
+- Ficha do cliente (`GET /api/clientes/{uuid}/ficha`): dados cadastrais mais
+  o histórico de agendamentos, atendimentos e notas fiscais — listas vazias
+  nesta fase (`// TODO(fase-4/5/6)`), já com a estrutura pronta para quando
+  essas entidades existirem.
+- LGPD: campo de consentimento (com data de registro), exportação de dados
+  pessoais (`GET /api/clientes/{uuid}/exportar-dados`) e anonimização lógica
+  (`POST /api/clientes/{uuid}/anonimizar`, com motivo obrigatório) — a linha
+  é preservada para integridade referencial futura, mas os campos pessoais
+  são zerados.
+- Frontend: listagem com busca e paginação, formulário de cadastro/edição
+  (com aviso e atalho para o cadastro existente em caso de duplicidade) e
+  tela de ficha do cliente (dados, histórico e ações de LGPD).
+- Permissões: leitura liberada a qualquer perfil autenticado; criar/editar
+  cliente para `ADMIN`, `GERENTE` e `RECEPCAO`; exportação e anonimização
+  (LGPD) restritas a `ADMIN`/`GERENTE`.
+- Seed de exemplo (perfil dev): 3 clientes com diferentes origens de
+  cadastro e status de consentimento.
+
 ## [0.2.0] - Fase 1 — Segurança, usuários e auditoria
 
 ### Adicionado

@@ -1,0 +1,76 @@
+.cliente-ficha {
+  padding: 16px;
+  max-width: 900px;
+}
+
+.cliente-ficha__cabecalho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.cliente-ficha__aviso {
+  background: #fff3e0;
+  border: 1px solid #ffb74d;
+  border-radius: 4px;
+  padding: 8px 16px;
+}
+
+.cliente-ficha__dados {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px 24px;
+}
+
+.cliente-ficha__campo-largo {
+  grid-column: 1 / -1;
+}
+
+.cliente-ficha__rotulo {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--mat-sys-on-surface-variant, #666);
+}
+
+.cliente-ficha__historico {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.cliente-ficha__historico h3 {
+  margin-top: 0;
+}
+
+.cliente-ficha__vazio {
+  color: var(--mat-sys-on-surface-variant, #666);
+  font-size: 0.9rem;
+}
+
+.cliente-ficha__lgpd {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.cliente-ficha__form-anonimizacao {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  max-width: 420px;
+}
+
+.cliente-ficha__acoes-anonimizacao {
+  display: flex;
+  gap: 8px;
+}
+
+.cliente-ficha__erro {
+  color: var(--mat-sys-error, #b3261e);
+  margin: 0 0 8px;
+  font-size: 0.875rem;
+}

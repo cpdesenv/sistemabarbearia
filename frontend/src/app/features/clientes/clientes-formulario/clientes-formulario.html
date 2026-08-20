@@ -1,0 +1,119 @@
+<section class="cliente-formulario">
+  <h1>{{ modoEdicao ? 'Editar cliente' : 'Novo cliente' }}</h1>
+
+  @if (carregando()) {
+    <mat-spinner diameter="32" />
+  } @else {
+    <mat-card>
+      <mat-card-content>
+        <form [formGroup]="formulario" (ngSubmit)="salvar()" class="cliente-formulario__form">
+          <div class="cliente-formulario__grade">
+            <mat-form-field appearance="outline">
+              <mat-label>Nome</mat-label>
+              <input matInput formControlName="nome" />
+              @if (formulario.controls.nome.invalid && formulario.controls.nome.touched) {
+                <mat-error>O nome é obrigatório.</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Telefone</mat-label>
+              <input matInput formControlName="telefone" placeholder="(19) 99999-8888" />
+              @if (formulario.controls.telefone.invalid && formulario.controls.telefone.touched) {
+                <mat-error>O telefone é obrigatório.</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>WhatsApp (se diferente)</mat-label>
+              <input matInput formControlName="whatsapp" placeholder="(19) 99999-8888" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>CPF</mat-label>
+              <input matInput formControlName="cpf" placeholder="000.000.000-00" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>E-mail</mat-label>
+              <input matInput type="email" formControlName="email" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Data de nascimento</mat-label>
+              <input matInput type="date" formControlName="dataNascimento" />
+            </mat-form-field>
+          </div>
+
+          <h2 class="cliente-formulario__subtitulo">Endereço (opcional)</h2>
+          <div class="cliente-formulario__grade">
+            <mat-form-field appearance="outline">
+              <mat-label>Logradouro</mat-label>
+              <input matInput formControlName="logradouro" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Número</mat-label>
+              <input matInput formControlName="numero" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Complemento</mat-label>
+              <input matInput formControlName="complemento" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Bairro</mat-label>
+              <input matInput formControlName="bairro" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Cidade</mat-label>
+              <input matInput formControlName="cidade" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>UF</mat-label>
+              <input matInput formControlName="uf" maxlength="2" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>CEP</mat-label>
+              <input matInput formControlName="cep" />
+            </mat-form-field>
+          </div>
+
+          <mat-form-field appearance="outline" class="cliente-formulario__campo-largo">
+            <mat-label>Observações</mat-label>
+            <textarea matInput formControlName="observacoes" rows="3"></textarea>
+          </mat-form-field>
+
+          <mat-checkbox formControlName="optInWhatsapp">Aceita receber mensagens automáticas pelo WhatsApp</mat-checkbox>
+          <mat-checkbox formControlName="consentimentoLgpd">
+            Cliente consentiu com o uso dos seus dados (LGPD)
+          </mat-checkbox>
+
+          @if (clienteDuplicado(); as duplicado) {
+            <div class="cliente-formulario__duplicado" role="alert">
+              <p>Já existe um cliente cadastrado com este telefone: <strong>{{ duplicado.nome }}</strong>.</p>
+              <a mat-stroked-button [routerLink]="['/clientes', duplicado.uuid, 'editar']">Abrir cadastro existente</a>
+            </div>
+          } @else if (mensagemErro()) {
+            <p class="cliente-formulario__erro" role="alert">{{ mensagemErro() }}</p>
+          }
+
+          <div class="cliente-formulario__acoes">
+            <a mat-stroked-button routerLink="/clientes">Cancelar</a>
+            <button mat-flat-button color="primary" type="submit" [disabled]="salvando()">
+              @if (salvando()) {
+                <mat-spinner diameter="20" />
+              } @else {
+                Salvar
+              }
+            </button>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  }
+</section>

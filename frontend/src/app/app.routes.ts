@@ -66,6 +66,34 @@ export const routes: Routes = [
       {
         path: 'bloqueios',
         loadComponent: () => import('./features/bloqueios/bloqueios').then((m) => m.Bloqueios)
+      },
+      {
+        path: 'clientes',
+        loadComponent: () =>
+          import('./features/clientes/clientes-lista/clientes-lista').then((m) => m.ClientesLista)
+      },
+      {
+        path: 'clientes/novo',
+        loadComponent: () =>
+          import('./features/clientes/clientes-formulario/clientes-formulario').then(
+            (m) => m.ClientesFormulario
+          ),
+        canActivate: [roleGuard],
+        data: { perfis: ['ADMIN', 'GERENTE', 'RECEPCAO'] }
+      },
+      {
+        path: 'clientes/:uuid',
+        loadComponent: () =>
+          import('./features/clientes/clientes-ficha/clientes-ficha').then((m) => m.ClientesFicha)
+      },
+      {
+        path: 'clientes/:uuid/editar',
+        loadComponent: () =>
+          import('./features/clientes/clientes-formulario/clientes-formulario').then(
+            (m) => m.ClientesFormulario
+          ),
+        canActivate: [roleGuard],
+        data: { perfis: ['ADMIN', 'GERENTE', 'RECEPCAO'] }
       }
     ]
   },
