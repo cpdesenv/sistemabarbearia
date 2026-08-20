@@ -26,6 +26,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+import com.barbearia.horario.dto.JanelaHorarioDto;
+import com.barbearia.horario.dto.SalvarJanelaHorarioRequest;
+import com.barbearia.horario.service.GradeHorariaService;
 import com.barbearia.profissional.dto.AssociarServicoRequest;
 import com.barbearia.profissional.dto.AtualizarStatusProfissionalRequest;
 import com.barbearia.profissional.dto.ProfissionalDto;
@@ -41,6 +44,7 @@ import com.barbearia.shared.security.UsuarioAutenticado;
 public class ProfissionalController {
 
     private final ProfissionalService profissionalService;
+    private final GradeHorariaService gradeHorariaService;
 
     @GetMapping
     public PagedModel<ProfissionalDto> listar(
@@ -94,5 +98,18 @@ public class ProfissionalController {
             @AuthenticationPrincipal UsuarioAutenticado principal, HttpServletRequest httpRequest) {
         return profissionalService.sincronizarServicos(uuid, requisicao, principal.getUsuario().getId(),
                 httpRequest);
+    }
+
+    @GetMapping("/{uuid}/grade-horaria")
+    public List<JanelaHorarioDto> obterGradeHoraria(@PathVariable UUID uuid) {
+        return gradeHorariaService.listar(uuid);
+    }
+
+    @PutMapping("/{uuid}/grade-horaria")
+    @PreAuthorize("hasAnyRole('ADMIN', 'GERENTE')")
+    public List<JanelaHorarioDto> sincronizarGradeHoraria(@PathVariable UUID uuid,
+            @Valid @RequestBody List<SalvarJanelaHorarioRequest> requisicao,
+            @AuthenticationPrincipal UsuarioAutenticado principal, HttpServletRequest httpRequest) {
+        return gradeHorariaService.sincronizar(uuid, requisicao, principal.getUsuario().getId(), httpRequest);
     }
 }

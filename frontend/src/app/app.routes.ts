@@ -62,6 +62,10 @@ export const routes: Routes = [
           ),
         canActivate: [roleGuard],
         data: { perfis: ['ADMIN', 'GERENTE'] }
+      },
+      {
+        path: 'bloqueios',
+        loadComponent: () => import('./features/bloqueios/bloqueios').then((m) => m.Bloqueios)
       }
     ]
   },

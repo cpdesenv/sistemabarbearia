@@ -5,6 +5,7 @@ import { Observable } from 'rxjs';
 import {
   AssociarServicoRequest,
   FiltroProfissionais,
+  JanelaHorario,
   PaginaProfissionais,
   Profissional,
   SalvarProfissionalRequest,
@@ -52,5 +53,13 @@ export class ProfissionaisService {
 
   sincronizarServicos(uuid: string, vinculos: AssociarServicoRequest[]): Observable<ServicoVinculado[]> {
     return this.http.put<ServicoVinculado[]>(`/api/profissionais/${uuid}/servicos`, vinculos);
+  }
+
+  obterGradeHoraria(uuid: string): Observable<JanelaHorario[]> {
+    return this.http.get<JanelaHorario[]>(`/api/profissionais/${uuid}/grade-horaria`);
+  }
+
+  sincronizarGradeHoraria(uuid: string, janelas: JanelaHorario[]): Observable<JanelaHorario[]> {
+    return this.http.put<JanelaHorario[]>(`/api/profissionais/${uuid}/grade-horaria`, janelas);
   }
 }

@@ -1,0 +1,109 @@
+<section class="bloqueios">
+  <h1>Bloqueios</h1>
+
+  @if (podeGerenciar()) {
+    <mat-card class="bloqueios__card-form">
+      <mat-card-content>
+        <form [formGroup]="formulario" (ngSubmit)="criar()" class="bloqueios__form">
+          <mat-form-field appearance="outline">
+            <mat-label>Profissional (opcional)</mat-label>
+            <mat-select formControlName="profissionalUuid">
+              <mat-option value="">Bloqueio global (fecha a barbearia)</mat-option>
+              @for (profissional of profissionais(); track profissional.uuid) {
+                <mat-option [value]="profissional.uuid">{{ profissional.nome }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Início</mat-label>
+            <input matInput type="datetime-local" formControlName="inicio" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Fim</mat-label>
+            <input matInput type="datetime-local" formControlName="fim" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Motivo</mat-label>
+            <input matInput formControlName="motivo" />
+          </mat-form-field>
+
+          <button mat-flat-button color="primary" type="submit" [disabled]="salvando()">
+            @if (salvando()) {
+              <mat-spinner diameter="20" />
+            } @else {
+              Criar bloqueio
+            }
+          </button>
+        </form>
+
+        @if (mensagemErro()) {
+          <p class="bloqueios__erro" role="alert">{{ mensagemErro() }}</p>
+        }
+      </mat-card-content>
+    </mat-card>
+  }
+
+  <form [formGroup]="filtro" (ngSubmit)="buscar()" class="bloqueios__filtro">
+    <mat-form-field appearance="outline">
+      <mat-label>Filtrar por profissional</mat-label>
+      <mat-select formControlName="profissionalUuid">
+        <mat-option value="">Todos</mat-option>
+        @for (profissional of profissionais(); track profissional.uuid) {
+          <mat-option [value]="profissional.uuid">{{ profissional.nome }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <button mat-stroked-button type="submit">Filtrar</button>
+  </form>
+
+  @if (carregando()) {
+    <mat-spinner diameter="32" />
+  } @else {
+    <div class="bloqueios__tabela-wrapper">
+      <table mat-table [dataSource]="bloqueios()" class="bloqueios__tabela">
+        <ng-container matColumnDef="profissional">
+          <th mat-header-cell *matHeaderCellDef>Profissional</th>
+          <td mat-cell *matCellDef="let bloqueio">{{ bloqueio.profissionalNome || 'Global (toda a barbearia)' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="inicio">
+          <th mat-header-cell *matHeaderCellDef>Início</th>
+          <td mat-cell *matCellDef="let bloqueio">{{ bloqueio.inicio | date: 'dd/MM/yyyy HH:mm' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="fim">
+          <th mat-header-cell *matHeaderCellDef>Fim</th>
+          <td mat-cell *matCellDef="let bloqueio">{{ bloqueio.fim | date: 'dd/MM/yyyy HH:mm' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="motivo">
+          <th mat-header-cell *matHeaderCellDef>Motivo</th>
+          <td mat-cell *matCellDef="let bloqueio">{{ bloqueio.motivo }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="acoes">
+          <th mat-header-cell *matHeaderCellDef></th>
+          <td mat-cell *matCellDef="let bloqueio">
+            @if (podeGerenciar()) {
+              <button mat-button (click)="remover(bloqueio)">Remover</button>
+            }
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="colunas"></tr>
+        <tr mat-row *matRowDef="let row; columns: colunas"></tr>
+      </table>
+    </div>
+
+    <mat-paginator
+      [length]="totalElementos()"
+      [pageSize]="tamanhoPagina()"
+      [pageSizeOptions]="[10, 20, 50]"
+      (page)="mudarPagina($event)"
+    />
+  }
+</section>

@@ -63,6 +63,46 @@
             }
           </div>
 
+          <h2>Grade de horários</h2>
+          <p class="profissional-formulario__ajuda">
+            Adicione uma janela para cada turno atendido. É possível ter duas janelas no mesmo dia (ex.: manhã e
+            tarde).
+          </p>
+
+          <div class="profissional-formulario__janelas">
+            @for (janela of janelas.controls; track $index; let i = $index) {
+              <div class="profissional-formulario__janela-linha" [formGroup]="janela">
+                <mat-form-field appearance="outline">
+                  <mat-label>Dia</mat-label>
+                  <mat-select formControlName="diaSemana">
+                    @for (dia of diasSemana; track dia.valor) {
+                      <mat-option [value]="dia.valor">{{ dia.rotulo }}</mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Início</mat-label>
+                  <input matInput type="time" formControlName="horaInicio" />
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Fim</mat-label>
+                  <input matInput type="time" formControlName="horaFim" />
+                </mat-form-field>
+
+                <button mat-button type="button" (click)="removerJanela(i)">Remover</button>
+              </div>
+            }
+            @if (janelas.length === 0) {
+              <p>Nenhuma janela cadastrada ainda.</p>
+            }
+          </div>
+
+          <button mat-stroked-button type="button" (click)="adicionarJanela()" class="profissional-formulario__botao-adicionar">
+            + Adicionar janela
+          </button>
+
           @if (mensagemErro()) {
             <p class="profissional-formulario__erro" role="alert">{{ mensagemErro() }}</p>
           }

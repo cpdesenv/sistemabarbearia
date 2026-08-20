@@ -46,3 +46,9 @@ export interface FiltroProfissionais {
   page?: number;
   size?: number;
 }
+
+export interface JanelaHorario {
+  diaSemana: number;
+  horaInicio: string;
+  horaFim: string;
+}

@@ -38,6 +38,25 @@
   width: 140px;
 }
 
+.profissional-formulario__janelas {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.profissional-formulario__janela-linha {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.profissional-formulario__botao-adicionar {
+  align-self: flex-start;
+  margin-bottom: 16px;
+}
+
 .profissional-formulario__erro {
   color: var(--mat-sys-error, #b3261e);
   margin: 0 0 8px;
