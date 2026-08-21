@@ -119,6 +119,41 @@ export const routes: Routes = [
         path: 'financeiro/comandas/:uuid',
         loadComponent: () =>
           import('./features/financeiro/comanda/comanda').then((m) => m.ComandaComponent)
+      },
+      {
+        path: 'produtos',
+        loadComponent: () =>
+          import('./features/produtos/produtos-lista/produtos-lista').then((m) => m.ProdutosLista)
+      },
+      {
+        path: 'produtos/novo',
+        loadComponent: () =>
+          import('./features/produtos/produtos-formulario/produtos-formulario').then(
+            (m) => m.ProdutosFormulario
+          ),
+        canActivate: [roleGuard],
+        data: { perfis: ['ADMIN', 'GERENTE'] }
+      },
+      {
+        path: 'produtos/estoque',
+        loadComponent: () =>
+          import('./features/produtos/estoque-lista/estoque-lista').then((m) => m.EstoqueLista)
+      },
+      {
+        path: 'produtos/:uuid/editar',
+        loadComponent: () =>
+          import('./features/produtos/produtos-formulario/produtos-formulario').then(
+            (m) => m.ProdutosFormulario
+          ),
+        canActivate: [roleGuard],
+        data: { perfis: ['ADMIN', 'GERENTE'] }
+      },
+      {
+        path: 'produtos/:uuid/estoque',
+        loadComponent: () =>
+          import('./features/produtos/estoque-detalhe/estoque-detalhe').then((m) => m.EstoqueDetalhe),
+        canActivate: [roleGuard],
+        data: { perfis: ['ADMIN', 'GERENTE'] }
       }
     ]
   },

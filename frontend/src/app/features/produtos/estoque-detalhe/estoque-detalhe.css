@@ -1,0 +1,41 @@
+.estoque-detalhe {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 900px;
+}
+
+.estoque-detalhe__resumo p {
+  margin: 4px 0;
+}
+
+.estoque-detalhe__saldo--baixo {
+  color: var(--mat-sys-error, #b3261e);
+  font-weight: 700;
+}
+
+.estoque-detalhe__form {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.estoque-detalhe__campo-largo {
+  flex: 1;
+  min-width: 200px;
+}
+
+.estoque-detalhe__tabela-wrapper {
+  overflow-x: auto;
+}
+
+.estoque-detalhe__tabela {
+  width: 100%;
+}
+
+.estoque-detalhe__erro {
+  color: #b00020;
+}

@@ -2,9 +2,13 @@ export type StatusComanda = 'ABERTA' | 'FECHADA' | 'ESTORNADA';
 
 export type FormaPagamento = 'DINHEIRO' | 'CARTAO_DEBITO' | 'CARTAO_CREDITO' | 'PIX' | 'OUTRO';
 
+export type TipoItemComanda = 'SERVICO' | 'PRODUTO';
+
 export interface ComandaItem {
   uuid: string;
-  servicoUuid: string;
+  tipo: TipoItemComanda;
+  servicoUuid: string | null;
+  produtoUuid: string | null;
   descricao: string;
   quantidade: number;
   valorUnitario: number;

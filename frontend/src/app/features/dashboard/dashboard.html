@@ -1,4 +1,23 @@
 <section>
   <h1>Dashboard</h1>
   <p>Indicadores e graficos serao implementados na Fase 12.</p>
+
+  <mat-card class="dashboard__card-estoque">
+    <mat-card-content>
+      <h2>Produtos a repor</h2>
+      @if (produtosParaRepor().length === 0) {
+        <p>Nenhum produto abaixo do estoque mínimo.</p>
+      } @else {
+        <ul>
+          @for (produto of produtosParaRepor(); track produto.uuid) {
+            <li>
+              <strong>{{ produto.nome }}</strong> — saldo {{ produto.estoqueAtual }} {{ produto.unidade }}
+              (mínimo {{ produto.estoqueMinimo }})
+            </li>
+          }
+        </ul>
+        <a routerLink="/produtos/estoque">Ver estoque e movimentações</a>
+      }
+    </mat-card-content>
+  </mat-card>
 </section>

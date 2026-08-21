@@ -14,6 +14,8 @@ import { MatTableModule } from '@angular/material/table';
 
 import { AuthService } from '../../../core/auth/auth.service';
 import { ConfirmDialogService } from '../../../core/ui/confirm-dialog/confirm-dialog.service';
+import { Produto } from '../../produtos/produtos.model';
+import { ProdutosService } from '../../produtos/produtos.service';
 import { Servico } from '../../servicos/servicos.model';
 import { ServicosService } from '../../servicos/servicos.service';
 import { Comanda, FormaPagamento, RUTULOS_FORMA_PAGAMENTO, RUTULOS_STATUS_COMANDA } from '../financeiro.model';
@@ -39,6 +41,7 @@ import { FinanceiroService } from '../financeiro.service';
 export class ComandaComponent {
   private readonly financeiroService = inject(FinanceiroService);
   private readonly servicosService = inject(ServicosService);
+  private readonly produtosService = inject(ProdutosService);
   private readonly authService = inject(AuthService);
   private readonly confirmDialog = inject(ConfirmDialogService);
   private readonly route = inject(ActivatedRoute);
@@ -55,8 +58,11 @@ export class ComandaComponent {
   protected readonly mensagemErro = signal<string | null>(null);
   protected readonly comanda = signal<Comanda | null>(null);
   protected readonly servicos = signal<Servico[]>([]);
+  protected readonly produtos = signal<Produto[]>([]);
 
   protected readonly servicoSelecionado = signal('');
+  protected readonly produtoSelecionado = signal('');
+  protected readonly produtoQuantidade = signal(1);
   protected readonly descontoValor = signal(0);
   protected readonly descontoMotivo = signal('');
   protected readonly formaPagamentoSelecionada = signal<FormaPagamento | ''>('');
@@ -64,6 +70,9 @@ export class ComandaComponent {
   constructor() {
     this.servicosService.listar({ ativo: true, size: 100 }).subscribe((pagina) => {
       this.servicos.set(pagina.content);
+    });
+    this.produtosService.listar({ ativo: true, size: 100 }).subscribe((pagina) => {
+      this.produtos.set(pagina.content);
     });
     this.carregar();
   }
@@ -86,6 +95,18 @@ export class ComandaComponent {
       this.financeiroService.adicionarItem(comanda.uuid, this.servicoSelecionado()),
     );
     this.servicoSelecionado.set('');
+  }
+
+  protected adicionarItemProduto(): void {
+    const comanda = this.comanda();
+    if (!comanda || !this.produtoSelecionado()) {
+      return;
+    }
+    this.executarComTratamentoDeErro(
+      this.financeiroService.adicionarItemProduto(comanda.uuid, this.produtoSelecionado(), this.produtoQuantidade()),
+    );
+    this.produtoSelecionado.set('');
+    this.produtoQuantidade.set(1);
   }
 
   protected removerItem(itemUuid: string): void {

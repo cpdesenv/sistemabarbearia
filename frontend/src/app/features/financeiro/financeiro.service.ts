@@ -20,6 +20,10 @@ export class FinanceiroService {
     return this.http.post<Comanda>(`/api/comandas/${comandaUuid}/itens`, { servicoUuid, quantidade });
   }
 
+  adicionarItemProduto(comandaUuid: string, produtoUuid: string, quantidade = 1): Observable<Comanda> {
+    return this.http.post<Comanda>(`/api/comandas/${comandaUuid}/itens/produto`, { produtoUuid, quantidade });
+  }
+
   removerItem(comandaUuid: string, itemUuid: string): Observable<Comanda> {
     return this.http.delete<Comanda>(`/api/comandas/${comandaUuid}/itens/${itemUuid}`);
   }

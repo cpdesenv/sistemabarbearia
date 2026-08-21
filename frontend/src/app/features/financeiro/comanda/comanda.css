@@ -29,6 +29,10 @@
   min-width: 200px;
 }
 
+.comanda__campo-quantidade {
+  width: 90px;
+}
+
 .comanda__totais p {
   margin: 4px 0;
 }

@@ -40,6 +40,42 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
     fechada, bloqueio de fechamento sem item/forma de pagamento, estorno
     com auditoria e permissões por perfil (barbeiro fecha mas não
     estorna).
+- **5B — Produtos e estoque:**
+  - Módulo `produto`: CRUD de catálogo (`Produto` — nome, categoria,
+    unidade, preço de venda/custo, estoque mínimo, `/api/produtos`,
+    mesmos perfis de gestão do CRUD de serviços) e histórico de
+    movimentações (`MovimentoEstoque` — entrada, saída, ajuste, devolução).
+  - Saldo do produto (`estoque_atual`) fica em cache na própria linha,
+    mantido em sincronia com o histórico por um `UPDATE` atômico
+    (`ProdutoRepository.ajustarEstoque`, condicionado a
+    `estoque_atual + delta >= 0`) — protege contra duas baixas
+    concorrentes deixarem o saldo negativo, sem precisar de lock explícito.
+  - Entrada de estoque com custo unitário (`POST
+    /api/produtos/{uuid}/entrada-estoque`) e ajuste manual de inventário
+    com motivo obrigatório (`POST /api/produtos/{uuid}/ajuste-estoque`),
+    ambos `ADMIN`/`GERENTE`; extrato paginado por produto (`GET
+    /api/produtos/{uuid}/movimentos`) e alerta de estoque mínimo (`GET
+    /api/produtos/alertas-estoque-minimo`).
+  - `comanda_item` passa a aceitar itens de **produto**, além de serviço
+    (`tipo`, `produto_id`, com `servico_id` agora opcional e uma
+    constraint de banco garantindo que exatamente um dos dois esteja
+    preenchido). Produto não gera comissão, mas entra no rateio do
+    desconto como qualquer outro item.
+  - Baixa de estoque acontece **somente ao fechar** a comanda (nunca ao
+    adicionar o item) — se o saldo não for suficiente para algum produto,
+    a `NegocioException` sobe e a transação inteira dá rollback: a comanda
+    continua `ABERTA` e nenhum estoque é alterado. O **estorno** devolve a
+    quantidade ao estoque automaticamente.
+  - Frontend: catálogo de produtos (`/produtos`) e tela de estoque e
+    movimentações (`/produtos/estoque` → lista com destaque para saldo
+    abaixo do mínimo → `/produtos/:uuid/estoque` com entrada, ajuste e
+    extrato); a tela de Comanda ganhou um segundo seletor para adicionar
+    produtos; card "Produtos a repor" no Dashboard.
+  - 13 novos testes de integração (CRUD de produto, entrada, ajuste sem
+    motivo recusado, alerta de estoque mínimo, e a integração completa
+    com comanda: venda com saldo zero bloqueada, baixa exata no
+    fechamento com extrato ligado à comanda, devolução no estorno, e item
+    de produto sem comissão).
 
 ## [0.4.0] - Fase 4 — Agenda e motor de disponibilidade
 

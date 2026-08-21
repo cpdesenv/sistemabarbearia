@@ -259,8 +259,44 @@ curl -X POST http://localhost:8080/api/comandas/<uuid-comanda>/estornar \
 curl "http://localhost:8080/api/caixa?data=2026-08-24" -H "Authorization: Bearer <accessToken>"
 ```
 
-Nesta sub-entrega os itens de comanda são somente serviços; produtos e a
-baixa automática de estoque entram na sub-entrega 5B.
+## Produtos e estoque (Fase 5B)
+
+Catálogo de produtos (nome, categoria, unidade, preço de venda/custo,
+estoque mínimo) e um histórico de movimentações (entrada, saída, ajuste,
+devolução) por trás de um saldo em cache (`estoque_atual`), atualizado por
+um `UPDATE` atômico que só aplica o delta se o resultado continuar `>= 0` —
+protege contra duas baixas concorrentes deixarem o saldo negativo sem
+precisar de lock explícito.
+
+A comanda agora aceita itens de produto além de serviço. Produto não gera
+comissão, mas entra no rateio do desconto normalmente. A baixa de estoque só
+acontece **ao fechar** a comanda (nunca ao adicionar o item): se não houver
+saldo suficiente para algum produto, o fechamento inteiro é recusado e nada
+é alterado. O estorno devolve a quantidade ao estoque automaticamente.
+
+```bash
+# CRUD de produto
+curl -X POST http://localhost:8080/api/produtos \
+  -H "Authorization: Bearer <accessToken>" -H "Content-Type: application/json" \
+  -d '{"nome":"Pomada Modeladora","categoria":"Estetica","unidade":"UN","precoVenda":45.00,"precoCusto":20.00,"estoqueMinimo":5}'
+
+# Entrada de estoque (compra) e ajuste manual de inventário (motivo obrigatorio)
+curl -X POST http://localhost:8080/api/produtos/<uuid-produto>/entrada-estoque \
+  -H "Authorization: Bearer <accessToken>" -H "Content-Type: application/json" \
+  -d '{"quantidade":10,"custoUnitario":20.00,"motivo":"Compra fornecedor"}'
+curl -X POST http://localhost:8080/api/produtos/<uuid-produto>/ajuste-estoque \
+  -H "Authorization: Bearer <accessToken>" -H "Content-Type: application/json" \
+  -d '{"novaQuantidadeContada":8,"motivo":"Contagem de inventario"}'
+
+# Extrato de movimentacoes e alerta de estoque minimo
+curl "http://localhost:8080/api/produtos/<uuid-produto>/movimentos" -H "Authorization: Bearer <accessToken>"
+curl "http://localhost:8080/api/produtos/alertas-estoque-minimo" -H "Authorization: Bearer <accessToken>"
+
+# Adicionar produto a uma comanda aberta
+curl -X POST http://localhost:8080/api/comandas/<uuid-comanda>/itens/produto \
+  -H "Authorization: Bearer <accessToken>" -H "Content-Type: application/json" \
+  -d '{"produtoUuid":"<uuid-produto>","quantidade":2}'
+```
 
 ## Como executar os testes
 

@@ -1,0 +1,74 @@
+<section class="produto-formulario">
+  <h1>{{ modoEdicao ? 'Editar produto' : 'Novo produto' }}</h1>
+
+  @if (carregando()) {
+    <mat-spinner diameter="32" />
+  } @else {
+    <mat-card>
+      <mat-card-content>
+        <form [formGroup]="formulario" (ngSubmit)="salvar()" class="produto-formulario__form">
+          <mat-form-field appearance="outline">
+            <mat-label>Nome</mat-label>
+            <input matInput formControlName="nome" />
+            @if (formulario.controls.nome.invalid && formulario.controls.nome.touched) {
+              <mat-error>O nome é obrigatório.</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Categoria</mat-label>
+            <input matInput formControlName="categoria" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Descrição</mat-label>
+            <textarea matInput formControlName="descricao" rows="3"></textarea>
+          </mat-form-field>
+
+          <div class="produto-formulario__grade">
+            <mat-form-field appearance="outline">
+              <mat-label>Unidade</mat-label>
+              <input matInput formControlName="unidade" placeholder="UN" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Preço de venda (R$)</mat-label>
+              <input matInput type="number" step="0.01" formControlName="precoVenda" />
+              @if (formulario.controls.precoVenda.invalid && formulario.controls.precoVenda.touched) {
+                <mat-error>Informe um preço de venda válido.</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Preço de custo (R$)</mat-label>
+              <input matInput type="number" step="0.01" formControlName="precoCusto" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Estoque mínimo</mat-label>
+              <input matInput type="number" formControlName="estoqueMinimo" />
+              @if (formulario.controls.estoqueMinimo.invalid && formulario.controls.estoqueMinimo.touched) {
+                <mat-error>Informe um estoque mínimo válido.</mat-error>
+              }
+            </mat-form-field>
+          </div>
+
+          @if (mensagemErro()) {
+            <p class="produto-formulario__erro" role="alert">{{ mensagemErro() }}</p>
+          }
+
+          <div class="produto-formulario__acoes">
+            <a mat-stroked-button routerLink="/produtos">Cancelar</a>
+            <button mat-flat-button color="primary" type="submit" [disabled]="salvando()">
+              @if (salvando()) {
+                <mat-spinner diameter="20" />
+              } @else {
+                Salvar
+              }
+            </button>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  }
+</section>
