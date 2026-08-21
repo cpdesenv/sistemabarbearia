@@ -18,5 +18,6 @@ public record BarbeariaDto(
         int antecedenciaMinimaAgendamentoMinutos,
         int antecedenciaMaximaAgendamentoDias,
         int antecedenciaMinimaCancelamentoMinutos,
+        int granularidadeSlotMinutos,
         Instant atualizadoEm) {
 }

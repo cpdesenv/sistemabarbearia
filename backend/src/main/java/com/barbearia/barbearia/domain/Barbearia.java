@@ -56,6 +56,9 @@ public class Barbearia {
     @Column(name = "antecedencia_minima_cancelamento_minutos", nullable = false)
     private int antecedenciaMinimaCancelamentoMinutos;
 
+    @Column(name = "granularidade_slot_minutos", nullable = false)
+    private int granularidadeSlotMinutos = 15;
+
     @CreationTimestamp
     @Column(name = "criado_em", nullable = false, updatable = false)
     private Instant criadoEm;

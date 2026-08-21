@@ -162,6 +162,56 @@ abrir o cadastro existente em vez de criar um duplicado — o telefone é único
 no banco porque é a chave que a mensageria (Fases 9+) vai usar para
 identificar o cliente.
 
+## Agenda e motor de disponibilidade (Fase 4)
+
+O motor de disponibilidade calcula os horários realmente livres de um
+profissional (ou de todos os que realizam os serviços pedidos), considerando
+grade semanal, bloqueios, agendamentos existentes, duração total dos
+serviços e as antecedências mínima/máxima configuradas na barbearia. A
+sobreposição de agendamentos para o mesmo profissional é impedida em duas
+camadas: uma validação em Java (que dá mensagens de erro legíveis para o
+caso comum) e uma **constraint de exclusão no Postgres**
+(`EXCLUDE USING gist`, com `btree_gist`) — a garantia real contra duas
+requisições concorrentes disputando o mesmo horário.
+
+```bash
+# Consultar disponibilidade — servicoUuids aceita uma lista separada por virgula
+curl "http://localhost:8080/api/agenda/disponibilidade?data=2026-08-24&servicoUuids=<uuid-servico>&profissionalUuid=<uuid-profissional>" \
+  -H "Authorization: Bearer <accessToken>"
+
+# Criar agendamento (nasce com status AGENDADO)
+curl -X POST http://localhost:8080/api/agendamentos \
+  -H "Authorization: Bearer <accessToken>" \
+  -H "Content-Type: application/json" \
+  -d '{"clienteUuid":"<uuid>","profissionalUuid":"<uuid>","servicoUuids":["<uuid>"],"inicio":"2026-08-24T12:00:00Z","observacao":null}'
+
+# Transicoes de status
+curl -X POST http://localhost:8080/api/agendamentos/<uuid>/confirmar -H "Authorization: Bearer <accessToken>"
+curl -X POST http://localhost:8080/api/agendamentos/<uuid>/iniciar    -H "Authorization: Bearer <accessToken>"
+curl -X POST http://localhost:8080/api/agendamentos/<uuid>/finalizar  -H "Authorization: Bearer <accessToken>"
+curl -X POST http://localhost:8080/api/agendamentos/<uuid>/nao-compareceu -H "Authorization: Bearer <accessToken>"
+curl -X POST http://localhost:8080/api/agendamentos/<uuid>/cancelar \
+  -H "Authorization: Bearer <accessToken>" -H "Content-Type: application/json" \
+  -d '{"motivo":"Cliente remarcou por telefone"}'
+
+# Remarcar (arrastar na agenda faz essa mesma chamada)
+curl -X PUT http://localhost:8080/api/agendamentos/<uuid> \
+  -H "Authorization: Bearer <accessToken>" -H "Content-Type: application/json" \
+  -d '{"clienteUuid":"<uuid>","profissionalUuid":"<uuid>","servicoUuids":["<uuid>"],"inicio":"2026-08-24T14:00:00Z","observacao":null}'
+```
+
+Máquina de estados: `AGENDADO → CONFIRMADO → EM_ATENDIMENTO → FINALIZADO`,
+com `CANCELADO` e `NAO_COMPARECEU` como saídas a partir de `AGENDADO`/
+`CONFIRMADO` (`EM_ATENDIMENTO` também pode ser cancelado). Uma corrida de
+concorrência genuína (duas transações inserindo ao mesmo tempo, sem leitura
+prévia entre elas) é testada diretamente contra a constraint de exclusão em
+`AgendamentoControllerIntegrationTest` — nesse teste, exatamente uma das
+duas inserções é aceita, não importa a ordem em que as threads rodem.
+
+No painel, a tela **Agenda** oferece visão dia (colunas por profissional,
+clique numa célula vazia para criar, arrastar um agendamento para
+remarcar) e visão semana (lista compacta por dia).
+
 ## Como executar os testes
 
 Backend (usa Testcontainers — requer Docker disponível para o usuário que

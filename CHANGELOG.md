@@ -4,6 +4,42 @@ Todas as mudanças notáveis deste projeto serão documentadas neste arquivo.
 
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
+## [0.4.0] - Fase 4 — Agenda e motor de disponibilidade
+
+### Adicionado
+
+- `AvailabilityService`: motor de disponibilidade que calcula os horários
+  realmente livres de um profissional (ou de todos que realizam os serviços
+  pedidos), considerando grade semanal, bloqueios, agendamentos existentes,
+  duração total dos serviços selecionados e as antecedências mínima/máxima
+  configuradas na barbearia (`GET /api/agenda/disponibilidade`).
+- Novo campo `granularidade_slot_minutos` na configuração da barbearia
+  (padrão 15), controlando o intervalo entre os horários sugeridos.
+- CRUD de agendamentos (`/api/agendamentos`): criar, alterar (remarcar),
+  consultar por período/profissional/cliente/status, e as transições de
+  estado `confirmar` → `iniciar` → `finalizar`, além de `nao-compareceu` e
+  `cancelar` (soft delete, com motivo obrigatório e auditoria em toda
+  alteração).
+- **Constraint de exclusão no Postgres** (`EXCLUDE USING gist`, com a
+  extensão `btree_gist`) impedindo, a nível de banco, dois agendamentos
+  sobrepostos para o mesmo profissional — a validação em Java (que dá
+  mensagens de erro legíveis para o caso comum) não é suficiente sozinha sob
+  concorrência real; quem garante de verdade é o banco. Testado diretamente
+  com duas transações concorrentes inserindo o mesmo horário, sem leitura
+  prévia entre elas: exatamente uma é aceita, sempre.
+- Tabelas `agendamento` e `agendamento_servico` (com snapshot de preço e
+  duração do serviço no momento do agendamento, para não alterar
+  retroativamente agendamentos já criados quando um serviço muda de preço).
+- Frontend: tela **Agenda** com visão dia (colunas por profissional, clique
+  numa célula vazia para criar um agendamento, arrastar um agendamento para
+  remarcar) e visão semana (lista compacta por dia); formulário de
+  agendamento com busca de cliente, seleção de serviços/profissional/
+  horário e os botões de transição de status.
+- 13 testes de integração cobrindo disponibilidade por duração de serviço,
+  remoção de slots por bloqueio, fuso horário, validações (fora do horário
+  de funcionamento, no passado, sobreposição), fluxo completo de status,
+  remarcação, permissões e a constraint de exclusão sob concorrência real.
+
 ## [0.3.0] - Fase 3 — Clientes e histórico
 
 ### Adicionado

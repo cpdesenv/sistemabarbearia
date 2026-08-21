@@ -68,6 +68,22 @@ export const routes: Routes = [
         loadComponent: () => import('./features/bloqueios/bloqueios').then((m) => m.Bloqueios)
       },
       {
+        path: 'agenda',
+        loadComponent: () => import('./features/agenda/agenda').then((m) => m.Agenda)
+      },
+      {
+        path: 'agenda/novo',
+        loadComponent: () =>
+          import('./features/agenda/agenda-formulario/agenda-formulario').then((m) => m.AgendaFormulario),
+        canActivate: [roleGuard],
+        data: { perfis: ['ADMIN', 'GERENTE', 'RECEPCAO'] }
+      },
+      {
+        path: 'agenda/:uuid/editar',
+        loadComponent: () =>
+          import('./features/agenda/agenda-formulario/agenda-formulario').then((m) => m.AgendaFormulario)
+      },
+      {
         path: 'clientes',
         loadComponent: () =>
           import('./features/clientes/clientes-lista/clientes-lista').then((m) => m.ClientesLista)

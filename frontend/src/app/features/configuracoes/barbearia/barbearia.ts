@@ -48,6 +48,7 @@ export class BarbeariaConfig {
     antecedenciaMinimaAgendamentoMinutos: [0, [Validators.required, Validators.min(0)]],
     antecedenciaMaximaAgendamentoDias: [1, [Validators.required, Validators.min(1)]],
     antecedenciaMinimaCancelamentoMinutos: [0, [Validators.required, Validators.min(0)]],
+    granularidadeSlotMinutos: [15, [Validators.required, Validators.min(1)]],
   });
 
   constructor() {
@@ -122,6 +123,7 @@ export class BarbeariaConfig {
       antecedenciaMinimaAgendamentoMinutos: barbearia.antecedenciaMinimaAgendamentoMinutos,
       antecedenciaMaximaAgendamentoDias: barbearia.antecedenciaMaximaAgendamentoDias,
       antecedenciaMinimaCancelamentoMinutos: barbearia.antecedenciaMinimaCancelamentoMinutos,
+      granularidadeSlotMinutos: barbearia.granularidadeSlotMinutos,
     });
   }
 }

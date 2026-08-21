@@ -14,6 +14,7 @@ export interface Barbearia {
   antecedenciaMinimaAgendamentoMinutos: number;
   antecedenciaMaximaAgendamentoDias: number;
   antecedenciaMinimaCancelamentoMinutos: number;
+  granularidadeSlotMinutos: number;
   atualizadoEm: string;
 }
 
