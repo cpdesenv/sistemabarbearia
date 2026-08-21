@@ -45,7 +45,8 @@ class BarbeariaControllerIntegrationTest extends IntegrationTestBase {
               "fusoHorario": "America/Sao_Paulo",
               "antecedenciaMinimaAgendamentoMinutos": 30,
               "antecedenciaMaximaAgendamentoDias": 45,
-              "antecedenciaMinimaCancelamentoMinutos": 120
+              "antecedenciaMinimaCancelamentoMinutos": 120,
+              "granularidadeSlotMinutos": 30
             }
             """;
 

@@ -1,0 +1,90 @@
+<section class="agenda">
+  <div class="agenda__cabecalho">
+    <h1>Agenda</h1>
+    <div class="agenda__controles">
+      <button mat-stroked-button (click)="navegar(-1)" aria-label="Anterior">‹</button>
+      <button mat-stroked-button (click)="irParaHoje()">Hoje</button>
+      <button mat-stroked-button (click)="navegar(1)" aria-label="Próximo">›</button>
+      <span class="agenda__data">{{ rotuloData() }}</span>
+      <mat-button-toggle-group [value]="visao()" (change)="mudarVisao($event.value)">
+        <mat-button-toggle value="dia">Dia</mat-button-toggle>
+        <mat-button-toggle value="semana">Semana</mat-button-toggle>
+      </mat-button-toggle-group>
+    </div>
+  </div>
+
+  @if (mensagemErro()) {
+    <p class="agenda__erro" role="alert">{{ mensagemErro() }}</p>
+  }
+
+  @if (carregando()) {
+    <mat-spinner diameter="32" />
+  } @else if (visao() === 'dia') {
+    <div class="agenda-dia">
+      <div class="agenda-dia__coluna-horarios">
+        <div class="agenda-dia__cabecalho-coluna">&nbsp;</div>
+        @for (linha of linhas; track linha) {
+          <div class="agenda-dia__rotulo-linha">{{ rotuloLinha(linha) }}</div>
+        }
+      </div>
+
+      @for (profissional of profissionais(); track profissional.uuid) {
+        <div class="agenda-dia__coluna">
+          <div class="agenda-dia__cabecalho-coluna" [style.border-top-color]="profissional.corAgenda">
+            {{ profissional.nome }}
+          </div>
+          <div class="agenda-dia__grade" [style.height.px]="alturaGradePx">
+            @for (linha of linhas; track linha) {
+              <div
+                class="agenda-dia__celula"
+                [style.top.px]="linha * 32"
+                (click)="clicarCelulaVazia(profissional, linha)"
+                (dragover)="$event.preventDefault()"
+                (drop)="aoSoltar($event, profissional, linha)"
+              ></div>
+            }
+
+            @for (bloco of blocosDoProfissional(profissional); track bloco.agendamento.uuid) {
+              <div
+                class="agenda-dia__bloco"
+                [style.top.px]="bloco.topoPx"
+                [style.height.px]="bloco.alturaPx"
+                [style.background]="corDeFundo(bloco.agendamento.status, profissional.corAgenda)"
+                draggable="true"
+                (dragstart)="aoIniciarArrasto($event, bloco.agendamento)"
+                (click)="abrirAgendamento(bloco.agendamento.uuid)"
+              >
+                <strong>{{ bloco.agendamento.clienteNome }}</strong>
+                <span>{{ rotulosStatus[bloco.agendamento.status] }}</span>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  } @else {
+    <div class="agenda-semana">
+      @for (dia of diasDaSemana(); track dia.data.getTime()) {
+        <div class="agenda-semana__dia">
+          <h3>{{ dia.rotulo }}</h3>
+          @if (dia.agendamentos.length === 0) {
+            <p class="agenda-semana__vazio">Sem agendamentos</p>
+          }
+          @for (ag of dia.agendamentos; track ag.uuid) {
+            <button
+              type="button"
+              class="agenda-semana__cartao"
+              (click)="abrirAgendamento(ag.uuid)"
+              [style.border-left-color]="corDeFundo(ag.status, ag.profissionalCorAgenda)"
+            >
+              <span class="agenda-semana__hora">{{ ag.inicio | date: 'HH:mm' }}</span>
+              <span>{{ ag.clienteNome }}</span>
+              <span class="agenda-semana__profissional">{{ ag.profissionalNome }}</span>
+              <span class="agenda-semana__status">{{ rotulosStatus[ag.status] }}</span>
+            </button>
+          }
+        </div>
+      }
+    </div>
+  }
+</section>

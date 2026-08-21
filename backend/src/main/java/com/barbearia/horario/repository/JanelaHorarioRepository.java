@@ -11,5 +11,8 @@ public interface JanelaHorarioRepository extends JpaRepository<JanelaHorario, Lo
 
     List<JanelaHorario> findByProfissionalOrderByDiaSemanaAscHoraInicioAsc(Profissional profissional);
 
+    List<JanelaHorario> findByProfissionalAndDiaSemanaOrderByHoraInicioAsc(Profissional profissional,
+            int diaSemana);
+
     void deleteByProfissional(Profissional profissional);
 }

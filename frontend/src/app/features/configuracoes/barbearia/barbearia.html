@@ -95,6 +95,11 @@
               <mat-label>Antecedência mínima para cancelar (minutos)</mat-label>
               <input matInput type="number" formControlName="antecedenciaMinimaCancelamentoMinutos" />
             </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Granularidade dos horários oferecidos (minutos)</mat-label>
+              <input matInput type="number" formControlName="granularidadeSlotMinutos" />
+            </mat-form-field>
           </div>
 
           @if (mensagemErro()) {

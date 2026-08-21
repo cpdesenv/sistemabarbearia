@@ -1,0 +1,149 @@
+<section class="agendamento-formulario">
+  <h1>{{ modoEdicao ? 'Agendamento' : 'Novo agendamento' }}</h1>
+
+  @if (carregando()) {
+    <mat-spinner diameter="32" />
+  } @else {
+    @if (modoEdicao && agendamentoAtual(); as agendamento) {
+      <mat-card class="agendamento-formulario__status">
+        <mat-card-content class="agendamento-formulario__status-conteudo">
+          <span>Status: <strong>{{ rotulosStatus[agendamento.status] }}</strong></span>
+          @if (agendamento.motivoCancelamento) {
+            <span>Motivo do cancelamento: {{ agendamento.motivoCancelamento }}</span>
+          }
+          <div class="agendamento-formulario__acoes-status">
+            @if (agendamento.status === 'AGENDADO') {
+              <button mat-stroked-button [disabled]="executandoAcao()" (click)="executarAcao('confirmar')">
+                Confirmar
+              </button>
+            }
+            @if (agendamento.status === 'CONFIRMADO') {
+              <button mat-stroked-button [disabled]="executandoAcao()" (click)="executarAcao('iniciar')">
+                Iniciar atendimento
+              </button>
+            }
+            @if (agendamento.status === 'EM_ATENDIMENTO') {
+              <button mat-stroked-button [disabled]="executandoAcao()" (click)="executarAcao('finalizar')">
+                Finalizar
+              </button>
+            }
+            @if (agendamento.status === 'AGENDADO' || agendamento.status === 'CONFIRMADO') {
+              <button mat-stroked-button [disabled]="executandoAcao()" (click)="executarAcao('naoCompareceu')">
+                Não compareceu
+              </button>
+              <button mat-stroked-button color="warn" [disabled]="executandoAcao()" (click)="cancelar()">
+                Cancelar
+              </button>
+            }
+            @if (agendamento.status === 'EM_ATENDIMENTO') {
+              <button mat-stroked-button color="warn" [disabled]="executandoAcao()" (click)="cancelar()">
+                Cancelar
+              </button>
+            }
+          </div>
+        </mat-card-content>
+      </mat-card>
+    }
+
+    <mat-card>
+      <mat-card-content>
+        <div class="agendamento-formulario__cliente">
+          <h2>Cliente</h2>
+          @if (clienteSelecionado(); as cliente) {
+            <div class="agendamento-formulario__cliente-selecionado">
+              <span>{{ cliente.nome }}</span>
+              @if (podeRemarcar()) {
+                <button mat-button type="button" (click)="clienteSelecionado.set(null)">Trocar</button>
+              }
+            </div>
+          } @else {
+            <div class="agendamento-formulario__busca-cliente">
+              <mat-form-field appearance="outline">
+                <mat-label>Buscar cliente por nome ou telefone</mat-label>
+                <input
+                  matInput
+                  [ngModel]="buscaCliente()"
+                  (ngModelChange)="buscaCliente.set($event)"
+                  (keyup.enter)="buscarClientes()"
+                  name="buscaCliente"
+                />
+              </mat-form-field>
+              <button mat-stroked-button type="button" (click)="buscarClientes()">Buscar</button>
+            </div>
+            @if (resultadosClientes().length > 0) {
+              <ul class="agendamento-formulario__resultados-cliente">
+                @for (cliente of resultadosClientes(); track cliente.uuid) {
+                  <li>
+                    <button type="button" (click)="selecionarCliente(cliente)">
+                      {{ cliente.nome }} — {{ cliente.telefone }}
+                    </button>
+                  </li>
+                }
+              </ul>
+            }
+          }
+        </div>
+
+        <form [formGroup]="formulario" (ngSubmit)="salvar()" class="agendamento-formulario__form">
+          <h2>Serviços</h2>
+          <div class="agendamento-formulario__servicos">
+            @for (servico of servicos(); track servico.uuid) {
+              <mat-checkbox
+                [checked]="servicosSelecionados().has(servico.uuid)"
+                [disabled]="!podeRemarcar()"
+                (change)="alternarServico(servico.uuid)"
+              >
+                {{ servico.nome }} ({{ servico.duracaoMinutos }} min — {{ servico.preco | currency: 'BRL' }})
+              </mat-checkbox>
+            }
+          </div>
+          <p class="agendamento-formulario__total">Total: {{ valorTotalSelecionado() | currency: 'BRL' }}</p>
+
+          <h2>Horário</h2>
+          <div class="agendamento-formulario__grade">
+            <mat-form-field appearance="outline">
+              <mat-label>Profissional</mat-label>
+              <mat-select formControlName="profissionalUuid">
+                @for (profissional of profissionais(); track profissional.uuid) {
+                  <mat-option [value]="profissional.uuid">{{ profissional.nome }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Data</mat-label>
+              <input matInput type="date" formControlName="data" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Hora</mat-label>
+              <input matInput type="time" formControlName="hora" />
+            </mat-form-field>
+          </div>
+
+          <mat-form-field appearance="outline" class="agendamento-formulario__campo-largo">
+            <mat-label>Observações</mat-label>
+            <textarea matInput formControlName="observacao" rows="3"></textarea>
+          </mat-form-field>
+
+          @if (mensagemErro()) {
+            <p class="agendamento-formulario__erro" role="alert">{{ mensagemErro() }}</p>
+          }
+
+          <div class="agendamento-formulario__acoes">
+            <a mat-stroked-button routerLink="/agenda">Voltar</a>
+            @if (podeRemarcar()) {
+              <button mat-flat-button color="primary" type="submit" [disabled]="salvando()">
+                @if (salvando()) {
+                  <mat-spinner diameter="20" />
+                } @else {
+                  Salvar
+                }
+              </button>
+            }
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  }
+</section>

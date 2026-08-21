@@ -53,5 +53,8 @@ public record AtualizarBarbeariaRequest(
         int antecedenciaMaximaAgendamentoDias,
 
         @Min(value = 0, message = "A antecedencia minima de cancelamento nao pode ser negativa.")
-        int antecedenciaMinimaCancelamentoMinutos) {
+        int antecedenciaMinimaCancelamentoMinutos,
+
+        @Min(value = 1, message = "A granularidade de slot deve ser de pelo menos 1 minuto.")
+        int granularidadeSlotMinutos) {
 }
