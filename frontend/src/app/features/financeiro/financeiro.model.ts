@@ -73,3 +73,83 @@ export const RUTULOS_FORMA_PAGAMENTO: Record<FormaPagamento, string> = {
   PIX: 'Pix',
   OUTRO: 'Outro',
 };
+
+export interface Despesa {
+  uuid: string;
+  data: string;
+  categoria: string | null;
+  valor: number;
+  descricao: string | null;
+  comprovanteUrl: string | null;
+  criadoEm: string;
+}
+
+export interface CriarDespesaRequest {
+  data: string;
+  categoria: string | null;
+  valor: number;
+  descricao: string | null;
+  comprovanteUrl: string | null;
+}
+
+export type StatusContaPagar = 'PENDENTE' | 'PAGA' | 'CANCELADA';
+
+export interface ContaPagar {
+  uuid: string;
+  descricao: string;
+  valor: number;
+  dataVencimento: string;
+  status: StatusContaPagar;
+  dataPagamento: string | null;
+  vencida: boolean;
+  criadoEm: string;
+  atualizadoEm: string;
+}
+
+export interface CriarContaPagarRequest {
+  descricao: string;
+  valor: number;
+  dataVencimento: string;
+}
+
+export type StatusContaReceber = 'PENDENTE' | 'RECEBIDA' | 'CANCELADA';
+
+export interface ContaReceber {
+  uuid: string;
+  clienteUuid: string;
+  clienteNome: string;
+  descricao: string | null;
+  valor: number;
+  dataVencimento: string;
+  status: StatusContaReceber;
+  dataRecebimento: string | null;
+  vencida: boolean;
+  criadoEm: string;
+  atualizadoEm: string;
+}
+
+export interface CriarContaReceberRequest {
+  clienteUuid: string;
+  descricao: string | null;
+  valor: number;
+  dataVencimento: string;
+}
+
+export interface FluxoCaixa {
+  caixaEmMaos: number;
+  contasAReceberEsperadas: number;
+  contasAPagarVencidas: number;
+  fluxoCaixa: number;
+}
+
+export const RUTULOS_STATUS_CONTA_PAGAR: Record<StatusContaPagar, string> = {
+  PENDENTE: 'Pendente',
+  PAGA: 'Paga',
+  CANCELADA: 'Cancelada',
+};
+
+export const RUTULOS_STATUS_CONTA_RECEBER: Record<StatusContaReceber, string> = {
+  PENDENTE: 'Pendente',
+  RECEBIDA: 'Recebida',
+  CANCELADA: 'Cancelada',
+};

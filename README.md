@@ -298,6 +298,38 @@ curl -X POST http://localhost:8080/api/comandas/<uuid-comanda>/itens/produto \
   -d '{"produtoUuid":"<uuid-produto>","quantidade":2}'
 ```
 
+## Despesas, contas a pagar/receber e fluxo de caixa (Fase 5C)
+
+Além do Caixa do dia (Fase 5A, que soma só as comandas fechadas *daquele
+dia*), o **Fluxo de caixa** (`GET /api/financeiro/fluxo-caixa`) dá a foto
+completa da saúde financeira: **caixa em mãos** (todas as comandas
+`FECHADA` já lançadas, menos todas as despesas) **+ contas a receber
+esperadas** (todo débito de cliente ainda `PENDENTE`, esperado entrar) **−
+contas a pagar vencidas** (só as `PENDENTE` cujo vencimento já passou — uma
+conta a pagar futura não pesa no fluxo ainda).
+
+```bash
+# Lançar uma despesa (ADMIN/GERENTE)
+curl -X POST http://localhost:8080/api/despesas \
+  -H "Authorization: Bearer <accessToken>" -H "Content-Type: application/json" \
+  -d '{"data":"2026-08-21","categoria":"Aluguel","valor":1200.00,"descricao":"Aluguel de agosto"}'
+
+# Lançar e liquidar uma conta a pagar (ADMIN/GERENTE)
+curl -X POST http://localhost:8080/api/contas-pagar \
+  -H "Authorization: Bearer <accessToken>" -H "Content-Type: application/json" \
+  -d '{"descricao":"Fornecedor de produtos","valor":300.00,"dataVencimento":"2026-08-25"}'
+curl -X POST http://localhost:8080/api/contas-pagar/<uuid-conta>/pagar -H "Authorization: Bearer <accessToken>"
+
+# Lançar um debito de cliente (ADMIN/GERENTE/RECEPCAO) e recebe-lo depois (ADMIN/GERENTE)
+curl -X POST http://localhost:8080/api/contas-receber \
+  -H "Authorization: Bearer <accessToken>" -H "Content-Type: application/json" \
+  -d '{"clienteUuid":"<uuid-cliente>","descricao":"Corte fiado","valor":50.00,"dataVencimento":"2026-08-30"}'
+curl -X POST http://localhost:8080/api/contas-receber/<uuid-conta>/receber -H "Authorization: Bearer <accessToken>"
+
+# Fluxo de caixa consolidado
+curl http://localhost:8080/api/financeiro/fluxo-caixa -H "Authorization: Bearer <accessToken>"
+```
+
 ## Como executar os testes
 
 Backend (usa Testcontainers — requer Docker disponível para o usuário que

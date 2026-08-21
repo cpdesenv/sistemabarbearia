@@ -121,6 +121,15 @@ export const routes: Routes = [
           import('./features/financeiro/comanda/comanda').then((m) => m.ComandaComponent)
       },
       {
+        path: 'financeiro/contas',
+        loadComponent: () => import('./features/financeiro/contas/contas').then((m) => m.Contas)
+      },
+      {
+        path: 'financeiro/fluxo-caixa',
+        loadComponent: () =>
+          import('./features/financeiro/fluxo-caixa/fluxo-caixa').then((m) => m.FluxoCaixaComponent)
+      },
+      {
         path: 'produtos',
         loadComponent: () =>
           import('./features/produtos/produtos-lista/produtos-lista').then((m) => m.ProdutosLista)

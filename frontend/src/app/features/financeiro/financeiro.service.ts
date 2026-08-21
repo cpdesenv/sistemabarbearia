@@ -2,7 +2,20 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
-import { CaixaDoDia, Comanda, FormaPagamento } from './financeiro.model';
+import {
+  CaixaDoDia,
+  Comanda,
+  ContaPagar,
+  ContaReceber,
+  CriarContaPagarRequest,
+  CriarContaReceberRequest,
+  CriarDespesaRequest,
+  Despesa,
+  FluxoCaixa,
+  FormaPagamento,
+  StatusContaPagar,
+  StatusContaReceber,
+} from './financeiro.model';
 
 @Injectable({ providedIn: 'root' })
 export class FinanceiroService {
@@ -47,5 +60,57 @@ export class FinanceiroService {
   caixaDoDia(data: string): Observable<CaixaDoDia> {
     const params = new HttpParams().set('data', data);
     return this.http.get<CaixaDoDia>('/api/caixa', { params });
+  }
+
+  listarDespesas(): Observable<Despesa[]> {
+    return this.http.get<Despesa[]>('/api/despesas');
+  }
+
+  criarDespesa(dados: CriarDespesaRequest): Observable<Despesa> {
+    return this.http.post<Despesa>('/api/despesas', dados);
+  }
+
+  listarContasPagar(status?: StatusContaPagar): Observable<ContaPagar[]> {
+    let params = new HttpParams();
+    if (status) {
+      params = params.set('status', status);
+    }
+    return this.http.get<ContaPagar[]>('/api/contas-pagar', { params });
+  }
+
+  criarContaPagar(dados: CriarContaPagarRequest): Observable<ContaPagar> {
+    return this.http.post<ContaPagar>('/api/contas-pagar', dados);
+  }
+
+  marcarContaPagarPaga(uuid: string): Observable<ContaPagar> {
+    return this.http.post<ContaPagar>(`/api/contas-pagar/${uuid}/pagar`, {});
+  }
+
+  cancelarContaPagar(uuid: string, motivo: string): Observable<ContaPagar> {
+    return this.http.post<ContaPagar>(`/api/contas-pagar/${uuid}/cancelar`, { motivo });
+  }
+
+  listarContasReceber(status?: StatusContaReceber): Observable<ContaReceber[]> {
+    let params = new HttpParams();
+    if (status) {
+      params = params.set('status', status);
+    }
+    return this.http.get<ContaReceber[]>('/api/contas-receber', { params });
+  }
+
+  criarContaReceber(dados: CriarContaReceberRequest): Observable<ContaReceber> {
+    return this.http.post<ContaReceber>('/api/contas-receber', dados);
+  }
+
+  marcarContaReceberRecebida(uuid: string): Observable<ContaReceber> {
+    return this.http.post<ContaReceber>(`/api/contas-receber/${uuid}/receber`, {});
+  }
+
+  cancelarContaReceber(uuid: string, motivo: string): Observable<ContaReceber> {
+    return this.http.post<ContaReceber>(`/api/contas-receber/${uuid}/cancelar`, { motivo });
+  }
+
+  fluxoCaixa(): Observable<FluxoCaixa> {
+    return this.http.get<FluxoCaixa>('/api/financeiro/fluxo-caixa');
   }
 }

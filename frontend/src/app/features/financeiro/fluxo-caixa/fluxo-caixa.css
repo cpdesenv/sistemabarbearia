@@ -1,0 +1,24 @@
+.fluxo-caixa__grade {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.fluxo-caixa__rotulo {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.fluxo-caixa__valor {
+  font-size: 1.5rem;
+  margin: 4px 0;
+}
+
+.fluxo-caixa__explicacao {
+  font-size: 0.85rem;
+  opacity: 0.75;
+}
+
+.fluxo-caixa__total {
+  border: 2px solid currentColor;
+}

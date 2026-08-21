@@ -1,0 +1,228 @@
+<section class="contas">
+  <h1>Contas a pagar/receber</h1>
+
+  @if (carregando()) {
+    <mat-spinner diameter="32" />
+  } @else {
+    @if (mensagemErro()) {
+      <p class="contas__erro" role="alert">{{ mensagemErro() }}</p>
+    }
+
+    <mat-tab-group>
+      <mat-tab label="Despesas">
+        <mat-card>
+          <mat-card-content>
+            @if (podeGerenciar()) {
+              <h2>Nova despesa</h2>
+              <div class="contas__formulario">
+                <mat-form-field appearance="outline">
+                  <mat-label>Data</mat-label>
+                  <input matInput type="date" [ngModel]="novaDespesaData()"
+                    (ngModelChange)="novaDespesaData.set($event)" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Categoria</mat-label>
+                  <input matInput [ngModel]="novaDespesaCategoria()"
+                    (ngModelChange)="novaDespesaCategoria.set($event)" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Valor (R$)</mat-label>
+                  <input matInput type="number" min="0" step="0.01" [ngModel]="novaDespesaValor()"
+                    (ngModelChange)="novaDespesaValor.set($event)" />
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="contas__campo-largo">
+                  <mat-label>Descrição</mat-label>
+                  <input matInput [ngModel]="novaDespesaDescricao()"
+                    (ngModelChange)="novaDespesaDescricao.set($event)" />
+                </mat-form-field>
+                <button mat-flat-button color="primary" type="button" (click)="registrarDespesa()">
+                  Registrar despesa
+                </button>
+              </div>
+            }
+
+            <h2>Despesas lançadas</h2>
+            @if (despesas().length === 0) {
+              <p>Nenhuma despesa lançada.</p>
+            } @else {
+              <table mat-table [dataSource]="despesas()" class="contas__tabela">
+                <ng-container matColumnDef="data">
+                  <th mat-header-cell *matHeaderCellDef>Data</th>
+                  <td mat-cell *matCellDef="let d">{{ d.data | date: 'dd/MM/yyyy' }}</td>
+                </ng-container>
+                <ng-container matColumnDef="categoria">
+                  <th mat-header-cell *matHeaderCellDef>Categoria</th>
+                  <td mat-cell *matCellDef="let d">{{ d.categoria ?? '—' }}</td>
+                </ng-container>
+                <ng-container matColumnDef="valor">
+                  <th mat-header-cell *matHeaderCellDef>Valor</th>
+                  <td mat-cell *matCellDef="let d">{{ d.valor | currency: 'BRL' }}</td>
+                </ng-container>
+                <ng-container matColumnDef="descricao">
+                  <th mat-header-cell *matHeaderCellDef>Descrição</th>
+                  <td mat-cell *matCellDef="let d">{{ d.descricao ?? '—' }}</td>
+                </ng-container>
+                <tr mat-header-row *matHeaderRowDef="colunasDespesas"></tr>
+                <tr mat-row *matRowDef="let row; columns: colunasDespesas"></tr>
+              </table>
+            }
+          </mat-card-content>
+        </mat-card>
+      </mat-tab>
+
+      <mat-tab label="Contas a pagar">
+        <mat-card>
+          <mat-card-content>
+            @if (podeGerenciar()) {
+              <h2>Nova conta a pagar</h2>
+              <div class="contas__formulario">
+                <mat-form-field appearance="outline" class="contas__campo-largo">
+                  <mat-label>Descrição / fornecedor</mat-label>
+                  <input matInput [ngModel]="novaContaPagarDescricao()"
+                    (ngModelChange)="novaContaPagarDescricao.set($event)" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Valor (R$)</mat-label>
+                  <input matInput type="number" min="0" step="0.01" [ngModel]="novaContaPagarValor()"
+                    (ngModelChange)="novaContaPagarValor.set($event)" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Vencimento</mat-label>
+                  <input matInput type="date" [ngModel]="novaContaPagarVencimento()"
+                    (ngModelChange)="novaContaPagarVencimento.set($event)" />
+                </mat-form-field>
+                <button mat-flat-button color="primary" type="button" (click)="registrarContaPagar()">
+                  Lançar conta a pagar
+                </button>
+              </div>
+            }
+
+            <h2>Contas a pagar</h2>
+            @if (contasPagar().length === 0) {
+              <p>Nenhuma conta a pagar lançada.</p>
+            } @else {
+              <table mat-table [dataSource]="contasPagar()" class="contas__tabela">
+                <ng-container matColumnDef="descricao">
+                  <th mat-header-cell *matHeaderCellDef>Descrição</th>
+                  <td mat-cell *matCellDef="let c">{{ c.descricao }}</td>
+                </ng-container>
+                <ng-container matColumnDef="valor">
+                  <th mat-header-cell *matHeaderCellDef>Valor</th>
+                  <td mat-cell *matCellDef="let c">{{ c.valor | currency: 'BRL' }}</td>
+                </ng-container>
+                <ng-container matColumnDef="dataVencimento">
+                  <th mat-header-cell *matHeaderCellDef>Vencimento</th>
+                  <td mat-cell *matCellDef="let c" [class.contas__vencida]="c.vencida">
+                    {{ c.dataVencimento | date: 'dd/MM/yyyy' }} @if (c.vencida) { (vencida) }
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="status">
+                  <th mat-header-cell *matHeaderCellDef>Status</th>
+                  <td mat-cell *matCellDef="let c">{{ rotuloStatusPagar(c.status) }}</td>
+                </ng-container>
+                <ng-container matColumnDef="acoes">
+                  <th mat-header-cell *matHeaderCellDef></th>
+                  <td mat-cell *matCellDef="let c">
+                    @if (c.status === 'PENDENTE' && podeGerenciar()) {
+                      <button mat-button type="button" (click)="marcarPaga(c.uuid)">Marcar como paga</button>
+                      <button mat-button color="warn" type="button" (click)="cancelarContaPagar(c.uuid)">
+                        Cancelar
+                      </button>
+                    }
+                  </td>
+                </ng-container>
+                <tr mat-header-row *matHeaderRowDef="colunasContasPagar"></tr>
+                <tr mat-row *matRowDef="let row; columns: colunasContasPagar"></tr>
+              </table>
+            }
+          </mat-card-content>
+        </mat-card>
+      </mat-tab>
+
+      <mat-tab label="Contas a receber">
+        <mat-card>
+          <mat-card-content>
+            @if (podeLancarContaReceber()) {
+              <h2>Nova conta a receber</h2>
+              <div class="contas__formulario">
+                @if (clienteSelecionado(); as cliente) {
+                  <p>Cliente: <strong>{{ cliente.nome }}</strong>
+                    <button mat-button type="button" (click)="clienteSelecionado.set(null)">Trocar</button>
+                  </p>
+                } @else {
+                  <mat-form-field appearance="outline">
+                    <mat-label>Buscar cliente</mat-label>
+                    <input matInput [ngModel]="buscaCliente()" (ngModelChange)="buscaCliente.set($event)"
+                      (keyup)="buscarClientes()" />
+                  </mat-form-field>
+                  @for (cliente of resultadosClientes(); track cliente.uuid) {
+                    <button mat-stroked-button type="button" (click)="selecionarCliente(cliente)">
+                      {{ cliente.nome }}
+                    </button>
+                  }
+                }
+                <mat-form-field appearance="outline" class="contas__campo-largo">
+                  <mat-label>Descrição</mat-label>
+                  <input matInput [ngModel]="novaContaReceberDescricao()"
+                    (ngModelChange)="novaContaReceberDescricao.set($event)" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Valor (R$)</mat-label>
+                  <input matInput type="number" min="0" step="0.01" [ngModel]="novaContaReceberValor()"
+                    (ngModelChange)="novaContaReceberValor.set($event)" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Vencimento</mat-label>
+                  <input matInput type="date" [ngModel]="novaContaReceberVencimento()"
+                    (ngModelChange)="novaContaReceberVencimento.set($event)" />
+                </mat-form-field>
+                <button mat-flat-button color="primary" type="button" (click)="registrarContaReceber()">
+                  Lançar conta a receber
+                </button>
+              </div>
+            }
+
+            <h2>Contas a receber</h2>
+            @if (contasReceber().length === 0) {
+              <p>Nenhuma conta a receber lançada.</p>
+            } @else {
+              <table mat-table [dataSource]="contasReceber()" class="contas__tabela">
+                <ng-container matColumnDef="clienteNome">
+                  <th mat-header-cell *matHeaderCellDef>Cliente</th>
+                  <td mat-cell *matCellDef="let c">{{ c.clienteNome }}</td>
+                </ng-container>
+                <ng-container matColumnDef="valor">
+                  <th mat-header-cell *matHeaderCellDef>Valor</th>
+                  <td mat-cell *matCellDef="let c">{{ c.valor | currency: 'BRL' }}</td>
+                </ng-container>
+                <ng-container matColumnDef="dataVencimento">
+                  <th mat-header-cell *matHeaderCellDef>Vencimento</th>
+                  <td mat-cell *matCellDef="let c" [class.contas__vencida]="c.vencida">
+                    {{ c.dataVencimento | date: 'dd/MM/yyyy' }} @if (c.vencida) { (vencida) }
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="status">
+                  <th mat-header-cell *matHeaderCellDef>Status</th>
+                  <td mat-cell *matCellDef="let c">{{ rotuloStatusReceber(c.status) }}</td>
+                </ng-container>
+                <ng-container matColumnDef="acoes">
+                  <th mat-header-cell *matHeaderCellDef></th>
+                  <td mat-cell *matCellDef="let c">
+                    @if (c.status === 'PENDENTE' && podeGerenciar()) {
+                      <button mat-button type="button" (click)="marcarRecebida(c.uuid)">Marcar como recebida</button>
+                      <button mat-button color="warn" type="button" (click)="cancelarContaReceber(c.uuid)">
+                        Cancelar
+                      </button>
+                    }
+                  </td>
+                </ng-container>
+                <tr mat-header-row *matHeaderRowDef="colunasContasReceber"></tr>
+                <tr mat-row *matRowDef="let row; columns: colunasContasReceber"></tr>
+              </table>
+            }
+          </mat-card-content>
+        </mat-card>
+      </mat-tab>
+    </mat-tab-group>
+  }
+</section>

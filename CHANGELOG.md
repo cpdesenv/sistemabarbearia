@@ -76,6 +76,39 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
     com comanda: venda com saldo zero bloqueada, baixa exata no
     fechamento com extrato ligado à comanda, devolução no estorno, e item
     de produto sem comissão).
+- **5C — Despesas, contas a pagar/receber e fluxo de caixa:**
+  - Novas entidades no módulo `financeiro`: `Despesa` (lançamento avulso,
+    definitivo, sem edição/exclusão), `ContaPagar` e `ContaReceber`
+    (`PENDENTE`/`PAGA` ou `RECEBIDA`/`CANCELADA`, com auditoria em toda
+    transição). `ContaReceber` referencia um `Cliente` (débito de
+    cliente, ex.: serviço fiado).
+  - `GET /api/financeiro/fluxo-caixa`: **caixa em mãos** (soma de todas as
+    comandas `FECHADA` menos todas as despesas lançadas, histórico
+    completo — não só do dia, diferente do Caixa do dia da 5A) **+
+    contas a receber esperadas** (toda conta a receber `PENDENTE`,
+    independente do vencimento) **− contas a pagar vencidas** (só as
+    `PENDENTE` cujo vencimento já passou — uma conta a pagar futura não
+    reduz o fluxo projetado). Usa o fuso horário da barbearia para
+    definir "hoje", como o Caixa do dia da 5A.
+  - Endpoints: `/api/despesas` (`ADMIN`/`GERENTE` lançam), `/api/contas-
+    pagar` (`ADMIN`/`GERENTE` lançam, marcam paga ou cancelam) e
+    `/api/contas-receber` (`ADMIN`/`GERENTE`/`RECEPCAO` lançam — é tarefa
+    de recepção registrar um débito de cliente —, só `ADMIN`/`GERENTE`
+    marcam recebida ou cancelam).
+  - Frontend: tela **Contas a pagar/receber** (`/financeiro/contas`, com
+    abas de Despesas, Contas a pagar e Contas a receber — busca de
+    cliente reaproveitada do formulário de agendamento, vencidas
+    destacadas em vermelho) e tela **Fluxo de caixa**
+    (`/financeiro/fluxo-caixa`) com os 4 números explicados.
+  - 5 novos testes de integração cobrindo o efeito de cada lançamento no
+    fluxo de caixa (despesa reduz, conta a receber soma até ser
+    recebida, conta a pagar só entra quando vencida, comanda fechada
+    soma) e permissões (recepção lança conta a receber mas não confirma
+    o recebimento).
+
+Com a 5C, a Fase 5 está completa: comanda, caixa, estoque e a visão
+financeira consolidada — tudo o que a barbearia precisa para controlar o
+dinheiro real antes de qualquer automação (Fase 6 em diante).
 
 ## [0.4.0] - Fase 4 — Agenda e motor de disponibilidade
 
