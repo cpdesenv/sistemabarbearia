@@ -71,5 +71,5 @@
 .conteudo {
   flex: 1;
   overflow: auto;
-  padding: 24px;
+  padding: 32px clamp(24px, 4.5%, 54px);
 }
