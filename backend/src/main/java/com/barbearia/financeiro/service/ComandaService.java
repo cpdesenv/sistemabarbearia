@@ -244,11 +244,12 @@ public class ComandaService {
     }
 
     @Transactional(readOnly = true)
-    public CaixaDoDiaDto calcularCaixaDoDia(LocalDate data) {
+    public CaixaDoDiaDto calcularCaixaDoDia(LocalDate dataOpcional) {
         Barbearia barbearia = barbeariaRepository.findById(Barbearia.ID_SINGLETON)
                 .orElseThrow(() -> new RecursoNaoEncontradoException(
                         "Configuracao da barbearia nao encontrada. Verifique se as migrations foram executadas."));
         ZoneId fuso = ZoneId.of(barbearia.getFusoHorario());
+        LocalDate data = dataOpcional != null ? dataOpcional : LocalDate.now(fuso);
         Instant inicioDoDia = data.atStartOfDay(fuso).toInstant();
         Instant fimDoDia = data.plusDays(1).atStartOfDay(fuso).toInstant();
 

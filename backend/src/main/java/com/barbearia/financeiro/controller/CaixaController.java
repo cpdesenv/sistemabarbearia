@@ -23,6 +23,6 @@ public class CaixaController {
 
     @GetMapping
     public CaixaDoDiaDto caixaDoDia(@RequestParam(required = false) LocalDate data) {
-        return comandaService.calcularCaixaDoDia(data == null ? LocalDate.now() : data);
+        return comandaService.calcularCaixaDoDia(data);
     }
 }
