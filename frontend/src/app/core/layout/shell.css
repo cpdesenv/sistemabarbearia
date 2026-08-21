@@ -33,9 +33,73 @@
   flex: 1;
 }
 
+/*
+ * Bloco do usuario logado: avatar com iniciais (mesmo degrade azul do
+ * selo do sistema) + nome/perfil empilhados + seta, tudo dentro de um
+ * unico botao que abre o menu com "Sair" - um padrao comum em produtos
+ * profissionais (evita um botao "Sair" solto competindo visualmente com
+ * o nome do usuario).
+ */
 .topbar__usuario {
-  margin-right: 12px;
-  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-right: 4px;
+  padding: 6px 10px 6px 6px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transition: background-color 160ms ease;
+}
+
+.topbar__usuario:hover,
+.topbar__usuario:focus-visible {
+  background: color-mix(in srgb, var(--ink) 6%, transparent);
+}
+
+.topbar__avatar {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.topbar__usuario-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.25;
+}
+
+.topbar__usuario-nome {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.topbar__usuario-perfil {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.topbar__usuario-seta {
+  flex-shrink: 0;
+  margin-left: 2px;
+  color: var(--muted);
 }
 
 .shell__corpo {

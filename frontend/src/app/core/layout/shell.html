@@ -3,8 +3,19 @@
     <span class="topbar__titulo">Sistema para Barbearia</span>
     <span class="topbar__espaco"></span>
     @if (usuario(); as usuarioLogado) {
-      <span class="topbar__usuario">{{ usuarioLogado.nome }}</span>
-      <button mat-stroked-button (click)="sair()">Sair</button>
+      <button class="topbar__usuario" type="button" [matMenuTriggerFor]="menuUsuario">
+        <span class="topbar__avatar">{{ iniciais() }}</span>
+        <span class="topbar__usuario-info">
+          <span class="topbar__usuario-nome">{{ usuarioLogado.nome }}</span>
+          <span class="topbar__usuario-perfil">{{ rotuloPerfil() }}</span>
+        </span>
+        <svg class="topbar__usuario-seta" width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true">
+          <path d="M1 1L5 5L9 1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </button>
+      <mat-menu #menuUsuario="matMenu" xPosition="before">
+        <button mat-menu-item (click)="sair()">Sair</button>
+      </mat-menu>
     }
   </mat-toolbar>
 
