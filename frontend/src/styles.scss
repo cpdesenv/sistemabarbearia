@@ -1,20 +1,39 @@
 @use '@angular/material' as mat;
 
 /*
- * Tema provisorio (paleta neutra com um acento amarronzado, lembrando couro/
- * barbearia). Sera trocado pela identidade visual definitiva da barbearia
- * quando ela existir (ver Fase 19 - dados cadastrais e logo).
+ * Identidade visual de apresentacao (primeiro rascunho, para demo com o
+ * cliente). Primary extraido da logo "CP Desenv" (azul vivido ~#0096ff,
+ * mais proximo do $azure-palette nativo do Material entre as paletas
+ * disponiveis - $blue-palette e indigo/violeta, $cyan-palette puxa pro
+ * verde-azulado). Tertiary mantido em $blue-palette: e' um azul mais
+ * profundo/violaceo que combina com o degrade azul-claro -> azul-escuro do
+ * icone da logo, sem repetir o mesmo tom do primary.
+ * Sera trocado pela identidade visual definitiva da barbearia quando ela
+ * existir (ver Fase 19 - dados cadastrais e logo do cliente).
  */
 html {
   @include mat.theme((
     color: (
       theme-type: light,
-      primary: mat.$orange-palette,
+      primary: mat.$azure-palette,
       tertiary: mat.$blue-palette,
     ),
     typography: Roboto,
     density: 0,
   ));
+}
+
+:root {
+  /*
+   * Papel semantico proprio para "positivo/ativo", independente da cor de
+   * marca (--mat-sys-primary). O Material 3 nao tem um papel nativo de
+   * "sucesso" - antes desse token, 4 telas usavam var(--mat-sys-primary,
+   * #2e7d32) so' pelo fallback verde, o que ficou visivelmente errado
+   * assim que primary passou de laranja para azul (badge "Ativo" ficou
+   * azul). Ver docs/limitacoes.md ou o audit de paleta para o resto do
+   * plano de tokens semanticos (--warning, --info).
+   */
+  --success: #2e7d32;
 }
 
 * {
