@@ -40,6 +40,8 @@
   padding: 10px 16px;
   color: #1f2937;
   text-decoration: none;
+  border-left: 3px solid transparent;
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
 }
 
 .sidebar__item:hover {
@@ -48,7 +50,9 @@
 
 .sidebar__item--ativo {
   font-weight: 600;
-  background: #e5e7eb;
+  color: var(--mat-sys-primary, #005cbb);
+  background: color-mix(in srgb, var(--mat-sys-primary, #005cbb) 10%, transparent);
+  border-left-color: var(--mat-sys-primary, #005cbb);
 }
 
 .conteudo {

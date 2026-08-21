@@ -37,7 +37,7 @@
 }
 
 .profissionais__status--ativo {
-  color: var(--mat-sys-primary, #2e7d32);
+  color: var(--success, #2e7d32);
   font-weight: 500;
 }
 
