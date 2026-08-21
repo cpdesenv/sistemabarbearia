@@ -22,6 +22,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 import com.barbearia.financeiro.dto.AdicionarItemComandaRequest;
+import com.barbearia.financeiro.dto.AdicionarItemProdutoComandaRequest;
 import com.barbearia.financeiro.dto.AplicarDescontoRequest;
 import com.barbearia.financeiro.dto.ComandaDto;
 import com.barbearia.financeiro.dto.DefinirFormaPagamentoRequest;
@@ -56,6 +57,15 @@ public class ComandaController {
             @Valid @RequestBody AdicionarItemComandaRequest requisicao,
             @AuthenticationPrincipal UsuarioAutenticado principal, HttpServletRequest httpRequest) {
         return ResponseEntity.ok(comandaService.adicionarItemServico(uuid, requisicao,
+                principal.getUsuario().getId(), httpRequest));
+    }
+
+    @PostMapping("/{uuid}/itens/produto")
+    @PreAuthorize("hasAnyRole('ADMIN', 'GERENTE', 'RECEPCAO', 'BARBEIRO')")
+    public ResponseEntity<ComandaDto> adicionarItemProduto(@PathVariable UUID uuid,
+            @Valid @RequestBody AdicionarItemProdutoComandaRequest requisicao,
+            @AuthenticationPrincipal UsuarioAutenticado principal, HttpServletRequest httpRequest) {
+        return ResponseEntity.ok(comandaService.adicionarItemProduto(uuid, requisicao,
                 principal.getUsuario().getId(), httpRequest));
     }
 

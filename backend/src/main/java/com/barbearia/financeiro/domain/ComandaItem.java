@@ -8,6 +8,8 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -19,14 +21,20 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import com.barbearia.produto.domain.Produto;
 import com.barbearia.servico.domain.Servico;
 
 /**
- * Um item (servico) incluido numa comanda. {@code descricao} e
- * {@code valorUnitario} sao um snapshot do {@link Servico} no momento em que
- * o item foi adicionado — mudar o preco do servico depois nao deve alterar
- * comandas ja fechadas nem itens ja lancados. Nesta sub-entrega (5A) todo
- * item e' um servico; produtos entram na sub-entrega 5B.
+ * Um item incluido numa comanda: servico ou produto (nunca os dois, ver
+ * {@link #tipo}). {@code descricao} e {@code valorUnitario} sao um snapshot
+ * do servico/produto no momento em que o item foi adicionado — mudar o preco
+ * depois nao deve alterar comandas ja fechadas nem itens ja lancados.
+ *
+ * <p>Itens de produto nao geram comissao (so' servico gera — ver
+ * {@code ComandaService#recalcularTotais}); a baixa/devolucao de estoque de
+ * um item de produto so' acontece no fechamento/estorno da comanda, nunca ao
+ * simplesmente adicionar/remover o item (ver {@code ComandaService#fechar}/
+ * {@code #estornar} e {@code EstoqueService}).
  */
 @Entity
 @Table(name = "comanda_item")
@@ -46,9 +54,17 @@ public class ComandaItem {
     @JoinColumn(name = "comanda_id", nullable = false)
     private Comanda comanda;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "servico_id", nullable = false)
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private TipoItemComanda tipo;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "servico_id")
     private Servico servico;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "produto_id")
+    private Produto produto;
 
     @Column(nullable = false)
     private String descricao;
@@ -79,7 +95,18 @@ public class ComandaItem {
     private Instant criadoEm;
 
     public ComandaItem(Servico servico, String descricao, BigDecimal valorUnitario) {
+        this.tipo = TipoItemComanda.SERVICO;
         this.servico = servico;
+        this.descricao = descricao;
+        this.quantidade = 1;
+        this.valorUnitario = valorUnitario;
+        this.valorBruto = valorUnitario;
+        this.valorLiquido = valorUnitario;
+    }
+
+    public ComandaItem(Produto produto, String descricao, BigDecimal valorUnitario) {
+        this.tipo = TipoItemComanda.PRODUTO;
+        this.produto = produto;
         this.descricao = descricao;
         this.quantidade = 1;
         this.valorUnitario = valorUnitario;

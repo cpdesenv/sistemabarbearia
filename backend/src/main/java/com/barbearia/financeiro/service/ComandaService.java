@@ -31,7 +31,9 @@ import com.barbearia.financeiro.domain.Comanda;
 import com.barbearia.financeiro.domain.ComandaItem;
 import com.barbearia.financeiro.domain.FormaPagamento;
 import com.barbearia.financeiro.domain.StatusComanda;
+import com.barbearia.financeiro.domain.TipoItemComanda;
 import com.barbearia.financeiro.dto.AdicionarItemComandaRequest;
+import com.barbearia.financeiro.dto.AdicionarItemProdutoComandaRequest;
 import com.barbearia.financeiro.dto.AplicarDescontoRequest;
 import com.barbearia.financeiro.dto.CaixaDoDiaDto;
 import com.barbearia.financeiro.dto.ComandaDto;
@@ -41,6 +43,9 @@ import com.barbearia.financeiro.dto.EstornarComandaRequest;
 import com.barbearia.financeiro.dto.TotalPorFormaPagamentoDto;
 import com.barbearia.financeiro.dto.TotalPorProfissionalDto;
 import com.barbearia.financeiro.repository.ComandaRepository;
+import com.barbearia.produto.domain.Produto;
+import com.barbearia.produto.repository.ProdutoRepository;
+import com.barbearia.produto.service.EstoqueService;
 import com.barbearia.profissional.domain.Profissional;
 import com.barbearia.profissional.domain.ProfissionalServico;
 import com.barbearia.profissional.repository.ProfissionalServicoRepository;
@@ -50,16 +55,19 @@ import com.barbearia.shared.exception.NegocioException;
 import com.barbearia.shared.exception.RecursoNaoEncontradoException;
 
 /**
- * Comanda de atendimento: itens (nesta sub-entrega, somente servicos),
- * desconto rateado entre os itens, comissao do profissional calculada sobre
- * o valor liquido (apos o rateio do desconto), forma de pagamento,
- * fechamento (imutavel) e estorno.
+ * Comanda de atendimento: itens (servico ou produto), desconto rateado entre
+ * os itens, comissao do profissional calculada sobre o valor liquido (apos o
+ * rateio do desconto) — so' para itens de servico, produto nao gera comissao
+ * nesta fase —, forma de pagamento, fechamento (imutavel) e estorno.
  *
  * <p>Uma comanda e' sempre aberta a partir de um {@link Agendamento}
  * ({@link #abrirParaAgendamento}), que e' quem transiciona o agendamento
  * para EM_ATENDIMENTO (ao abrir) e FINALIZADO (ao fechar a comanda) —
  * reaproveitando as transicoes ja existentes em {@link AgendamentoService}
  * em vez de duplica-las.
+ *
+ * <p>Itens de produto baixam/devolvem estoque somente no fechamento/estorno
+ * da comanda (nunca ao adicionar/remover o item) — ver {@link EstoqueService}.
  */
 @Service
 @RequiredArgsConstructor
@@ -70,6 +78,8 @@ public class ComandaService {
     private final AgendamentoService agendamentoService;
     private final AvailabilityService availabilityService;
     private final ProfissionalServicoRepository profissionalServicoRepository;
+    private final ProdutoRepository produtoRepository;
+    private final EstoqueService estoqueService;
     private final BarbeariaRepository barbeariaRepository;
     private final AuditoriaService auditoriaService;
 
@@ -128,6 +138,37 @@ public class ComandaService {
 
         auditoriaService.registrar(usuarioId, "COMANDA_ITEM_ADICIONADO", "comanda", comanda.getId(),
                 "Item '" + servico.getNome() + "' adicionado a comanda", httpRequest);
+
+        return paraDto(comanda);
+    }
+
+    @Transactional
+    public ComandaDto adicionarItemProduto(UUID comandaUuid, AdicionarItemProdutoComandaRequest requisicao,
+            Long usuarioId, HttpServletRequest httpRequest) {
+        Comanda comanda = buscarPorUuid(comandaUuid);
+        exigirAberta(comanda);
+
+        Produto produto = produtoRepository.findByUuidPublico(requisicao.produtoUuid())
+                .filter(Produto::isAtivo)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Produto nao encontrado."));
+        int quantidade = requisicao.quantidadeOuPadrao();
+
+        if (quantidade > produto.getEstoqueAtual()) {
+            throw new NegocioException("Estoque insuficiente de '" + produto.getNome() + "' (disponivel: "
+                    + produto.getEstoqueAtual() + ").");
+        }
+
+        ComandaItem item = new ComandaItem(produto, produto.getNome(), produto.getPrecoVenda());
+        item.setQuantidade(quantidade);
+        item.setValorBruto(produto.getPrecoVenda().multiply(BigDecimal.valueOf(quantidade)));
+        item.setValorLiquido(item.getValorBruto());
+        comanda.adicionarItem(item);
+
+        recalcularTotais(comanda);
+        comanda = comandaRepository.save(comanda);
+
+        auditoriaService.registrar(usuarioId, "COMANDA_ITEM_PRODUTO_ADICIONADO", "comanda", comanda.getId(),
+                "Produto '" + produto.getNome() + "' (x" + quantidade + ") adicionado a comanda", httpRequest);
 
         return paraDto(comanda);
     }
@@ -207,6 +248,13 @@ public class ComandaService {
             throw new NegocioException("Selecione a forma de pagamento antes de fechar a comanda.");
         }
 
+        for (ComandaItem item : comanda.getItens()) {
+            if (item.getTipo() == TipoItemComanda.PRODUTO) {
+                estoqueService.baixarPorComanda(item.getProduto(), item.getQuantidade(), comanda.getId(), usuarioId,
+                        httpRequest);
+            }
+        }
+
         comanda.setStatus(StatusComanda.FECHADA);
         comanda.setFechadaEm(Instant.now());
         comanda.setFechadaPorUsuarioId(usuarioId);
@@ -236,6 +284,13 @@ public class ComandaService {
         comanda.setEstornadaPorUsuarioId(usuarioId);
         comanda.setMotivoEstorno(requisicao.motivo());
         comanda = comandaRepository.save(comanda);
+
+        for (ComandaItem item : comanda.getItens()) {
+            if (item.getTipo() == TipoItemComanda.PRODUTO) {
+                estoqueService.devolverPorComanda(item.getProduto(), item.getQuantidade(), comanda.getId(),
+                        usuarioId, httpRequest);
+            }
+        }
 
         auditoriaService.registrar(usuarioId, "COMANDA_ESTORNADA", "comanda", comanda.getId(),
                 "Comanda estornada. Motivo: " + requisicao.motivo(), httpRequest);
@@ -310,10 +365,12 @@ public class ComandaService {
     }
 
     /**
-     * Recalcula subtotal, rateio do desconto por item, comissao por item (sobre
-     * o valor liquido, ja com o desconto rateado) e o valor total da comanda.
-     * Chamado sempre que a lista de itens ou o desconto mudam, para que a
-     * comanda sempre mostre em tempo real quanto o profissional vai receber.
+     * Recalcula subtotal, rateio do desconto por item (servico e produto, os
+     * dois entram no rateio proporcional ao valor bruto), comissao por item
+     * (somente para itens de servico — produto nao gera comissao nesta fase)
+     * e o valor total da comanda. Chamado sempre que a lista de itens ou o
+     * desconto mudam, para que a comanda sempre mostre em tempo real quanto o
+     * profissional vai receber.
      */
     private void recalcularTotais(Comanda comanda) {
         List<ComandaItem> itens = comanda.getItens();
@@ -343,10 +400,15 @@ public class ComandaService {
             BigDecimal liquido = item.getValorBruto().subtract(descontoItem);
             item.setValorLiquido(liquido);
 
-            BigDecimal percentual = resolverComissaoPercentual(profissional, item.getServico());
-            item.setComissaoPercentualAplicado(percentual);
-            item.setComissaoValor(liquido.multiply(percentual).divide(BigDecimal.valueOf(100), 2,
-                    RoundingMode.HALF_UP));
+            if (item.getTipo() == TipoItemComanda.SERVICO) {
+                BigDecimal percentual = resolverComissaoPercentual(profissional, item.getServico());
+                item.setComissaoPercentualAplicado(percentual);
+                item.setComissaoValor(liquido.multiply(percentual).divide(BigDecimal.valueOf(100), 2,
+                        RoundingMode.HALF_UP));
+            } else {
+                item.setComissaoPercentualAplicado(null);
+                item.setComissaoValor(null);
+            }
         }
 
         comanda.setValorTotal(subtotal.subtract(desconto));
@@ -370,7 +432,11 @@ public class ComandaService {
 
     private ComandaDto paraDto(Comanda comanda) {
         List<ComandaItemDto> itens = comanda.getItens().stream()
-                .map(item -> new ComandaItemDto(item.getUuidPublico(), item.getServico().getUuidPublico(),
+                .map(item -> new ComandaItemDto(
+                        item.getUuidPublico(),
+                        item.getTipo(),
+                        item.getServico() != null ? item.getServico().getUuidPublico() : null,
+                        item.getProduto() != null ? item.getProduto().getUuidPublico() : null,
                         item.getDescricao(), item.getQuantidade(), item.getValorUnitario(), item.getValorBruto(),
                         item.getValorDescontoRateado(), item.getValorLiquido(), item.getComissaoPercentualAplicado(),
                         item.getComissaoValor()))
