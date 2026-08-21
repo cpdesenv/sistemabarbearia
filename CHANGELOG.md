@@ -4,6 +4,43 @@ Todas as mudanças notáveis deste projeto serão documentadas neste arquivo.
 
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
+## [0.5.0] - Fase 5 — Comanda, pagamento, caixa, estoque e financeiro
+
+### Adicionado
+
+- **5A — Comanda, caixa e formas de pagamento:**
+  - Módulo `financeiro`: `Comanda` e `ComandaItem`, sempre vinculada a um
+    `Agendamento`. A comanda é aberta automaticamente ao iniciar o
+    atendimento (`POST /api/comandas/abrir-para-agendamento/{agendamentoUuid}`,
+    idempotente) já com os serviços do agendamento; fecha-la transiciona o
+    agendamento para `FINALIZADO` e lança o valor no caixa do dia.
+  - Nesta sub-entrega os itens são somente serviços — produtos entram na
+    sub-entrega 5B, que vai estender `comanda_item` via nova migration.
+  - Desconto com motivo obrigatório, rateado proporcionalmente entre os
+    itens (com ajuste de centavo de arredondamento no último item, para a
+    soma sempre fechar exatamente com o valor informado).
+  - Comissão por item calculada sobre o valor líquido (após o rateio do
+    desconto), usando o percentual do vínculo profissional↔serviço quando
+    existir, senão o percentual padrão do profissional — recalculada em
+    tempo real a cada mudança de item ou desconto.
+  - Comanda `FECHADA` é imutável; correção é feita por **estorno** (motivo
+    obrigatório, com auditoria), o que libera o agendamento (já
+    `FINALIZADO`) para uma nova comanda ser aberta, preservando o
+    histórico das comandas anteriores.
+  - Índice único parcial no banco (`WHERE status = 'ABERTA'`) garante, sob
+    concorrência, no máximo uma comanda aberta por agendamento por vez.
+  - Tela **Caixa do dia**: total geral, total por forma de pagamento e
+    total (faturado + comissão) por profissional
+    (`GET /api/caixa?data=...`).
+  - Frontend: tela de Comanda (itens, desconto, forma de pagamento,
+    fechar/estornar) e tela de Caixa do dia; o botão "Iniciar atendimento"
+    da Agenda agora abre a comanda e navega direto para ela.
+  - 9 testes de integração cobrindo abertura idempotente, rateio de
+    desconto e comissão com valores exatos, bloqueio de edição de comanda
+    fechada, bloqueio de fechamento sem item/forma de pagamento, estorno
+    com auditoria e permissões por perfil (barbeiro fecha mas não
+    estorna).
+
 ## [0.4.0] - Fase 4 — Agenda e motor de disponibilidade
 
 ### Adicionado

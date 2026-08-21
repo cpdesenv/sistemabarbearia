@@ -19,6 +19,7 @@ const ITENS_MENU: ItemMenu[] = [
   { rota: '/servicos', rotulo: 'Serviços' },
   { rota: '/profissionais', rotulo: 'Profissionais' },
   { rota: '/bloqueios', rotulo: 'Bloqueios' },
+  { rota: '/financeiro/caixa', rotulo: 'Caixa do dia' },
   { rota: '/configuracoes/barbearia', rotulo: 'Configurações', perfis: ['ADMIN'] },
 ];
 

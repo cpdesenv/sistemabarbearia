@@ -13,6 +13,7 @@ import { MatSelectModule } from '@angular/material/select';
 
 import { Cliente } from '../../clientes/clientes.model';
 import { ClientesService } from '../../clientes/clientes.service';
+import { FinanceiroService } from '../../financeiro/financeiro.service';
 import { Profissional } from '../../profissionais/profissionais.model';
 import { ProfissionaisService } from '../../profissionais/profissionais.service';
 import { Servico } from '../../servicos/servicos.model';
@@ -41,6 +42,7 @@ import { AgendaService } from '../agenda.service';
 export class AgendaFormulario {
   private readonly formBuilder = inject(FormBuilder);
   private readonly agendaService = inject(AgendaService);
+  private readonly financeiroService = inject(FinanceiroService);
   private readonly clientesService = inject(ClientesService);
   private readonly profissionaisService = inject(ProfissionaisService);
   private readonly servicosService = inject(ServicosService);
@@ -179,7 +181,7 @@ export class AgendaFormulario {
     });
   }
 
-  protected executarAcao(acao: 'confirmar' | 'iniciar' | 'finalizar' | 'naoCompareceu'): void {
+  protected executarAcao(acao: 'confirmar' | 'finalizar' | 'naoCompareceu'): void {
     if (!this.uuid) {
       return;
     }
@@ -189,11 +191,9 @@ export class AgendaFormulario {
     const operacao =
       acao === 'confirmar'
         ? this.agendaService.confirmar(this.uuid)
-        : acao === 'iniciar'
-          ? this.agendaService.iniciar(this.uuid)
-          : acao === 'finalizar'
-            ? this.agendaService.finalizar(this.uuid)
-            : this.agendaService.marcarNaoComparecimento(this.uuid);
+        : acao === 'finalizar'
+          ? this.agendaService.finalizar(this.uuid)
+          : this.agendaService.marcarNaoComparecimento(this.uuid);
 
     operacao.subscribe({
       next: (agendamento) => {
@@ -203,6 +203,23 @@ export class AgendaFormulario {
       error: (erro: HttpErrorResponse) => {
         this.executandoAcao.set(false);
         this.mensagemErro.set(erro.error?.mensagem ?? 'Não foi possível executar essa ação agora.');
+      },
+    });
+  }
+
+  /** Iniciar atendimento abre a comanda e leva o usuario direto pra ela, em vez de so' trocar o status aqui. */
+  protected iniciarAtendimento(): void {
+    if (!this.uuid) {
+      return;
+    }
+    this.executandoAcao.set(true);
+    this.mensagemErro.set(null);
+
+    this.financeiroService.abrirParaAgendamento(this.uuid).subscribe({
+      next: (comanda) => this.router.navigate(['/financeiro/comandas', comanda.uuid]),
+      error: (erro: HttpErrorResponse) => {
+        this.executandoAcao.set(false);
+        this.mensagemErro.set(erro.error?.mensagem ?? 'Não foi possível abrir a comanda agora.');
       },
     });
   }

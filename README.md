@@ -212,6 +212,56 @@ No painel, a tela **Agenda** oferece visão dia (colunas por profissional,
 clique numa célula vazia para criar, arrastar um agendamento para
 remarcar) e visão semana (lista compacta por dia).
 
+## Comanda, caixa e formas de pagamento (Fase 5A)
+
+Uma comanda é sempre aberta a partir de um agendamento: ao clicar em
+"Iniciar atendimento" na tela de Agenda, o backend transiciona o
+agendamento para `EM_ATENDIMENTO` e cria a comanda `ABERTA` já com os
+serviços do agendamento. A partir daí é possível adicionar/remover itens de
+serviço, aplicar um desconto (com motivo obrigatório, rateado
+proporcionalmente entre os itens) e escolher a forma de pagamento. Ao
+fechar a comanda, o agendamento é automaticamente transicionado para
+`FINALIZADO` e o valor entra no **Caixa do dia**. Comanda `FECHADA` é
+imutável — qualquer correção é feita por **estorno** (motivo obrigatório,
+com auditoria), que libera o agendamento para uma nova comanda ser aberta.
+
+A comissão de cada item de serviço é calculada sobre o valor líquido (já
+com o desconto rateado), usando o percentual específico do vínculo
+profissional↔serviço quando existir, ou o percentual padrão do
+profissional caso contrário — recalculada em tempo real a cada mudança de
+item ou desconto, para a comanda sempre mostrar quanto o profissional vai
+receber.
+
+```bash
+# Abrir a comanda de um agendamento CONFIRMADO (idempotente: chamar de novo
+# enquanto a comanda estiver ABERTA devolve a mesma comanda)
+curl -X POST http://localhost:8080/api/comandas/abrir-para-agendamento/<uuid-agendamento> \
+  -H "Authorization: Bearer <accessToken>"
+
+# Adicionar item, aplicar desconto, definir forma de pagamento
+curl -X POST http://localhost:8080/api/comandas/<uuid-comanda>/itens \
+  -H "Authorization: Bearer <accessToken>" -H "Content-Type: application/json" \
+  -d '{"servicoUuid":"<uuid>","quantidade":1}'
+curl -X PUT http://localhost:8080/api/comandas/<uuid-comanda>/desconto \
+  -H "Authorization: Bearer <accessToken>" -H "Content-Type: application/json" \
+  -d '{"valor":10.00,"motivo":"Cliente fidelidade"}'
+curl -X PUT http://localhost:8080/api/comandas/<uuid-comanda>/forma-pagamento \
+  -H "Authorization: Bearer <accessToken>" -H "Content-Type: application/json" \
+  -d '{"formaPagamento":"PIX"}'
+
+# Fechar (transiciona o agendamento para FINALIZADO) e, se preciso, estornar
+curl -X POST http://localhost:8080/api/comandas/<uuid-comanda>/fechar   -H "Authorization: Bearer <accessToken>"
+curl -X POST http://localhost:8080/api/comandas/<uuid-comanda>/estornar \
+  -H "Authorization: Bearer <accessToken>" -H "Content-Type: application/json" \
+  -d '{"motivo":"Cobranca duplicada"}'
+
+# Caixa do dia (default: hoje)
+curl "http://localhost:8080/api/caixa?data=2026-08-24" -H "Authorization: Bearer <accessToken>"
+```
+
+Nesta sub-entrega os itens de comanda são somente serviços; produtos e a
+baixa automática de estoque entram na sub-entrega 5B.
+
 ## Como executar os testes
 
 Backend (usa Testcontainers — requer Docker disponível para o usuário que

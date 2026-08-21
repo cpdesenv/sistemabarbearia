@@ -110,6 +110,15 @@ export const routes: Routes = [
           ),
         canActivate: [roleGuard],
         data: { perfis: ['ADMIN', 'GERENTE', 'RECEPCAO'] }
+      },
+      {
+        path: 'financeiro/caixa',
+        loadComponent: () => import('./features/financeiro/caixa/caixa').then((m) => m.Caixa)
+      },
+      {
+        path: 'financeiro/comandas/:uuid',
+        loadComponent: () =>
+          import('./features/financeiro/comanda/comanda').then((m) => m.ComandaComponent)
       }
     ]
   },

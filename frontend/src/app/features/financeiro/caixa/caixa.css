@@ -1,0 +1,16 @@
+.caixa {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 720px;
+}
+
+.caixa__tabela {
+  width: 100%;
+}
+
+.caixa__total-geral {
+  font-weight: 700;
+  font-size: 1.3em;
+  margin: 0;
+}
