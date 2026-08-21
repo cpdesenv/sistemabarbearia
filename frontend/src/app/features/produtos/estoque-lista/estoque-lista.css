@@ -1,0 +1,20 @@
+.estoque-lista {
+  padding: 16px;
+}
+
+.estoque-lista__tabela-wrapper {
+  overflow-x: auto;
+}
+
+.estoque-lista__tabela {
+  width: 100%;
+}
+
+.estoque-lista__saldo--baixo {
+  color: var(--mat-sys-error, #b3261e);
+  font-weight: 600;
+}
+
+.estoque-lista__linha--baixa {
+  background: color-mix(in srgb, var(--mat-sys-error, #b3261e) 6%, transparent);
+}

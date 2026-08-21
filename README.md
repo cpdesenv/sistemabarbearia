@@ -212,6 +212,124 @@ No painel, a tela **Agenda** oferece visão dia (colunas por profissional,
 clique numa célula vazia para criar, arrastar um agendamento para
 remarcar) e visão semana (lista compacta por dia).
 
+## Comanda, caixa e formas de pagamento (Fase 5A)
+
+Uma comanda é sempre aberta a partir de um agendamento: ao clicar em
+"Iniciar atendimento" na tela de Agenda, o backend transiciona o
+agendamento para `EM_ATENDIMENTO` e cria a comanda `ABERTA` já com os
+serviços do agendamento. A partir daí é possível adicionar/remover itens de
+serviço, aplicar um desconto (com motivo obrigatório, rateado
+proporcionalmente entre os itens) e escolher a forma de pagamento. Ao
+fechar a comanda, o agendamento é automaticamente transicionado para
+`FINALIZADO` e o valor entra no **Caixa do dia**. Comanda `FECHADA` é
+imutável — qualquer correção é feita por **estorno** (motivo obrigatório,
+com auditoria), que libera o agendamento para uma nova comanda ser aberta.
+
+A comissão de cada item de serviço é calculada sobre o valor líquido (já
+com o desconto rateado), usando o percentual específico do vínculo
+profissional↔serviço quando existir, ou o percentual padrão do
+profissional caso contrário — recalculada em tempo real a cada mudança de
+item ou desconto, para a comanda sempre mostrar quanto o profissional vai
+receber.
+
+```bash
+# Abrir a comanda de um agendamento CONFIRMADO (idempotente: chamar de novo
+# enquanto a comanda estiver ABERTA devolve a mesma comanda)
+curl -X POST http://localhost:8080/api/comandas/abrir-para-agendamento/<uuid-agendamento> \
+  -H "Authorization: Bearer <accessToken>"
+
+# Adicionar item, aplicar desconto, definir forma de pagamento
+curl -X POST http://localhost:8080/api/comandas/<uuid-comanda>/itens \
+  -H "Authorization: Bearer <accessToken>" -H "Content-Type: application/json" \
+  -d '{"servicoUuid":"<uuid>","quantidade":1}'
+curl -X PUT http://localhost:8080/api/comandas/<uuid-comanda>/desconto \
+  -H "Authorization: Bearer <accessToken>" -H "Content-Type: application/json" \
+  -d '{"valor":10.00,"motivo":"Cliente fidelidade"}'
+curl -X PUT http://localhost:8080/api/comandas/<uuid-comanda>/forma-pagamento \
+  -H "Authorization: Bearer <accessToken>" -H "Content-Type: application/json" \
+  -d '{"formaPagamento":"PIX"}'
+
+# Fechar (transiciona o agendamento para FINALIZADO) e, se preciso, estornar
+curl -X POST http://localhost:8080/api/comandas/<uuid-comanda>/fechar   -H "Authorization: Bearer <accessToken>"
+curl -X POST http://localhost:8080/api/comandas/<uuid-comanda>/estornar \
+  -H "Authorization: Bearer <accessToken>" -H "Content-Type: application/json" \
+  -d '{"motivo":"Cobranca duplicada"}'
+
+# Caixa do dia (default: hoje)
+curl "http://localhost:8080/api/caixa?data=2026-08-24" -H "Authorization: Bearer <accessToken>"
+```
+
+## Produtos e estoque (Fase 5B)
+
+Catálogo de produtos (nome, categoria, unidade, preço de venda/custo,
+estoque mínimo) e um histórico de movimentações (entrada, saída, ajuste,
+devolução) por trás de um saldo em cache (`estoque_atual`), atualizado por
+um `UPDATE` atômico que só aplica o delta se o resultado continuar `>= 0` —
+protege contra duas baixas concorrentes deixarem o saldo negativo sem
+precisar de lock explícito.
+
+A comanda agora aceita itens de produto além de serviço. Produto não gera
+comissão, mas entra no rateio do desconto normalmente. A baixa de estoque só
+acontece **ao fechar** a comanda (nunca ao adicionar o item): se não houver
+saldo suficiente para algum produto, o fechamento inteiro é recusado e nada
+é alterado. O estorno devolve a quantidade ao estoque automaticamente.
+
+```bash
+# CRUD de produto
+curl -X POST http://localhost:8080/api/produtos \
+  -H "Authorization: Bearer <accessToken>" -H "Content-Type: application/json" \
+  -d '{"nome":"Pomada Modeladora","categoria":"Estetica","unidade":"UN","precoVenda":45.00,"precoCusto":20.00,"estoqueMinimo":5}'
+
+# Entrada de estoque (compra) e ajuste manual de inventário (motivo obrigatorio)
+curl -X POST http://localhost:8080/api/produtos/<uuid-produto>/entrada-estoque \
+  -H "Authorization: Bearer <accessToken>" -H "Content-Type: application/json" \
+  -d '{"quantidade":10,"custoUnitario":20.00,"motivo":"Compra fornecedor"}'
+curl -X POST http://localhost:8080/api/produtos/<uuid-produto>/ajuste-estoque \
+  -H "Authorization: Bearer <accessToken>" -H "Content-Type: application/json" \
+  -d '{"novaQuantidadeContada":8,"motivo":"Contagem de inventario"}'
+
+# Extrato de movimentacoes e alerta de estoque minimo
+curl "http://localhost:8080/api/produtos/<uuid-produto>/movimentos" -H "Authorization: Bearer <accessToken>"
+curl "http://localhost:8080/api/produtos/alertas-estoque-minimo" -H "Authorization: Bearer <accessToken>"
+
+# Adicionar produto a uma comanda aberta
+curl -X POST http://localhost:8080/api/comandas/<uuid-comanda>/itens/produto \
+  -H "Authorization: Bearer <accessToken>" -H "Content-Type: application/json" \
+  -d '{"produtoUuid":"<uuid-produto>","quantidade":2}'
+```
+
+## Despesas, contas a pagar/receber e fluxo de caixa (Fase 5C)
+
+Além do Caixa do dia (Fase 5A, que soma só as comandas fechadas *daquele
+dia*), o **Fluxo de caixa** (`GET /api/financeiro/fluxo-caixa`) dá a foto
+completa da saúde financeira: **caixa em mãos** (todas as comandas
+`FECHADA` já lançadas, menos todas as despesas) **+ contas a receber
+esperadas** (todo débito de cliente ainda `PENDENTE`, esperado entrar) **−
+contas a pagar vencidas** (só as `PENDENTE` cujo vencimento já passou — uma
+conta a pagar futura não pesa no fluxo ainda).
+
+```bash
+# Lançar uma despesa (ADMIN/GERENTE)
+curl -X POST http://localhost:8080/api/despesas \
+  -H "Authorization: Bearer <accessToken>" -H "Content-Type: application/json" \
+  -d '{"data":"2026-08-21","categoria":"Aluguel","valor":1200.00,"descricao":"Aluguel de agosto"}'
+
+# Lançar e liquidar uma conta a pagar (ADMIN/GERENTE)
+curl -X POST http://localhost:8080/api/contas-pagar \
+  -H "Authorization: Bearer <accessToken>" -H "Content-Type: application/json" \
+  -d '{"descricao":"Fornecedor de produtos","valor":300.00,"dataVencimento":"2026-08-25"}'
+curl -X POST http://localhost:8080/api/contas-pagar/<uuid-conta>/pagar -H "Authorization: Bearer <accessToken>"
+
+# Lançar um debito de cliente (ADMIN/GERENTE/RECEPCAO) e recebe-lo depois (ADMIN/GERENTE)
+curl -X POST http://localhost:8080/api/contas-receber \
+  -H "Authorization: Bearer <accessToken>" -H "Content-Type: application/json" \
+  -d '{"clienteUuid":"<uuid-cliente>","descricao":"Corte fiado","valor":50.00,"dataVencimento":"2026-08-30"}'
+curl -X POST http://localhost:8080/api/contas-receber/<uuid-conta>/receber -H "Authorization: Bearer <accessToken>"
+
+# Fluxo de caixa consolidado
+curl http://localhost:8080/api/financeiro/fluxo-caixa -H "Authorization: Bearer <accessToken>"
+```
+
 ## Como executar os testes
 
 Backend (usa Testcontainers — requer Docker disponível para o usuário que

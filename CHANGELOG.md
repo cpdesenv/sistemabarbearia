@@ -4,6 +4,112 @@ Todas as mudanças notáveis deste projeto serão documentadas neste arquivo.
 
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
+## [0.5.0] - Fase 5 — Comanda, pagamento, caixa, estoque e financeiro
+
+### Adicionado
+
+- **5A — Comanda, caixa e formas de pagamento:**
+  - Módulo `financeiro`: `Comanda` e `ComandaItem`, sempre vinculada a um
+    `Agendamento`. A comanda é aberta automaticamente ao iniciar o
+    atendimento (`POST /api/comandas/abrir-para-agendamento/{agendamentoUuid}`,
+    idempotente) já com os serviços do agendamento; fecha-la transiciona o
+    agendamento para `FINALIZADO` e lança o valor no caixa do dia.
+  - Nesta sub-entrega os itens são somente serviços — produtos entram na
+    sub-entrega 5B, que vai estender `comanda_item` via nova migration.
+  - Desconto com motivo obrigatório, rateado proporcionalmente entre os
+    itens (com ajuste de centavo de arredondamento no último item, para a
+    soma sempre fechar exatamente com o valor informado).
+  - Comissão por item calculada sobre o valor líquido (após o rateio do
+    desconto), usando o percentual do vínculo profissional↔serviço quando
+    existir, senão o percentual padrão do profissional — recalculada em
+    tempo real a cada mudança de item ou desconto.
+  - Comanda `FECHADA` é imutável; correção é feita por **estorno** (motivo
+    obrigatório, com auditoria), o que libera o agendamento (já
+    `FINALIZADO`) para uma nova comanda ser aberta, preservando o
+    histórico das comandas anteriores.
+  - Índice único parcial no banco (`WHERE status = 'ABERTA'`) garante, sob
+    concorrência, no máximo uma comanda aberta por agendamento por vez.
+  - Tela **Caixa do dia**: total geral, total por forma de pagamento e
+    total (faturado + comissão) por profissional
+    (`GET /api/caixa?data=...`).
+  - Frontend: tela de Comanda (itens, desconto, forma de pagamento,
+    fechar/estornar) e tela de Caixa do dia; o botão "Iniciar atendimento"
+    da Agenda agora abre a comanda e navega direto para ela.
+  - 9 testes de integração cobrindo abertura idempotente, rateio de
+    desconto e comissão com valores exatos, bloqueio de edição de comanda
+    fechada, bloqueio de fechamento sem item/forma de pagamento, estorno
+    com auditoria e permissões por perfil (barbeiro fecha mas não
+    estorna).
+- **5B — Produtos e estoque:**
+  - Módulo `produto`: CRUD de catálogo (`Produto` — nome, categoria,
+    unidade, preço de venda/custo, estoque mínimo, `/api/produtos`,
+    mesmos perfis de gestão do CRUD de serviços) e histórico de
+    movimentações (`MovimentoEstoque` — entrada, saída, ajuste, devolução).
+  - Saldo do produto (`estoque_atual`) fica em cache na própria linha,
+    mantido em sincronia com o histórico por um `UPDATE` atômico
+    (`ProdutoRepository.ajustarEstoque`, condicionado a
+    `estoque_atual + delta >= 0`) — protege contra duas baixas
+    concorrentes deixarem o saldo negativo, sem precisar de lock explícito.
+  - Entrada de estoque com custo unitário (`POST
+    /api/produtos/{uuid}/entrada-estoque`) e ajuste manual de inventário
+    com motivo obrigatório (`POST /api/produtos/{uuid}/ajuste-estoque`),
+    ambos `ADMIN`/`GERENTE`; extrato paginado por produto (`GET
+    /api/produtos/{uuid}/movimentos`) e alerta de estoque mínimo (`GET
+    /api/produtos/alertas-estoque-minimo`).
+  - `comanda_item` passa a aceitar itens de **produto**, além de serviço
+    (`tipo`, `produto_id`, com `servico_id` agora opcional e uma
+    constraint de banco garantindo que exatamente um dos dois esteja
+    preenchido). Produto não gera comissão, mas entra no rateio do
+    desconto como qualquer outro item.
+  - Baixa de estoque acontece **somente ao fechar** a comanda (nunca ao
+    adicionar o item) — se o saldo não for suficiente para algum produto,
+    a `NegocioException` sobe e a transação inteira dá rollback: a comanda
+    continua `ABERTA` e nenhum estoque é alterado. O **estorno** devolve a
+    quantidade ao estoque automaticamente.
+  - Frontend: catálogo de produtos (`/produtos`) e tela de estoque e
+    movimentações (`/produtos/estoque` → lista com destaque para saldo
+    abaixo do mínimo → `/produtos/:uuid/estoque` com entrada, ajuste e
+    extrato); a tela de Comanda ganhou um segundo seletor para adicionar
+    produtos; card "Produtos a repor" no Dashboard.
+  - 13 novos testes de integração (CRUD de produto, entrada, ajuste sem
+    motivo recusado, alerta de estoque mínimo, e a integração completa
+    com comanda: venda com saldo zero bloqueada, baixa exata no
+    fechamento com extrato ligado à comanda, devolução no estorno, e item
+    de produto sem comissão).
+- **5C — Despesas, contas a pagar/receber e fluxo de caixa:**
+  - Novas entidades no módulo `financeiro`: `Despesa` (lançamento avulso,
+    definitivo, sem edição/exclusão), `ContaPagar` e `ContaReceber`
+    (`PENDENTE`/`PAGA` ou `RECEBIDA`/`CANCELADA`, com auditoria em toda
+    transição). `ContaReceber` referencia um `Cliente` (débito de
+    cliente, ex.: serviço fiado).
+  - `GET /api/financeiro/fluxo-caixa`: **caixa em mãos** (soma de todas as
+    comandas `FECHADA` menos todas as despesas lançadas, histórico
+    completo — não só do dia, diferente do Caixa do dia da 5A) **+
+    contas a receber esperadas** (toda conta a receber `PENDENTE`,
+    independente do vencimento) **− contas a pagar vencidas** (só as
+    `PENDENTE` cujo vencimento já passou — uma conta a pagar futura não
+    reduz o fluxo projetado). Usa o fuso horário da barbearia para
+    definir "hoje", como o Caixa do dia da 5A.
+  - Endpoints: `/api/despesas` (`ADMIN`/`GERENTE` lançam), `/api/contas-
+    pagar` (`ADMIN`/`GERENTE` lançam, marcam paga ou cancelam) e
+    `/api/contas-receber` (`ADMIN`/`GERENTE`/`RECEPCAO` lançam — é tarefa
+    de recepção registrar um débito de cliente —, só `ADMIN`/`GERENTE`
+    marcam recebida ou cancelam).
+  - Frontend: tela **Contas a pagar/receber** (`/financeiro/contas`, com
+    abas de Despesas, Contas a pagar e Contas a receber — busca de
+    cliente reaproveitada do formulário de agendamento, vencidas
+    destacadas em vermelho) e tela **Fluxo de caixa**
+    (`/financeiro/fluxo-caixa`) com os 4 números explicados.
+  - 5 novos testes de integração cobrindo o efeito de cada lançamento no
+    fluxo de caixa (despesa reduz, conta a receber soma até ser
+    recebida, conta a pagar só entra quando vencida, comanda fechada
+    soma) e permissões (recepção lança conta a receber mas não confirma
+    o recebimento).
+
+Com a 5C, a Fase 5 está completa: comanda, caixa, estoque e a visão
+financeira consolidada — tudo o que a barbearia precisa para controlar o
+dinheiro real antes de qualquer automação (Fase 6 em diante).
+
 ## [0.4.0] - Fase 4 — Agenda e motor de disponibilidade
 
 ### Adicionado

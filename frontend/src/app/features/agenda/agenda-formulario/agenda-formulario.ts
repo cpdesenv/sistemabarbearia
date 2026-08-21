@@ -11,8 +11,10 @@ import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 
+import { ConfirmDialogService } from '../../../core/ui/confirm-dialog/confirm-dialog.service';
 import { Cliente } from '../../clientes/clientes.model';
 import { ClientesService } from '../../clientes/clientes.service';
+import { FinanceiroService } from '../../financeiro/financeiro.service';
 import { Profissional } from '../../profissionais/profissionais.model';
 import { ProfissionaisService } from '../../profissionais/profissionais.service';
 import { Servico } from '../../servicos/servicos.model';
@@ -41,9 +43,11 @@ import { AgendaService } from '../agenda.service';
 export class AgendaFormulario {
   private readonly formBuilder = inject(FormBuilder);
   private readonly agendaService = inject(AgendaService);
+  private readonly financeiroService = inject(FinanceiroService);
   private readonly clientesService = inject(ClientesService);
   private readonly profissionaisService = inject(ProfissionaisService);
   private readonly servicosService = inject(ServicosService);
+  private readonly confirmDialog = inject(ConfirmDialogService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
@@ -179,7 +183,7 @@ export class AgendaFormulario {
     });
   }
 
-  protected executarAcao(acao: 'confirmar' | 'iniciar' | 'finalizar' | 'naoCompareceu'): void {
+  protected executarAcao(acao: 'confirmar' | 'finalizar' | 'naoCompareceu'): void {
     if (!this.uuid) {
       return;
     }
@@ -189,11 +193,9 @@ export class AgendaFormulario {
     const operacao =
       acao === 'confirmar'
         ? this.agendaService.confirmar(this.uuid)
-        : acao === 'iniciar'
-          ? this.agendaService.iniciar(this.uuid)
-          : acao === 'finalizar'
-            ? this.agendaService.finalizar(this.uuid)
-            : this.agendaService.marcarNaoComparecimento(this.uuid);
+        : acao === 'finalizar'
+          ? this.agendaService.finalizar(this.uuid)
+          : this.agendaService.marcarNaoComparecimento(this.uuid);
 
     operacao.subscribe({
       next: (agendamento) => {
@@ -207,27 +209,56 @@ export class AgendaFormulario {
     });
   }
 
+  /** Iniciar atendimento abre a comanda e leva o usuario direto pra ela, em vez de so' trocar o status aqui. */
+  protected iniciarAtendimento(): void {
+    if (!this.uuid) {
+      return;
+    }
+    this.executandoAcao.set(true);
+    this.mensagemErro.set(null);
+
+    this.financeiroService.abrirParaAgendamento(this.uuid).subscribe({
+      next: (comanda) => this.router.navigate(['/financeiro/comandas', comanda.uuid]),
+      error: (erro: HttpErrorResponse) => {
+        this.executandoAcao.set(false);
+        this.mensagemErro.set(erro.error?.mensagem ?? 'Não foi possível abrir a comanda agora.');
+      },
+    });
+  }
+
   protected cancelar(): void {
     if (!this.uuid) {
       return;
     }
-    const motivo = window.prompt('Motivo do cancelamento:');
-    if (!motivo) {
-      return;
-    }
+    const uuid = this.uuid;
 
-    this.executandoAcao.set(true);
-    this.mensagemErro.set(null);
-    this.agendaService.cancelar(this.uuid, motivo).subscribe({
-      next: (agendamento) => {
-        this.preencherComAgendamento(agendamento);
-        this.executandoAcao.set(false);
-      },
-      error: (erro: HttpErrorResponse) => {
-        this.executandoAcao.set(false);
-        this.mensagemErro.set(erro.error?.mensagem ?? 'Não foi possível cancelar agora.');
-      },
-    });
+    this.confirmDialog
+      .confirm({
+        title: 'Cancelar agendamento',
+        message: 'O agendamento será cancelado e o horário liberado na agenda.',
+        confirmLabel: 'Cancelar agendamento',
+        danger: true,
+        requireReason: true,
+        reasonLabel: 'Motivo do cancelamento',
+      })
+      .subscribe((resultado) => {
+        if (!resultado.confirmed || !resultado.reason) {
+          return;
+        }
+
+        this.executandoAcao.set(true);
+        this.mensagemErro.set(null);
+        this.agendaService.cancelar(uuid, resultado.reason).subscribe({
+          next: (agendamento) => {
+            this.preencherComAgendamento(agendamento);
+            this.executandoAcao.set(false);
+          },
+          error: (erro: HttpErrorResponse) => {
+            this.executandoAcao.set(false);
+            this.mensagemErro.set(erro.error?.mensagem ?? 'Não foi possível cancelar agora.');
+          },
+        });
+      });
   }
 
   private preencherComAgendamento(agendamento: Agendamento): void {

@@ -1,0 +1,166 @@
+<section class="comanda">
+  <h1>Comanda</h1>
+
+  @if (carregando()) {
+    <mat-spinner diameter="32" />
+  } @else if (comanda(); as dados) {
+    <mat-card class="comanda__resumo">
+      <mat-card-content>
+        <p><strong>Cliente:</strong> {{ dados.clienteNome }}</p>
+        <p><strong>Profissional:</strong> {{ dados.profissionalNome }}</p>
+        <p><strong>Status:</strong> {{ rotulosStatus[dados.status] }}</p>
+        @if (dados.status === 'ESTORNADA' && dados.motivoEstorno) {
+          <p><strong>Motivo do estorno:</strong> {{ dados.motivoEstorno }}</p>
+        }
+      </mat-card-content>
+    </mat-card>
+
+    @if (mensagemErro()) {
+      <p class="comanda__erro" role="alert">{{ mensagemErro() }}</p>
+    }
+
+    <mat-card>
+      <mat-card-content>
+        <h2>Itens</h2>
+        <table mat-table [dataSource]="dados.itens" class="comanda__tabela">
+          <ng-container matColumnDef="descricao">
+            <th mat-header-cell *matHeaderCellDef>Serviço</th>
+            <td mat-cell *matCellDef="let item">{{ item.descricao }}</td>
+          </ng-container>
+          <ng-container matColumnDef="valorBruto">
+            <th mat-header-cell *matHeaderCellDef>Bruto</th>
+            <td mat-cell *matCellDef="let item">{{ item.valorBruto | currency: 'BRL' }}</td>
+          </ng-container>
+          <ng-container matColumnDef="valorDescontoRateado">
+            <th mat-header-cell *matHeaderCellDef>Desconto</th>
+            <td mat-cell *matCellDef="let item">{{ item.valorDescontoRateado | currency: 'BRL' }}</td>
+          </ng-container>
+          <ng-container matColumnDef="valorLiquido">
+            <th mat-header-cell *matHeaderCellDef>Líquido</th>
+            <td mat-cell *matCellDef="let item">{{ item.valorLiquido | currency: 'BRL' }}</td>
+          </ng-container>
+          <ng-container matColumnDef="comissaoValor">
+            <th mat-header-cell *matHeaderCellDef>Comissão</th>
+            <td mat-cell *matCellDef="let item">
+              {{ item.comissaoValor !== null ? (item.comissaoValor | currency: 'BRL') : '—' }}
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="acoes">
+            <th mat-header-cell *matHeaderCellDef></th>
+            <td mat-cell *matCellDef="let item">
+              @if (estaAberta()) {
+                <button mat-button color="warn" type="button" [disabled]="executandoAcao()"
+                  (click)="removerItem(item.uuid)">
+                  Remover
+                </button>
+              }
+            </td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="colunasItens"></tr>
+          <tr mat-row *matRowDef="let row; columns: colunasItens"></tr>
+        </table>
+
+        @if (estaAberta()) {
+          <div class="comanda__adicionar-item">
+            <mat-form-field appearance="outline">
+              <mat-label>Adicionar serviço</mat-label>
+              <mat-select [ngModel]="servicoSelecionado()" (ngModelChange)="servicoSelecionado.set($event)">
+                @for (servico of servicos(); track servico.uuid) {
+                  <mat-option [value]="servico.uuid">
+                    {{ servico.nome }} ({{ servico.preco | currency: 'BRL' }})
+                  </mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            <button mat-stroked-button type="button" [disabled]="executandoAcao() || !servicoSelecionado()"
+              (click)="adicionarItem()">
+              Adicionar
+            </button>
+          </div>
+
+          <div class="comanda__adicionar-item">
+            <mat-form-field appearance="outline">
+              <mat-label>Adicionar produto</mat-label>
+              <mat-select [ngModel]="produtoSelecionado()" (ngModelChange)="produtoSelecionado.set($event)">
+                @for (produto of produtos(); track produto.uuid) {
+                  <mat-option [value]="produto.uuid">
+                    {{ produto.nome }} ({{ produto.precoVenda | currency: 'BRL' }}) — saldo: {{ produto.estoqueAtual }}
+                  </mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="comanda__campo-quantidade">
+              <mat-label>Qtd.</mat-label>
+              <input matInput type="number" min="1" [ngModel]="produtoQuantidade()"
+                (ngModelChange)="produtoQuantidade.set($event)" />
+            </mat-form-field>
+            <button mat-stroked-button type="button" [disabled]="executandoAcao() || !produtoSelecionado()"
+              (click)="adicionarItemProduto()">
+              Adicionar
+            </button>
+          </div>
+        }
+
+        <div class="comanda__totais">
+          <p>Subtotal: {{ dados.subtotal | currency: 'BRL' }}</p>
+          <p>Desconto: {{ dados.descontoValor | currency: 'BRL' }}</p>
+          <p class="comanda__total">Total: {{ dados.valorTotal | currency: 'BRL' }}</p>
+          <p>Comissão do profissional: {{ dados.comissaoTotal | currency: 'BRL' }}</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    @if (estaAberta()) {
+      <mat-card>
+        <mat-card-content>
+          <h2>Desconto</h2>
+          <div class="comanda__desconto">
+            <mat-form-field appearance="outline">
+              <mat-label>Valor do desconto</mat-label>
+              <input matInput type="number" min="0" step="0.01" [ngModel]="descontoValor()"
+                (ngModelChange)="descontoValor.set($event)" />
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="comanda__campo-largo">
+              <mat-label>Motivo</mat-label>
+              <input matInput [ngModel]="descontoMotivo()" (ngModelChange)="descontoMotivo.set($event)" />
+            </mat-form-field>
+            <button mat-stroked-button type="button" [disabled]="executandoAcao()" (click)="aplicarDesconto()">
+              Aplicar desconto
+            </button>
+          </div>
+
+          <h2>Forma de pagamento</h2>
+          <div class="comanda__forma-pagamento">
+            <mat-form-field appearance="outline">
+              <mat-label>Forma de pagamento</mat-label>
+              <mat-select [ngModel]="formaPagamentoSelecionada()"
+                (ngModelChange)="formaPagamentoSelecionada.set($event)">
+                @for (forma of formasPagamento; track forma) {
+                  <mat-option [value]="forma">{{ rotulosFormaPagamento[forma] }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            <button mat-stroked-button type="button" [disabled]="executandoAcao() || !formaPagamentoSelecionada()"
+              (click)="definirFormaPagamento()">
+              Definir
+            </button>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    }
+
+    <div class="comanda__acoes">
+      <a mat-stroked-button routerLink="/agenda">Voltar para a agenda</a>
+      @if (estaAberta()) {
+        <button mat-flat-button color="primary" type="button" [disabled]="executandoAcao()" (click)="fechar()">
+          Fechar comanda
+        </button>
+      }
+      @if (dados.status === 'FECHADA' && podeEstornar()) {
+        <button mat-stroked-button color="warn" type="button" [disabled]="executandoAcao()" (click)="estornar()">
+          Estornar
+        </button>
+      }
+    </div>
+  }
+</section>

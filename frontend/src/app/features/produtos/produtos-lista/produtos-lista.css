@@ -1,0 +1,45 @@
+.produtos {
+  padding: 16px;
+}
+
+.produtos__cabecalho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.produtos__filtro {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.produtos__tabela-wrapper {
+  overflow-x: auto;
+}
+
+.produtos__tabela {
+  width: 100%;
+}
+
+.produtos__acoes {
+  white-space: nowrap;
+}
+
+.produtos__status--ativo {
+  color: var(--success, #2e7d32);
+  font-weight: 500;
+}
+
+.produtos__status--inativo {
+  color: var(--mat-sys-error, #b3261e);
+  font-weight: 500;
+}
+
+.produtos__estoque--baixo {
+  color: var(--mat-sys-error, #b3261e);
+  font-weight: 600;
+}

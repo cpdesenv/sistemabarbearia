@@ -1,0 +1,53 @@
+.comanda {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 720px;
+}
+
+.comanda__resumo p {
+  margin: 4px 0;
+}
+
+.comanda__tabela {
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+.comanda__adicionar-item,
+.comanda__desconto,
+.comanda__forma-pagamento {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.comanda__campo-largo {
+  flex: 1;
+  min-width: 200px;
+}
+
+.comanda__campo-quantidade {
+  width: 90px;
+}
+
+.comanda__totais p {
+  margin: 4px 0;
+}
+
+.comanda__total {
+  font-weight: 700;
+  font-size: 1.1em;
+}
+
+.comanda__acoes {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.comanda__erro {
+  color: #b00020;
+}

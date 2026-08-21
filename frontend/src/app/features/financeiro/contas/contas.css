@@ -1,0 +1,25 @@
+.contas__formulario {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.contas__campo-largo {
+  min-width: 260px;
+  flex-grow: 1;
+}
+
+.contas__tabela {
+  width: 100%;
+}
+
+.contas__vencida {
+  color: #b3261e;
+  font-weight: 600;
+}
+
+.contas__erro {
+  color: #b3261e;
+}

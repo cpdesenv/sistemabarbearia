@@ -1,0 +1,46 @@
+<section class="estoque-lista">
+  <h1>Estoque e movimentações</h1>
+
+  @if (carregando()) {
+    <mat-spinner diameter="32" />
+  } @else {
+    <div class="estoque-lista__tabela-wrapper">
+      <table mat-table [dataSource]="produtos()" class="estoque-lista__tabela">
+        <ng-container matColumnDef="nome">
+          <th mat-header-cell *matHeaderCellDef>Produto</th>
+          <td mat-cell *matCellDef="let produto">{{ produto.nome }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="categoria">
+          <th mat-header-cell *matHeaderCellDef>Categoria</th>
+          <td mat-cell *matCellDef="let produto">{{ produto.categoria || '—' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="estoqueAtual">
+          <th mat-header-cell *matHeaderCellDef>Saldo atual</th>
+          <td mat-cell *matCellDef="let produto">
+            <span [class.estoque-lista__saldo--baixo]="estaAbaixoDoMinimo(produto)">
+              {{ produto.estoqueAtual }} {{ produto.unidade }}
+            </span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="estoqueMinimo">
+          <th mat-header-cell *matHeaderCellDef>Estoque mínimo</th>
+          <td mat-cell *matCellDef="let produto">{{ produto.estoqueMinimo }} {{ produto.unidade }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="acoes">
+          <th mat-header-cell *matHeaderCellDef></th>
+          <td mat-cell *matCellDef="let produto">
+            <a mat-button [routerLink]="['/produtos', produto.uuid, 'estoque']">Movimentar / extrato</a>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="colunas"></tr>
+        <tr mat-row *matRowDef="let row; columns: colunas"
+          [class.estoque-lista__linha--baixa]="estaAbaixoDoMinimo(row)"></tr>
+      </table>
+    </div>
+  }
+</section>

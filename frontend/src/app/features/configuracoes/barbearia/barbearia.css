@@ -22,7 +22,7 @@
 }
 
 .barbearia-config__sucesso {
-  color: var(--mat-sys-primary, #2e7d32);
+  color: var(--success, #2e7d32);
   margin: 0 0 8px;
   font-size: 0.875rem;
 }

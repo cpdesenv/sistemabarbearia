@@ -18,13 +18,13 @@
               </button>
             }
             @if (agendamento.status === 'CONFIRMADO') {
-              <button mat-stroked-button [disabled]="executandoAcao()" (click)="executarAcao('iniciar')">
+              <button mat-stroked-button [disabled]="executandoAcao()" (click)="iniciarAtendimento()">
                 Iniciar atendimento
               </button>
             }
             @if (agendamento.status === 'EM_ATENDIMENTO') {
-              <button mat-stroked-button [disabled]="executandoAcao()" (click)="executarAcao('finalizar')">
-                Finalizar
+              <button mat-stroked-button [disabled]="executandoAcao()" (click)="iniciarAtendimento()">
+                Abrir comanda
               </button>
             }
             @if (agendamento.status === 'AGENDADO' || agendamento.status === 'CONFIRMADO') {

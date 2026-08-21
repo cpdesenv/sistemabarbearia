@@ -110,6 +110,59 @@ export const routes: Routes = [
           ),
         canActivate: [roleGuard],
         data: { perfis: ['ADMIN', 'GERENTE', 'RECEPCAO'] }
+      },
+      {
+        path: 'financeiro/caixa',
+        loadComponent: () => import('./features/financeiro/caixa/caixa').then((m) => m.Caixa)
+      },
+      {
+        path: 'financeiro/comandas/:uuid',
+        loadComponent: () =>
+          import('./features/financeiro/comanda/comanda').then((m) => m.ComandaComponent)
+      },
+      {
+        path: 'financeiro/contas',
+        loadComponent: () => import('./features/financeiro/contas/contas').then((m) => m.Contas)
+      },
+      {
+        path: 'financeiro/fluxo-caixa',
+        loadComponent: () =>
+          import('./features/financeiro/fluxo-caixa/fluxo-caixa').then((m) => m.FluxoCaixaComponent)
+      },
+      {
+        path: 'produtos',
+        loadComponent: () =>
+          import('./features/produtos/produtos-lista/produtos-lista').then((m) => m.ProdutosLista)
+      },
+      {
+        path: 'produtos/novo',
+        loadComponent: () =>
+          import('./features/produtos/produtos-formulario/produtos-formulario').then(
+            (m) => m.ProdutosFormulario
+          ),
+        canActivate: [roleGuard],
+        data: { perfis: ['ADMIN', 'GERENTE'] }
+      },
+      {
+        path: 'produtos/estoque',
+        loadComponent: () =>
+          import('./features/produtos/estoque-lista/estoque-lista').then((m) => m.EstoqueLista)
+      },
+      {
+        path: 'produtos/:uuid/editar',
+        loadComponent: () =>
+          import('./features/produtos/produtos-formulario/produtos-formulario').then(
+            (m) => m.ProdutosFormulario
+          ),
+        canActivate: [roleGuard],
+        data: { perfis: ['ADMIN', 'GERENTE'] }
+      },
+      {
+        path: 'produtos/:uuid/estoque',
+        loadComponent: () =>
+          import('./features/produtos/estoque-detalhe/estoque-detalhe').then((m) => m.EstoqueDetalhe),
+        canActivate: [roleGuard],
+        data: { perfis: ['ADMIN', 'GERENTE'] }
       }
     ]
   },

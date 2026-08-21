@@ -8,9 +8,25 @@
   flex-shrink: 0;
 }
 
+/*
+ * Selo do nome do sistema: degrade azul da mesma familia do acento do
+ * menu lateral, pra funcionar como uma especie de "wordmark" no topo -
+ * destacado do resto do topbar, que fica neutro. --accent (nao
+ * --accent-bright) como ponta clara do degrade: --accent-bright da' so'
+ * 2,14:1 de contraste com texto branco, abaixo do minimo AA de 3:1 mesmo
+ * pra texto grande/negrito; --accent da' 3,38:1.
+ */
 .topbar__titulo {
-  font-size: 1.1rem;
-  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 18px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--accent-deep) 30%, transparent);
+  color: #fff;
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
 .topbar__espaco {
@@ -29,30 +45,47 @@
 }
 
 .sidebar {
+  /*
+   * Azul-marinho quase preto, o mesmo fundo da logo "CP Desenv" (#070d1a),
+   * levemente clareado para nao ficar um vazio total numa superficie
+   * grande de UI. --sidebar-accent usa o tom mais vivido do icone da
+   * logo em vez de --mat-sys-primary: o tone-40 do tema (#005cbb) so
+   * tem 2,9:1 de contraste contra esse fundo escuro, abaixo do minimo
+   * AA de 4,5:1 para texto.
+   */
+  --sidebar-bg: #0a1220;
+  --sidebar-bg-hover: #16213a;
+  --sidebar-text: #c9d3e0;
+  --sidebar-accent: #0cbbfe;
+
   width: 220px;
   flex-shrink: 0;
-  background: #f3f4f6;
+  background: var(--sidebar-bg);
   padding: 16px 0;
 }
 
 .sidebar__item {
   display: block;
   padding: 10px 16px;
-  color: #1f2937;
+  color: var(--sidebar-text);
   text-decoration: none;
+  border-left: 3px solid transparent;
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
 }
 
 .sidebar__item:hover {
-  background: #e5e7eb;
+  background: var(--sidebar-bg-hover);
 }
 
 .sidebar__item--ativo {
   font-weight: 600;
-  background: #e5e7eb;
+  color: var(--sidebar-accent);
+  background: color-mix(in srgb, var(--sidebar-accent) 16%, transparent);
+  border-left-color: var(--sidebar-accent);
 }
 
 .conteudo {
   flex: 1;
   overflow: auto;
-  padding: 24px;
+  padding: 32px clamp(24px, 4.5%, 54px);
 }

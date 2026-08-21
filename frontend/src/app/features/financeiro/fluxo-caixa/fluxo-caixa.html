@@ -1,0 +1,41 @@
+<section class="fluxo-caixa">
+  <h1>Fluxo de caixa</h1>
+
+  @if (carregando()) {
+    <mat-spinner diameter="32" />
+  } @else if (fluxo(); as dados) {
+    <div class="fluxo-caixa__grade">
+      <mat-card>
+        <mat-card-content>
+          <p class="fluxo-caixa__rotulo">Caixa em mãos</p>
+          <p class="fluxo-caixa__valor">{{ dados.caixaEmMaos | currency: 'BRL' }}</p>
+          <p class="fluxo-caixa__explicacao">Comandas fechadas menos despesas lançadas</p>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card>
+        <mat-card-content>
+          <p class="fluxo-caixa__rotulo">Contas a receber esperadas</p>
+          <p class="fluxo-caixa__valor">{{ dados.contasAReceberEsperadas | currency: 'BRL' }}</p>
+          <p class="fluxo-caixa__explicacao">Soma de todas as contas a receber pendentes</p>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card>
+        <mat-card-content>
+          <p class="fluxo-caixa__rotulo">Contas a pagar vencidas</p>
+          <p class="fluxo-caixa__valor">{{ dados.contasAPagarVencidas | currency: 'BRL' }}</p>
+          <p class="fluxo-caixa__explicacao">Contas pendentes com vencimento no passado</p>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="fluxo-caixa__total">
+        <mat-card-content>
+          <p class="fluxo-caixa__rotulo">Fluxo de caixa projetado</p>
+          <p class="fluxo-caixa__valor">{{ dados.fluxoCaixa | currency: 'BRL' }}</p>
+          <p class="fluxo-caixa__explicacao">Caixa em mãos + a receber − a pagar vencidas</p>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  }
+</section>
