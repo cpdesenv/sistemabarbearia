@@ -29,30 +29,43 @@
 }
 
 .sidebar {
+  /*
+   * Azul-marinho quase preto, o mesmo fundo da logo "CP Desenv" (#070d1a),
+   * levemente clareado para nao ficar um vazio total numa superficie
+   * grande de UI. --sidebar-accent usa o tom mais vivido do icone da
+   * logo em vez de --mat-sys-primary: o tone-40 do tema (#005cbb) so
+   * tem 2,9:1 de contraste contra esse fundo escuro, abaixo do minimo
+   * AA de 4,5:1 para texto.
+   */
+  --sidebar-bg: #0a1220;
+  --sidebar-bg-hover: #16213a;
+  --sidebar-text: #c9d3e0;
+  --sidebar-accent: #0cbbfe;
+
   width: 220px;
   flex-shrink: 0;
-  background: #f3f4f6;
+  background: var(--sidebar-bg);
   padding: 16px 0;
 }
 
 .sidebar__item {
   display: block;
   padding: 10px 16px;
-  color: #1f2937;
+  color: var(--sidebar-text);
   text-decoration: none;
   border-left: 3px solid transparent;
   transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
 }
 
 .sidebar__item:hover {
-  background: #e5e7eb;
+  background: var(--sidebar-bg-hover);
 }
 
 .sidebar__item--ativo {
   font-weight: 600;
-  color: var(--mat-sys-primary, #005cbb);
-  background: color-mix(in srgb, var(--mat-sys-primary, #005cbb) 10%, transparent);
-  border-left-color: var(--mat-sys-primary, #005cbb);
+  color: var(--sidebar-accent);
+  background: color-mix(in srgb, var(--sidebar-accent) 16%, transparent);
+  border-left-color: var(--sidebar-accent);
 }
 
 .conteudo {
