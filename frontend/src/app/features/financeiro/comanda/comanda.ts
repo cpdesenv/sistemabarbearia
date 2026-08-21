@@ -13,6 +13,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatTableModule } from '@angular/material/table';
 
 import { AuthService } from '../../../core/auth/auth.service';
+import { ConfirmDialogService } from '../../../core/ui/confirm-dialog/confirm-dialog.service';
 import { Servico } from '../../servicos/servicos.model';
 import { ServicosService } from '../../servicos/servicos.service';
 import { Comanda, FormaPagamento, RUTULOS_FORMA_PAGAMENTO, RUTULOS_STATUS_COMANDA } from '../financeiro.model';
@@ -39,6 +40,7 @@ export class ComandaComponent {
   private readonly financeiroService = inject(FinanceiroService);
   private readonly servicosService = inject(ServicosService);
   private readonly authService = inject(AuthService);
+  private readonly confirmDialog = inject(ConfirmDialogService);
   private readonly route = inject(ActivatedRoute);
 
   private readonly uuid = this.route.snapshot.paramMap.get('uuid')!;
@@ -122,10 +124,17 @@ export class ComandaComponent {
     if (!comanda) {
       return;
     }
-    if (!window.confirm('Fechar a comanda? Depois de fechada, só é possível corrigir por estorno.')) {
-      return;
-    }
-    this.executarComTratamentoDeErro(this.financeiroService.fechar(comanda.uuid));
+    this.confirmDialog
+      .confirm({
+        title: 'Fechar comanda',
+        message: 'Fechar a comanda? Depois de fechada, só é possível corrigir por estorno.',
+        confirmLabel: 'Fechar comanda',
+      })
+      .subscribe((resultado) => {
+        if (resultado.confirmed) {
+          this.executarComTratamentoDeErro(this.financeiroService.fechar(comanda.uuid));
+        }
+      });
   }
 
   protected estornar(): void {
@@ -133,11 +142,20 @@ export class ComandaComponent {
     if (!comanda) {
       return;
     }
-    const motivo = window.prompt('Motivo do estorno:');
-    if (!motivo) {
-      return;
-    }
-    this.executarComTratamentoDeErro(this.financeiroService.estornar(comanda.uuid, motivo));
+    this.confirmDialog
+      .confirm({
+        title: 'Estornar comanda',
+        message: 'O estorno não pode ser desfeito. Descreva o motivo da correção.',
+        confirmLabel: 'Estornar',
+        danger: true,
+        requireReason: true,
+        reasonLabel: 'Motivo do estorno',
+      })
+      .subscribe((resultado) => {
+        if (resultado.confirmed && resultado.reason) {
+          this.executarComTratamentoDeErro(this.financeiroService.estornar(comanda.uuid, resultado.reason));
+        }
+      });
   }
 
   private carregar(): void {
