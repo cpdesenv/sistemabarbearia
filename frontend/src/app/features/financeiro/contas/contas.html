@@ -8,7 +8,7 @@
       <p class="contas__erro" role="alert">{{ mensagemErro() }}</p>
     }
 
-    <mat-tab-group>
+    <mat-tab-group [dynamicHeight]="true">
       <mat-tab label="Despesas">
         <mat-card>
           <mat-card-content>

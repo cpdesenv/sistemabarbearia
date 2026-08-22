@@ -133,9 +133,18 @@
     display: none;
   }
 
+  /*
+   * height:auto explicito: o Material define uma altura fixa padrao
+   * (--mat-table-row-height, 52px no M3) em .mat-mdc-row, pensada pra
+   * uma linha de tabela normal - sem isso, o cartao empilhado (4 celulas
+   * uma embaixo da outra) fica espremido nesses 52px e o resto do
+   * conteudo vaza sem lugar nenhum pra aparecer (nem scroll chega nele,
+   * porque o overflow:visible so' deixa o desenho vazar, nao o layout).
+   */
   .contas__tabela .mat-mdc-row {
     display: flex;
     flex-direction: column;
+    height: auto;
     padding: 12px 4px;
     border: 1px solid #e0e0e0;
     border-radius: 8px;
@@ -146,6 +155,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    height: auto;
     gap: 12px;
     padding: 8px 12px;
     border-bottom: none;
