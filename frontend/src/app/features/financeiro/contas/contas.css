@@ -104,8 +104,29 @@
  * template). Evita tabela espremida/scroll horizontal forcado no celular.
  */
 @media (max-width: 640px) {
+  /*
+   * overflow:visible (os dois eixos) - nao so' overflow-x:hidden: pela
+   * especificacao do CSS, se um eixo de overflow nao e' "visible" o
+   * outro passa a computar como "auto" automaticamente, mesmo com
+   * overflow-y:visible declarado explicitamente - isso criava um scroll
+   * vertical indesejado, com o container ficando mais baixo que o
+   * proprio conteudo. Em telas estreitas a tabela vira cartoes
+   * empilhados (ver abaixo) e nao precisa mais de scroll horizontal.
+   */
   .contas__tabela-scroll {
     border: none;
+    overflow: visible;
+  }
+
+  /*
+   * display:block no proprio <table> (.contas__tabela): sem isso, o
+   * algoritmo de layout de tabela nativo do navegador ainda reserva
+   * largura minima por coluna mesmo com as linhas/celulas em flex,
+   * sobrando um scroll horizontal residual.
+   */
+  .contas__tabela {
+    display: block;
+    width: 100%;
   }
 
   .contas__tabela .mat-mdc-header-row {

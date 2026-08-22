@@ -1,4 +1,4 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatMenuModule } from '@angular/material/menu';
@@ -47,6 +47,9 @@ export class Shell {
 
   protected readonly usuario = this.authService.usuario;
 
+  /** Menu lateral em telas estreitas (ver shell.css): fechado por padrao, vira um painel deslizante. */
+  protected readonly menuAberto = signal(false);
+
   protected readonly itensMenu = computed(() => {
     const perfilAtual = this.usuario()?.perfil;
     return ITENS_MENU.filter((item) => !item.perfis || (perfilAtual && item.perfis.includes(perfilAtual)));
@@ -68,6 +71,14 @@ export class Shell {
     }
     return (partes[0][0] + partes[partes.length - 1][0]).toUpperCase();
   });
+
+  protected alternarMenu(): void {
+    this.menuAberto.update((aberto) => !aberto);
+  }
+
+  protected fecharMenu(): void {
+    this.menuAberto.set(false);
+  }
 
   protected sair(): void {
     this.authService.logout();

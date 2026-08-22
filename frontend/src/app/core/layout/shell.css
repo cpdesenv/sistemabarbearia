@@ -23,6 +23,28 @@
   background: var(--chrome-bg);
 }
 
+/* So aparece abaixo do breakpoint (ver media query no fim do arquivo) - em telas largas o menu fica sempre visivel. */
+.topbar__menu-toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  margin-right: 8px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  transition: background-color 160ms ease;
+}
+
+.topbar__menu-toggle:hover,
+.topbar__menu-toggle:focus-visible {
+  background: var(--chrome-bg-hover);
+}
+
 /*
  * Nome do sistema: lockup em duas linhas, mesmo padrao do bloco do
  * usuario a direita (kicker pequeno + linha principal maior).
@@ -148,6 +170,7 @@
 }
 
 .shell__corpo {
+  position: relative;
   display: flex;
   flex: 1;
   min-height: 0;
@@ -201,4 +224,41 @@
   flex: 1;
   overflow: auto;
   padding: 32px clamp(24px, 4.5%, 54px);
+}
+
+/*
+ * Abaixo de 840px o menu lateral deixa de ocupar espaco fixo no layout
+ * (que em telas de celular sobrava so' ~170px pro conteudo, com a tela
+ * inteira precisando de scroll horizontal) e vira um painel deslizante:
+ * escondido por padrao (translateX -100%), abre por cima do conteudo com
+ * um fundo escurecido atras, fechado pelo botao hamburguer no topbar, por
+ * um toque no fundo, ou ao navegar para uma tela (ver (click)="fecharMenu()"
+ * nos itens, no shell.html).
+ */
+@media (max-width: 840px) {
+  .topbar__menu-toggle {
+    display: flex;
+  }
+
+  .sidebar {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 30;
+    transform: translateX(-100%);
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.25);
+    transition: transform 220ms ease;
+  }
+
+  .sidebar--aberto {
+    transform: translateX(0);
+  }
+
+  .sidebar__fundo {
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    background: rgba(11, 25, 48, 0.45);
+  }
 }

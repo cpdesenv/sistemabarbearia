@@ -1,5 +1,18 @@
 <div class="shell">
   <mat-toolbar color="primary" class="topbar">
+    <button
+      class="topbar__menu-toggle"
+      type="button"
+      aria-label="Abrir menu"
+      [attr.aria-expanded]="menuAberto()"
+      (click)="alternarMenu()"
+    >
+      <svg width="20" height="14" viewBox="0 0 20 14" fill="none" aria-hidden="true">
+        <path d="M0 1H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+        <path d="M0 7H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+        <path d="M0 13H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+      </svg>
+    </button>
     <span class="topbar__titulo">
       <span class="topbar__titulo-kicker">Sistema para Barbearia</span>
       <span class="topbar__titulo-marca">Cortes Cavalinho</span>
@@ -23,9 +36,18 @@
   </mat-toolbar>
 
   <div class="shell__corpo">
-    <nav class="sidebar">
+    @if (menuAberto()) {
+      <div class="sidebar__fundo" (click)="fecharMenu()"></div>
+    }
+
+    <nav class="sidebar" [class.sidebar--aberto]="menuAberto()">
       @for (item of itensMenu(); track item.rota) {
-        <a class="sidebar__item" [routerLink]="item.rota" routerLinkActive="sidebar__item--ativo">
+        <a
+          class="sidebar__item"
+          [routerLink]="item.rota"
+          routerLinkActive="sidebar__item--ativo"
+          (click)="fecharMenu()"
+        >
           {{ item.rotulo }}
         </a>
       }
