@@ -51,9 +51,9 @@ export class Contas {
   protected readonly rotulosStatusContaPagar = RUTULOS_STATUS_CONTA_PAGAR;
   protected readonly rotulosStatusContaReceber = RUTULOS_STATUS_CONTA_RECEBER;
 
-  protected readonly colunasDespesas = ['data', 'categoria', 'valor', 'descricao'];
-  protected readonly colunasContasPagar = ['descricao', 'valor', 'dataVencimento', 'status', 'acoes'];
-  protected readonly colunasContasReceber = ['clienteNome', 'valor', 'dataVencimento', 'status', 'acoes'];
+  protected readonly colunasDespesas = ['indicador', 'data', 'categoria', 'valor', 'descricao'];
+  protected readonly colunasContasPagar = ['indicador', 'descricao', 'valor', 'dataVencimento', 'status', 'acoes'];
+  protected readonly colunasContasReceber = ['indicador', 'clienteNome', 'valor', 'dataVencimento', 'status', 'acoes'];
 
   protected readonly carregando = signal(true);
   protected readonly mensagemErro = signal<string | null>(null);
@@ -88,6 +88,32 @@ export class Contas {
 
   protected rotuloStatusReceber(status: StatusContaReceber): string {
     return this.rotulosStatusContaReceber[status];
+  }
+
+  /** Cor pastel do indicador circular de cada linha - saida de caixa (despesa), sem status proprio. */
+  protected corIndicadorDespesa(): string {
+    return '#F5C6C6';
+  }
+
+  protected corIndicadorContaPagar(conta: ContaPagar): string {
+    return this.corIndicadorPorStatus(conta.status, conta.vencida);
+  }
+
+  protected corIndicadorContaReceber(conta: ContaReceber): string {
+    return this.corIndicadorPorStatus(conta.status, conta.vencida);
+  }
+
+  private corIndicadorPorStatus(status: StatusContaPagar | StatusContaReceber, vencida: boolean): string {
+    if (vencida) {
+      return '#F0A8A8';
+    }
+    if (status === 'PAGA' || status === 'RECEBIDA') {
+      return '#B7E4C7';
+    }
+    if (status === 'CANCELADA') {
+      return '#D8D8D8';
+    }
+    return '#FFE1A8';
   }
 
   protected podeGerenciar(): boolean {

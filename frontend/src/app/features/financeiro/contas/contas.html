@@ -45,26 +45,34 @@
             @if (despesas().length === 0) {
               <p>Nenhuma despesa lançada.</p>
             } @else {
-              <table mat-table [dataSource]="despesas()" class="contas__tabela">
-                <ng-container matColumnDef="data">
-                  <th mat-header-cell *matHeaderCellDef>Data</th>
-                  <td mat-cell *matCellDef="let d">{{ d.data | date: 'dd/MM/yyyy' }}</td>
-                </ng-container>
-                <ng-container matColumnDef="categoria">
-                  <th mat-header-cell *matHeaderCellDef>Categoria</th>
-                  <td mat-cell *matCellDef="let d">{{ d.categoria ?? '—' }}</td>
-                </ng-container>
-                <ng-container matColumnDef="valor">
-                  <th mat-header-cell *matHeaderCellDef>Valor</th>
-                  <td mat-cell *matCellDef="let d">{{ d.valor | currency: 'BRL' }}</td>
-                </ng-container>
-                <ng-container matColumnDef="descricao">
-                  <th mat-header-cell *matHeaderCellDef>Descrição</th>
-                  <td mat-cell *matCellDef="let d">{{ d.descricao ?? '—' }}</td>
-                </ng-container>
-                <tr mat-header-row *matHeaderRowDef="colunasDespesas"></tr>
-                <tr mat-row *matRowDef="let row; columns: colunasDespesas"></tr>
-              </table>
+              <div class="contas__tabela-scroll">
+                <table mat-table [dataSource]="despesas()" class="contas__tabela">
+                  <ng-container matColumnDef="indicador">
+                    <th mat-header-cell *matHeaderCellDef></th>
+                    <td mat-cell *matCellDef="let d">
+                      <span class="contas__indicador" [style.background]="corIndicadorDespesa()"></span>
+                    </td>
+                  </ng-container>
+                  <ng-container matColumnDef="data">
+                    <th mat-header-cell *matHeaderCellDef>Data</th>
+                    <td mat-cell *matCellDef="let d" data-label="Data">{{ d.data | date: 'dd/MM/yyyy' }}</td>
+                  </ng-container>
+                  <ng-container matColumnDef="categoria">
+                    <th mat-header-cell *matHeaderCellDef>Categoria</th>
+                    <td mat-cell *matCellDef="let d" data-label="Categoria">{{ d.categoria ?? '—' }}</td>
+                  </ng-container>
+                  <ng-container matColumnDef="valor">
+                    <th mat-header-cell *matHeaderCellDef>Valor</th>
+                    <td mat-cell *matCellDef="let d" data-label="Valor">{{ d.valor | currency: 'BRL' }}</td>
+                  </ng-container>
+                  <ng-container matColumnDef="descricao">
+                    <th mat-header-cell *matHeaderCellDef>Descrição</th>
+                    <td mat-cell *matCellDef="let d" data-label="Descrição">{{ d.descricao ?? '—' }}</td>
+                  </ng-container>
+                  <tr mat-header-row *matHeaderRowDef="colunasDespesas"></tr>
+                  <tr mat-row *matRowDef="let row; columns: colunasDespesas"></tr>
+                </table>
+              </div>
             }
           </mat-card-content>
         </mat-card>
@@ -101,39 +109,47 @@
             @if (contasPagar().length === 0) {
               <p>Nenhuma conta a pagar lançada.</p>
             } @else {
-              <table mat-table [dataSource]="contasPagar()" class="contas__tabela">
-                <ng-container matColumnDef="descricao">
-                  <th mat-header-cell *matHeaderCellDef>Descrição</th>
-                  <td mat-cell *matCellDef="let c">{{ c.descricao }}</td>
-                </ng-container>
-                <ng-container matColumnDef="valor">
-                  <th mat-header-cell *matHeaderCellDef>Valor</th>
-                  <td mat-cell *matCellDef="let c">{{ c.valor | currency: 'BRL' }}</td>
-                </ng-container>
-                <ng-container matColumnDef="dataVencimento">
-                  <th mat-header-cell *matHeaderCellDef>Vencimento</th>
-                  <td mat-cell *matCellDef="let c" [class.contas__vencida]="c.vencida">
-                    {{ c.dataVencimento | date: 'dd/MM/yyyy' }} @if (c.vencida) { (vencida) }
-                  </td>
-                </ng-container>
-                <ng-container matColumnDef="status">
-                  <th mat-header-cell *matHeaderCellDef>Status</th>
-                  <td mat-cell *matCellDef="let c">{{ rotuloStatusPagar(c.status) }}</td>
-                </ng-container>
-                <ng-container matColumnDef="acoes">
-                  <th mat-header-cell *matHeaderCellDef></th>
-                  <td mat-cell *matCellDef="let c">
-                    @if (c.status === 'PENDENTE' && podeGerenciar()) {
-                      <button mat-button type="button" (click)="marcarPaga(c.uuid)">Marcar como paga</button>
-                      <button mat-button color="warn" type="button" (click)="cancelarContaPagar(c.uuid)">
-                        Cancelar
-                      </button>
-                    }
-                  </td>
-                </ng-container>
-                <tr mat-header-row *matHeaderRowDef="colunasContasPagar"></tr>
-                <tr mat-row *matRowDef="let row; columns: colunasContasPagar"></tr>
-              </table>
+              <div class="contas__tabela-scroll">
+                <table mat-table [dataSource]="contasPagar()" class="contas__tabela">
+                  <ng-container matColumnDef="indicador">
+                    <th mat-header-cell *matHeaderCellDef></th>
+                    <td mat-cell *matCellDef="let c">
+                      <span class="contas__indicador" [style.background]="corIndicadorContaPagar(c)"></span>
+                    </td>
+                  </ng-container>
+                  <ng-container matColumnDef="descricao">
+                    <th mat-header-cell *matHeaderCellDef>Descrição</th>
+                    <td mat-cell *matCellDef="let c" data-label="Descrição">{{ c.descricao }}</td>
+                  </ng-container>
+                  <ng-container matColumnDef="valor">
+                    <th mat-header-cell *matHeaderCellDef>Valor</th>
+                    <td mat-cell *matCellDef="let c" data-label="Valor">{{ c.valor | currency: 'BRL' }}</td>
+                  </ng-container>
+                  <ng-container matColumnDef="dataVencimento">
+                    <th mat-header-cell *matHeaderCellDef>Vencimento</th>
+                    <td mat-cell *matCellDef="let c" data-label="Vencimento" [class.contas__vencida]="c.vencida">
+                      {{ c.dataVencimento | date: 'dd/MM/yyyy' }} @if (c.vencida) { (vencida) }
+                    </td>
+                  </ng-container>
+                  <ng-container matColumnDef="status">
+                    <th mat-header-cell *matHeaderCellDef>Status</th>
+                    <td mat-cell *matCellDef="let c" data-label="Status">{{ rotuloStatusPagar(c.status) }}</td>
+                  </ng-container>
+                  <ng-container matColumnDef="acoes">
+                    <th mat-header-cell *matHeaderCellDef></th>
+                    <td mat-cell *matCellDef="let c" data-label="Ações">
+                      @if (c.status === 'PENDENTE' && podeGerenciar()) {
+                        <button mat-button type="button" (click)="marcarPaga(c.uuid)">Marcar como paga</button>
+                        <button mat-button color="warn" type="button" (click)="cancelarContaPagar(c.uuid)">
+                          Cancelar
+                        </button>
+                      }
+                    </td>
+                  </ng-container>
+                  <tr mat-header-row *matHeaderRowDef="colunasContasPagar"></tr>
+                  <tr mat-row *matRowDef="let row; columns: colunasContasPagar"></tr>
+                </table>
+              </div>
             }
           </mat-card-content>
         </mat-card>
@@ -186,39 +202,47 @@
             @if (contasReceber().length === 0) {
               <p>Nenhuma conta a receber lançada.</p>
             } @else {
-              <table mat-table [dataSource]="contasReceber()" class="contas__tabela">
-                <ng-container matColumnDef="clienteNome">
-                  <th mat-header-cell *matHeaderCellDef>Cliente</th>
-                  <td mat-cell *matCellDef="let c">{{ c.clienteNome }}</td>
-                </ng-container>
-                <ng-container matColumnDef="valor">
-                  <th mat-header-cell *matHeaderCellDef>Valor</th>
-                  <td mat-cell *matCellDef="let c">{{ c.valor | currency: 'BRL' }}</td>
-                </ng-container>
-                <ng-container matColumnDef="dataVencimento">
-                  <th mat-header-cell *matHeaderCellDef>Vencimento</th>
-                  <td mat-cell *matCellDef="let c" [class.contas__vencida]="c.vencida">
-                    {{ c.dataVencimento | date: 'dd/MM/yyyy' }} @if (c.vencida) { (vencida) }
-                  </td>
-                </ng-container>
-                <ng-container matColumnDef="status">
-                  <th mat-header-cell *matHeaderCellDef>Status</th>
-                  <td mat-cell *matCellDef="let c">{{ rotuloStatusReceber(c.status) }}</td>
-                </ng-container>
-                <ng-container matColumnDef="acoes">
-                  <th mat-header-cell *matHeaderCellDef></th>
-                  <td mat-cell *matCellDef="let c">
-                    @if (c.status === 'PENDENTE' && podeGerenciar()) {
-                      <button mat-button type="button" (click)="marcarRecebida(c.uuid)">Marcar como recebida</button>
-                      <button mat-button color="warn" type="button" (click)="cancelarContaReceber(c.uuid)">
-                        Cancelar
-                      </button>
-                    }
-                  </td>
-                </ng-container>
-                <tr mat-header-row *matHeaderRowDef="colunasContasReceber"></tr>
-                <tr mat-row *matRowDef="let row; columns: colunasContasReceber"></tr>
-              </table>
+              <div class="contas__tabela-scroll">
+                <table mat-table [dataSource]="contasReceber()" class="contas__tabela">
+                  <ng-container matColumnDef="indicador">
+                    <th mat-header-cell *matHeaderCellDef></th>
+                    <td mat-cell *matCellDef="let c">
+                      <span class="contas__indicador" [style.background]="corIndicadorContaReceber(c)"></span>
+                    </td>
+                  </ng-container>
+                  <ng-container matColumnDef="clienteNome">
+                    <th mat-header-cell *matHeaderCellDef>Cliente</th>
+                    <td mat-cell *matCellDef="let c" data-label="Cliente">{{ c.clienteNome }}</td>
+                  </ng-container>
+                  <ng-container matColumnDef="valor">
+                    <th mat-header-cell *matHeaderCellDef>Valor</th>
+                    <td mat-cell *matCellDef="let c" data-label="Valor">{{ c.valor | currency: 'BRL' }}</td>
+                  </ng-container>
+                  <ng-container matColumnDef="dataVencimento">
+                    <th mat-header-cell *matHeaderCellDef>Vencimento</th>
+                    <td mat-cell *matCellDef="let c" data-label="Vencimento" [class.contas__vencida]="c.vencida">
+                      {{ c.dataVencimento | date: 'dd/MM/yyyy' }} @if (c.vencida) { (vencida) }
+                    </td>
+                  </ng-container>
+                  <ng-container matColumnDef="status">
+                    <th mat-header-cell *matHeaderCellDef>Status</th>
+                    <td mat-cell *matCellDef="let c" data-label="Status">{{ rotuloStatusReceber(c.status) }}</td>
+                  </ng-container>
+                  <ng-container matColumnDef="acoes">
+                    <th mat-header-cell *matHeaderCellDef></th>
+                    <td mat-cell *matCellDef="let c" data-label="Ações">
+                      @if (c.status === 'PENDENTE' && podeGerenciar()) {
+                        <button mat-button type="button" (click)="marcarRecebida(c.uuid)">Marcar como recebida</button>
+                        <button mat-button color="warn" type="button" (click)="cancelarContaReceber(c.uuid)">
+                          Cancelar
+                        </button>
+                      }
+                    </td>
+                  </ng-container>
+                  <tr mat-header-row *matHeaderRowDef="colunasContasReceber"></tr>
+                  <tr mat-row *matRowDef="let row; columns: colunasContasReceber"></tr>
+                </table>
+              </div>
             }
           </mat-card-content>
         </mat-card>
