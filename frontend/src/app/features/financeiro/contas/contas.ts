@@ -90,9 +90,15 @@ export class Contas {
     return this.rotulosStatusContaReceber[status];
   }
 
-  /** Cor pastel do indicador circular de cada linha - saida de caixa (despesa), sem status proprio. */
+  /**
+   * Cor do indicador circular de cada linha de despesa (sem status
+   * proprio, ao contrario de conta a pagar/receber). Mesmo azul claro
+   * (#90CAF9) da paleta "Cor na agenda" (ver PALETA_CORES_AGENDA em
+   * profissionais-formulario.ts), reaproveitado aqui pra ficar dentro da
+   * identidade visual em vez de um tom pastel qualquer.
+   */
   protected corIndicadorDespesa(): string {
-    return '#F5C6C6';
+    return '#90CAF9';
   }
 
   protected corIndicadorContaPagar(conta: ContaPagar): string {
