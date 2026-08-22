@@ -1,4 +1,18 @@
 .shell {
+  /*
+   * Paleta do "chrome" do app (topbar + menu lateral), compartilhada pelos
+   * dois porque ambos viraram uma faixa azul-marinho continua. Definida
+   * aqui (ancestral comum) em vez de dentro de .sidebar: --chrome-accent
+   * usa o tom mais vivido do icone da logo "CP Desenv" em vez de
+   * --mat-sys-primary porque o tone-40 do tema (#005cbb) so' tem 2,9:1 de
+   * contraste contra o fundo escuro, abaixo do minimo AA de 4,5:1 para
+   * texto.
+   */
+  --chrome-bg: #0a1220;
+  --chrome-bg-hover: #16213a;
+  --chrome-text: #c9d3e0;
+  --chrome-accent: #0cbbfe;
+
   display: flex;
   flex-direction: column;
   height: 100vh;
@@ -6,26 +20,57 @@
 
 .topbar {
   flex-shrink: 0;
+  background: var(--chrome-bg);
 }
 
 /*
- * Selo do nome do sistema: degrade azul da mesma familia do acento do
- * menu lateral, pra funcionar como uma especie de "wordmark" no topo -
- * destacado do resto do topbar, que fica neutro. --accent (nao
- * --accent-bright) como ponta clara do degrade: --accent-bright da' so'
- * 2,14:1 de contraste com texto branco, abaixo do minimo AA de 3:1 mesmo
- * pra texto grande/negrito; --accent da' 3,38:1.
+ * Nome do sistema: lockup em duas linhas, mesmo padrao do bloco do
+ * usuario a direita (kicker pequeno + linha principal maior).
+ * "Sistema para Barbearia" e' o produto (generico); "Cortes Cavalinho" e'
+ * a barbearia que esta usando esta instancia - por isso ganha destaque
+ * (maior, serifada, a mesma Georgia dos titulos de pagina) enquanto o
+ * nome do produto vira so' um kicker discreto acima.
+ *
+ * O texto fica alinhado com "Dashboard", a primeira opcao do menu
+ * lateral logo abaixo (ambos comecam no mesmo x: o padding padrao de
+ * 16px do mat-toolbar bate com o padding de 16px do .sidebar__item). Por
+ * isso a barra de acento nao pode ser border-left/padding-left no fluxo
+ * normal (empurraria o texto pra direita, desalinhando de "Dashboard") -
+ * vira um ::before posicionado no gutter do proprio toolbar, sem ocupar
+ * espaco no layout.
  */
 .topbar__titulo {
-  display: inline-flex;
-  align-items: center;
-  padding: 7px 18px;
-  border-radius: 999px;
-  background: linear-gradient(135deg, var(--accent), var(--accent-deep));
-  box-shadow: 0 4px 14px color-mix(in srgb, var(--accent-deep) 30%, transparent);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  line-height: 1.2;
+}
+
+.topbar__titulo::before {
+  content: '';
+  position: absolute;
+  left: -11px;
+  top: 3px;
+  bottom: 3px;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--chrome-accent);
+}
+
+.topbar__titulo-kicker {
+  color: var(--chrome-text);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.topbar__titulo-marca {
   color: #fff;
-  font-size: 1.3rem;
-  font-weight: 700;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.6rem;
+  font-weight: 600;
   letter-spacing: -0.01em;
 }
 
@@ -57,7 +102,7 @@
 
 .topbar__usuario:hover,
 .topbar__usuario:focus-visible {
-  background: color-mix(in srgb, var(--ink) 6%, transparent);
+  background: var(--chrome-bg-hover);
 }
 
 .topbar__avatar {
@@ -85,13 +130,13 @@
 .topbar__usuario-nome {
   font-size: 0.85rem;
   font-weight: 600;
-  color: var(--ink);
+  color: #fff;
 }
 
 .topbar__usuario-perfil {
   font-size: 0.7rem;
   font-weight: 500;
-  color: var(--muted);
+  color: var(--chrome-text);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -99,7 +144,7 @@
 .topbar__usuario-seta {
   flex-shrink: 0;
   margin-left: 2px;
-  color: var(--muted);
+  color: var(--chrome-text);
 }
 
 .shell__corpo {
@@ -109,43 +154,47 @@
 }
 
 .sidebar {
-  /*
-   * Azul-marinho quase preto, o mesmo fundo da logo "CP Desenv" (#070d1a),
-   * levemente clareado para nao ficar um vazio total numa superficie
-   * grande de UI. --sidebar-accent usa o tom mais vivido do icone da
-   * logo em vez de --mat-sys-primary: o tone-40 do tema (#005cbb) so
-   * tem 2,9:1 de contraste contra esse fundo escuro, abaixo do minimo
-   * AA de 4,5:1 para texto.
-   */
-  --sidebar-bg: #0a1220;
-  --sidebar-bg-hover: #16213a;
-  --sidebar-text: #c9d3e0;
-  --sidebar-accent: #0cbbfe;
-
   width: 220px;
   flex-shrink: 0;
-  background: var(--sidebar-bg);
+  background: var(--chrome-bg);
   padding: 16px 0;
 }
 
 .sidebar__item {
+  position: relative;
   display: block;
   padding: 10px 16px;
-  color: var(--sidebar-text);
+  color: var(--chrome-text);
   text-decoration: none;
-  border-left: 3px solid transparent;
-  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+  transition: background-color 160ms ease, color 160ms ease;
 }
 
 .sidebar__item:hover {
-  background: var(--sidebar-bg-hover);
+  background: var(--chrome-bg-hover);
 }
 
 .sidebar__item--ativo {
   font-weight: 600;
-  color: var(--sidebar-accent);
-  background: color-mix(in srgb, var(--sidebar-accent) 16%, transparent);
-  border-left-color: var(--sidebar-accent);
+  color: var(--chrome-accent);
+  background: color-mix(in srgb, var(--chrome-accent) 16%, transparent);
+}
+
+/*
+ * Listra de selecao como pseudo-elemento posicionado, nao border-right:
+ * "right: -1px" avanca 1px por cima do painel claro (.conteudo) de
+ * proposito, garantindo encaixe sem nenhuma fresta mesmo se o navegador
+ * arredondar a largura da .sidebar (220px) de forma diferente do que
+ * arredonda a borda esquerda da .conteudo em alguma largura de janela.
+ * 1px de sobreposicao e' imperceptivel, mas elimina qualquer risco de gap.
+ */
+.sidebar__item--ativo::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: -1px;
+  width: 4px;
+  background: var(--chrome-accent);
 }
 
 .conteudo {

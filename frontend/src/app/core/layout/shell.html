@@ -1,6 +1,9 @@
 <div class="shell">
   <mat-toolbar color="primary" class="topbar">
-    <span class="topbar__titulo">Sistema para Barbearia</span>
+    <span class="topbar__titulo">
+      <span class="topbar__titulo-kicker">Sistema para Barbearia</span>
+      <span class="topbar__titulo-marca">Cortes Cavalinho</span>
+    </span>
     <span class="topbar__espaco"></span>
     @if (usuario(); as usuarioLogado) {
       <button class="topbar__usuario" type="button" [matMenuTriggerFor]="menuUsuario">
