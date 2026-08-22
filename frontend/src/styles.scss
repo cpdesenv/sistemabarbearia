@@ -168,14 +168,15 @@ body {
   font-family: Inter, ui-sans-serif, system-ui, sans-serif;
 }
 
+/* Cabecalho em azul escuro (--ink, mesmo tom de texto/marca usado no resto do sistema) com texto branco, no lugar do cinza neutro anterior. */
 .tabela-dados .mat-mdc-header-row {
-  background: #f5f5f5;
+  background: var(--ink, #0b1930);
 }
 
 .tabela-dados .mat-mdc-header-cell {
   padding: 16px 18px;
-  border-bottom: 1px solid #e0e0e0;
-  color: #333333;
+  border-bottom: none;
+  color: #fff;
   font-size: 0.8rem;
   font-weight: 600;
   letter-spacing: 0.02em;
