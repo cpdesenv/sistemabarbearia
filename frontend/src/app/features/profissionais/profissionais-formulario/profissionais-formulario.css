@@ -57,6 +57,39 @@
   margin-bottom: 16px;
 }
 
+.profissional-formulario__paleta-rotulo {
+  display: block;
+  margin: 8px 0 6px;
+  color: var(--mat-sys-on-surface-variant, #666);
+  font-size: 0.75rem;
+}
+
+.profissional-formulario__paleta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.profissional-formulario__cor-swatch {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  padding: 0;
+  cursor: pointer;
+  transition: transform 120ms ease, border-color 120ms ease;
+}
+
+.profissional-formulario__cor-swatch:hover {
+  transform: scale(1.1);
+}
+
+.profissional-formulario__cor-swatch--selecionada {
+  border-color: var(--ink, #0b1930);
+  box-shadow: 0 0 0 2px #fff inset;
+}
+
 .profissional-formulario__erro {
   color: var(--mat-sys-error, #b3261e);
   margin: 0 0 8px;

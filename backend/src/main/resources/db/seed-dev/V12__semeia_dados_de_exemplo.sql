@@ -14,10 +14,13 @@ UPDATE barbearia SET
     cep = '13010-000'
 WHERE id = 1;
 
+-- Cores em tons claros de azul/ciano/indigo (ver PALETA_CORES_AGENDA em
+-- profissionais-formulario.ts) - "Cor na agenda" nao e' mais um seletor
+-- livre, entao os dados de exemplo tambem seguem a paleta curada.
 INSERT INTO profissional (nome, email, telefone, cor_agenda, comissao_percentual_padrao) VALUES
-    ('Carlos Andrade', 'carlos@cortescavalinho.com.br', '(19) 98888-0001', '#3F51B5', 40.00),
-    ('Rafael Souza', 'rafael@cortescavalinho.com.br', '(19) 98888-0002', '#009688', 35.00),
-    ('Bruno Lima', 'bruno@cortescavalinho.com.br', '(19) 98888-0003', '#E91E63', 35.00);
+    ('Carlos Andrade', 'carlos@cortescavalinho.com.br', '(19) 98888-0001', '#90CAF9', 40.00),
+    ('Rafael Souza', 'rafael@cortescavalinho.com.br', '(19) 98888-0002', '#4DD0E1', 35.00),
+    ('Bruno Lima', 'bruno@cortescavalinho.com.br', '(19) 98888-0003', '#9FA8DA', 35.00);
 
 INSERT INTO servico (nome, descricao, categoria, preco, duracao_minutos) VALUES
     ('Corte Masculino', 'Corte tradicional com maquina e tesoura', 'Corte', 50.00, 45),

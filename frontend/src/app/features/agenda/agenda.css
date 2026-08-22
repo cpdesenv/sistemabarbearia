@@ -34,18 +34,18 @@
 .agenda-dia {
   display: flex;
   overflow-x: auto;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--line, #dce7f4);
   border-radius: 4px;
 }
 
 .agenda-dia__coluna-horarios {
   flex: 0 0 64px;
-  border-right: 1px solid #e0e0e0;
+  border-right: 1px solid var(--line, #dce7f4);
 }
 
 .agenda-dia__coluna {
   flex: 1 0 180px;
-  border-right: 1px solid #e0e0e0;
+  border-right: 1px solid var(--line, #dce7f4);
 }
 
 .agenda-dia__coluna:last-child {
@@ -60,8 +60,8 @@
   font-weight: 500;
   font-size: 0.85rem;
   border-top: 3px solid transparent;
-  border-bottom: 1px solid #e0e0e0;
-  background: #fafafa;
+  border-bottom: 1px solid var(--line, #dce7f4);
+  background: var(--paper, #f3f8fd);
   position: sticky;
   top: 0;
 }
@@ -73,7 +73,7 @@
   text-align: right;
   padding-right: 8px;
   box-sizing: border-box;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid color-mix(in srgb, var(--line, #dce7f4) 60%, transparent);
 }
 
 .agenda-dia__grade {
@@ -85,28 +85,34 @@
   left: 0;
   right: 0;
   height: 32px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid color-mix(in srgb, var(--line, #dce7f4) 60%, transparent);
   cursor: pointer;
 }
 
 .agenda-dia__celula:hover {
-  background: #f5f5f5;
+  background: color-mix(in srgb, var(--accent, #078cff) 8%, transparent);
 }
 
+/*
+ * Texto escuro (nao branco): a paleta de "Cor na agenda" (ver
+ * profissionais-formulario.ts) e' toda de tons claros de azul/ciano, no
+ * estilo de faixa de tabela do Excel - nenhum desses tons passa 4,5:1 de
+ * contraste AA com texto branco, mas todos passam com folga com --ink.
+ */
 .agenda-dia__bloco {
   position: absolute;
   left: 2px;
   right: 2px;
   border-radius: 4px;
   padding: 2px 6px;
-  color: #fff;
+  color: var(--ink, #0b1930);
   font-size: 0.75rem;
   overflow: hidden;
   cursor: grab;
   display: flex;
   flex-direction: column;
   line-height: 1.2;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 1px 2px rgba(11, 25, 48, 0.15);
 }
 
 .agenda-semana {
@@ -132,8 +138,8 @@
   width: 100%;
   text-align: left;
   border: none;
-  border-left: 4px solid #3f51b5;
-  background: #fafafa;
+  border-left: 4px solid var(--accent, #078cff);
+  background: var(--paper, #f3f8fd);
   border-radius: 4px;
   padding: 6px 8px;
   margin-bottom: 6px;
