@@ -20,61 +20,11 @@
 }
 
 /*
- * Tabela de transacoes financeiras (despesas, contas a pagar, contas a
- * receber): row striping em azul bem claro, divisores suaves, mais
- * respiro e um indicador circular pastel por linha - estilo planilha
- * (Excel/Sheets), nao a densidade padrao do Material.
+ * Indicador circular pastel: recorte visual rapido do tipo/status da
+ * linha. Especifico desta tela (nenhuma outra tem esse conceito) - o
+ * resto do visual da tabela (striping, bordas, padding, responsivo) vem
+ * da classe global .tabela-dados (ver styles.scss).
  */
-.contas__tabela-scroll {
-  overflow-x: auto;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-}
-
-.contas__tabela {
-  width: 100%;
-  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
-}
-
-.contas__tabela .mat-mdc-header-row {
-  background: #f5f5f5;
-}
-
-.contas__tabela .mat-mdc-header-cell {
-  padding: 16px 18px;
-  border-bottom: 1px solid #e0e0e0;
-  color: #333333;
-  font-size: 0.8rem;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-}
-
-.contas__tabela .mat-mdc-cell {
-  padding: 16px 18px;
-  border-bottom: 1px solid #e0e0e0;
-  color: var(--ink, #0b1930);
-  font-size: 0.92rem;
-}
-
-/* Striping: linhas pares num azul bem claro, impares em branco. */
-.contas__tabela .mat-mdc-row:nth-child(even) {
-  background: #f0f8fc;
-}
-
-.contas__tabela .mat-mdc-row:nth-child(odd) {
-  background: #ffffff;
-}
-
-.contas__tabela .mat-mdc-row {
-  transition: background-color 140ms ease;
-}
-
-.contas__tabela .mat-mdc-row:hover {
-  background: #e8f4f8;
-}
-
-/* Indicador circular pastel: recorte visual rapido do tipo/status da linha. */
 .contas__indicador {
   display: inline-block;
   width: 12px;
@@ -88,88 +38,12 @@
   padding-right: 0;
 }
 
-/* Links de acao (marcar como paga/recebida) em azul; "Cancelar" mantem o warn (vermelho). */
-.contas__tabela .mat-mdc-button:not(.mat-warn) {
-  color: #0066cc;
-}
-
 .contas__vencida {
   color: #b3261e;
   font-weight: 600;
 }
 
-/*
- * Abaixo de 640px, a tabela vira uma lista de cartoes: cada <tr> um bloco,
- * cada <td> uma linha "rotulo: valor" (rotulo via atributo data-label no
- * template). Evita tabela espremida/scroll horizontal forcado no celular.
- */
 @media (max-width: 640px) {
-  /*
-   * overflow:visible (os dois eixos) - nao so' overflow-x:hidden: pela
-   * especificacao do CSS, se um eixo de overflow nao e' "visible" o
-   * outro passa a computar como "auto" automaticamente, mesmo com
-   * overflow-y:visible declarado explicitamente - isso criava um scroll
-   * vertical indesejado, com o container ficando mais baixo que o
-   * proprio conteudo. Em telas estreitas a tabela vira cartoes
-   * empilhados (ver abaixo) e nao precisa mais de scroll horizontal.
-   */
-  .contas__tabela-scroll {
-    border: none;
-    overflow: visible;
-  }
-
-  /*
-   * display:block no proprio <table> (.contas__tabela): sem isso, o
-   * algoritmo de layout de tabela nativo do navegador ainda reserva
-   * largura minima por coluna mesmo com as linhas/celulas em flex,
-   * sobrando um scroll horizontal residual.
-   */
-  .contas__tabela {
-    display: block;
-    width: 100%;
-  }
-
-  .contas__tabela .mat-mdc-header-row {
-    display: none;
-  }
-
-  /*
-   * height:auto explicito: o Material define uma altura fixa padrao
-   * (--mat-table-row-height, 52px no M3) em .mat-mdc-row, pensada pra
-   * uma linha de tabela normal - sem isso, o cartao empilhado (4 celulas
-   * uma embaixo da outra) fica espremido nesses 52px e o resto do
-   * conteudo vaza sem lugar nenhum pra aparecer (nem scroll chega nele,
-   * porque o overflow:visible so' deixa o desenho vazar, nao o layout).
-   */
-  .contas__tabela .mat-mdc-row {
-    display: flex;
-    flex-direction: column;
-    height: auto;
-    padding: 12px 4px;
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    margin-bottom: 12px;
-  }
-
-  .contas__tabela .mat-mdc-cell {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    height: auto;
-    gap: 12px;
-    padding: 8px 12px;
-    border-bottom: none;
-  }
-
-  .contas__tabela .mat-mdc-cell[data-label]::before {
-    content: attr(data-label);
-    color: var(--muted, #64748b);
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-  }
-
   .contas__tabela .mat-mdc-cell:has(.contas__indicador) {
     width: auto;
     justify-content: flex-start;

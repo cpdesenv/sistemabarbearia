@@ -45,8 +45,8 @@
             @if (despesas().length === 0) {
               <p>Nenhuma despesa lançada.</p>
             } @else {
-              <div class="contas__tabela-scroll">
-                <table mat-table [dataSource]="despesas()" class="contas__tabela">
+              <div class="contas__tabela-scroll tabela-dados-wrapper">
+                <table mat-table [dataSource]="despesas()" class="contas__tabela tabela-dados">
                   <ng-container matColumnDef="indicador">
                     <th mat-header-cell *matHeaderCellDef></th>
                     <td mat-cell *matCellDef="let d">
@@ -109,8 +109,8 @@
             @if (contasPagar().length === 0) {
               <p>Nenhuma conta a pagar lançada.</p>
             } @else {
-              <div class="contas__tabela-scroll">
-                <table mat-table [dataSource]="contasPagar()" class="contas__tabela">
+              <div class="contas__tabela-scroll tabela-dados-wrapper">
+                <table mat-table [dataSource]="contasPagar()" class="contas__tabela tabela-dados">
                   <ng-container matColumnDef="indicador">
                     <th mat-header-cell *matHeaderCellDef></th>
                     <td mat-cell *matCellDef="let c">
@@ -202,8 +202,8 @@
             @if (contasReceber().length === 0) {
               <p>Nenhuma conta a receber lançada.</p>
             } @else {
-              <div class="contas__tabela-scroll">
-                <table mat-table [dataSource]="contasReceber()" class="contas__tabela">
+              <div class="contas__tabela-scroll tabela-dados-wrapper">
+                <table mat-table [dataSource]="contasReceber()" class="contas__tabela tabela-dados">
                   <ng-container matColumnDef="indicador">
                     <th mat-header-cell *matHeaderCellDef></th>
                     <td mat-cell *matCellDef="let c">

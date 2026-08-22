@@ -15,6 +15,12 @@
   font-weight: 600;
 }
 
+/*
+ * !important: sem isso, o striping zebra da .tabela-dados global
+ * (.mat-mdc-row:nth-child(even/odd)) tem a mesma especificidade e pode
+ * vencer no cascade dependendo da ordem de carregamento dos estilos,
+ * escondendo o destaque de estoque abaixo do minimo.
+ */
 .estoque-lista__linha--baixa {
-  background: color-mix(in srgb, var(--mat-sys-error, #b3261e) 6%, transparent);
+  background: color-mix(in srgb, var(--mat-sys-error, #b3261e) 6%, transparent) !important;
 }

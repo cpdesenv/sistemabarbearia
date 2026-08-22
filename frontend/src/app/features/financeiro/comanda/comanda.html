@@ -22,43 +22,45 @@
     <mat-card>
       <mat-card-content>
         <h2>Itens</h2>
-        <table mat-table [dataSource]="dados.itens" class="comanda__tabela">
-          <ng-container matColumnDef="descricao">
-            <th mat-header-cell *matHeaderCellDef>Serviço</th>
-            <td mat-cell *matCellDef="let item">{{ item.descricao }}</td>
-          </ng-container>
-          <ng-container matColumnDef="valorBruto">
-            <th mat-header-cell *matHeaderCellDef>Bruto</th>
-            <td mat-cell *matCellDef="let item">{{ item.valorBruto | currency: 'BRL' }}</td>
-          </ng-container>
-          <ng-container matColumnDef="valorDescontoRateado">
-            <th mat-header-cell *matHeaderCellDef>Desconto</th>
-            <td mat-cell *matCellDef="let item">{{ item.valorDescontoRateado | currency: 'BRL' }}</td>
-          </ng-container>
-          <ng-container matColumnDef="valorLiquido">
-            <th mat-header-cell *matHeaderCellDef>Líquido</th>
-            <td mat-cell *matCellDef="let item">{{ item.valorLiquido | currency: 'BRL' }}</td>
-          </ng-container>
-          <ng-container matColumnDef="comissaoValor">
-            <th mat-header-cell *matHeaderCellDef>Comissão</th>
-            <td mat-cell *matCellDef="let item">
-              {{ item.comissaoValor !== null ? (item.comissaoValor | currency: 'BRL') : '—' }}
-            </td>
-          </ng-container>
-          <ng-container matColumnDef="acoes">
-            <th mat-header-cell *matHeaderCellDef></th>
-            <td mat-cell *matCellDef="let item">
-              @if (estaAberta()) {
-                <button mat-button color="warn" type="button" [disabled]="executandoAcao()"
-                  (click)="removerItem(item.uuid)">
-                  Remover
-                </button>
-              }
-            </td>
-          </ng-container>
-          <tr mat-header-row *matHeaderRowDef="colunasItens"></tr>
-          <tr mat-row *matRowDef="let row; columns: colunasItens"></tr>
-        </table>
+        <div class="comanda__tabela-wrapper tabela-dados-wrapper">
+          <table mat-table [dataSource]="dados.itens" class="comanda__tabela tabela-dados">
+            <ng-container matColumnDef="descricao">
+              <th mat-header-cell *matHeaderCellDef>Serviço</th>
+              <td mat-cell *matCellDef="let item" data-label="Serviço">{{ item.descricao }}</td>
+            </ng-container>
+            <ng-container matColumnDef="valorBruto">
+              <th mat-header-cell *matHeaderCellDef>Bruto</th>
+              <td mat-cell *matCellDef="let item" data-label="Bruto">{{ item.valorBruto | currency: 'BRL' }}</td>
+            </ng-container>
+            <ng-container matColumnDef="valorDescontoRateado">
+              <th mat-header-cell *matHeaderCellDef>Desconto</th>
+              <td mat-cell *matCellDef="let item" data-label="Desconto">{{ item.valorDescontoRateado | currency: 'BRL' }}</td>
+            </ng-container>
+            <ng-container matColumnDef="valorLiquido">
+              <th mat-header-cell *matHeaderCellDef>Líquido</th>
+              <td mat-cell *matCellDef="let item" data-label="Líquido">{{ item.valorLiquido | currency: 'BRL' }}</td>
+            </ng-container>
+            <ng-container matColumnDef="comissaoValor">
+              <th mat-header-cell *matHeaderCellDef>Comissão</th>
+              <td mat-cell *matCellDef="let item" data-label="Comissão">
+                {{ item.comissaoValor !== null ? (item.comissaoValor | currency: 'BRL') : '—' }}
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="acoes">
+              <th mat-header-cell *matHeaderCellDef></th>
+              <td mat-cell *matCellDef="let item" data-label="Ações">
+                @if (estaAberta()) {
+                  <button mat-button color="warn" type="button" [disabled]="executandoAcao()"
+                    (click)="removerItem(item.uuid)">
+                    Remover
+                  </button>
+                }
+              </td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="colunasItens"></tr>
+            <tr mat-row *matRowDef="let row; columns: colunasItens"></tr>
+          </table>
+        </div>
 
         @if (estaAberta()) {
           <div class="comanda__adicionar-item">

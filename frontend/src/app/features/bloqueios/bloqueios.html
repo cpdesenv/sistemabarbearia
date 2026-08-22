@@ -63,31 +63,31 @@
   @if (carregando()) {
     <mat-spinner diameter="32" />
   } @else {
-    <div class="bloqueios__tabela-wrapper">
-      <table mat-table [dataSource]="bloqueios()" class="bloqueios__tabela">
+    <div class="bloqueios__tabela-wrapper tabela-dados-wrapper">
+      <table mat-table [dataSource]="bloqueios()" class="bloqueios__tabela tabela-dados">
         <ng-container matColumnDef="profissional">
           <th mat-header-cell *matHeaderCellDef>Profissional</th>
-          <td mat-cell *matCellDef="let bloqueio">{{ bloqueio.profissionalNome || 'Global (toda a barbearia)' }}</td>
+          <td mat-cell *matCellDef="let bloqueio" data-label="Profissional">{{ bloqueio.profissionalNome || 'Global (toda a barbearia)' }}</td>
         </ng-container>
 
         <ng-container matColumnDef="inicio">
           <th mat-header-cell *matHeaderCellDef>Início</th>
-          <td mat-cell *matCellDef="let bloqueio">{{ bloqueio.inicio | date: 'dd/MM/yyyy HH:mm' }}</td>
+          <td mat-cell *matCellDef="let bloqueio" data-label="Início">{{ bloqueio.inicio | date: 'dd/MM/yyyy HH:mm' }}</td>
         </ng-container>
 
         <ng-container matColumnDef="fim">
           <th mat-header-cell *matHeaderCellDef>Fim</th>
-          <td mat-cell *matCellDef="let bloqueio">{{ bloqueio.fim | date: 'dd/MM/yyyy HH:mm' }}</td>
+          <td mat-cell *matCellDef="let bloqueio" data-label="Fim">{{ bloqueio.fim | date: 'dd/MM/yyyy HH:mm' }}</td>
         </ng-container>
 
         <ng-container matColumnDef="motivo">
           <th mat-header-cell *matHeaderCellDef>Motivo</th>
-          <td mat-cell *matCellDef="let bloqueio">{{ bloqueio.motivo }}</td>
+          <td mat-cell *matCellDef="let bloqueio" data-label="Motivo">{{ bloqueio.motivo }}</td>
         </ng-container>
 
         <ng-container matColumnDef="acoes">
           <th mat-header-cell *matHeaderCellDef></th>
-          <td mat-cell *matCellDef="let bloqueio">
+          <td mat-cell *matCellDef="let bloqueio" data-label="Ações">
             @if (podeGerenciar()) {
               <button mat-button (click)="remover(bloqueio)">Remover</button>
             }

@@ -145,3 +145,132 @@ body {
   letter-spacing: 0.18em;
   text-transform: uppercase;
 }
+
+/*
+ * Tabela de dados (grid/planilha), compartilhada por todas as listagens
+ * do sistema (Servicos, Produtos, Profissionais, Clientes, Bloqueios,
+ * Estoque, Comanda, Caixa, Contas...): estilo desenhado originalmente
+ * para "Despesas lancadas" (Contas a pagar/receber) e promovido pra
+ * global aqui, em vez de duplicado por tela. Cada tela so' precisa
+ * adicionar as duas classes (".tabela-dados-wrapper" no container,
+ * ".tabela-dados" no <table mat-table>) as suas classes BEM proprias -
+ * ver contas.html para o padrao de referencia, incluindo o atributo
+ * data-label em cada <td> usado no layout empilhado do mobile.
+ */
+.tabela-dados-wrapper {
+  overflow-x: auto;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+}
+
+.tabela-dados {
+  width: 100%;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+}
+
+.tabela-dados .mat-mdc-header-row {
+  background: #f5f5f5;
+}
+
+.tabela-dados .mat-mdc-header-cell {
+  padding: 16px 18px;
+  border-bottom: 1px solid #e0e0e0;
+  color: #333333;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.tabela-dados .mat-mdc-cell {
+  padding: 16px 18px;
+  border-bottom: 1px solid #e0e0e0;
+  color: var(--ink, #0b1930);
+  font-size: 0.92rem;
+}
+
+.tabela-dados .mat-mdc-row {
+  transition: background-color 140ms ease;
+}
+
+.tabela-dados .mat-mdc-row:nth-child(even) {
+  background: #f0f8fc;
+}
+
+.tabela-dados .mat-mdc-row:nth-child(odd) {
+  background: #ffffff;
+}
+
+.tabela-dados .mat-mdc-row:hover {
+  background: #e8f4f8;
+}
+
+.tabela-dados .mat-mdc-button:not(.mat-warn) {
+  color: #0066cc;
+}
+
+/*
+ * Abaixo de 640px cada linha vira um cartao empilhado (rotulo: valor por
+ * celula, via atributo data-label no template) em vez de tabela
+ * espremida com scroll horizontal. height:auto explicito porque o
+ * Material define uma altura fixa padrao (52px no M3) em .mat-mdc-row,
+ * pensada pra uma linha normal de uma linha so' - sem isso, o cartao
+ * empilhado (varias celulas uma embaixo da outra) fica espremido nesses
+ * 52px sem lugar pro resto do conteudo aparecer. overflow:visible (nao
+ * so' overflow-x:hidden) pelo mesmo motivo: os dois eixos de overflow
+ * sao pareados pela especificacao do CSS (se um nao e' "visible" o outro
+ * vira "auto" tambem), o que criava um scroll vertical indesejado.
+ */
+@media (max-width: 640px) {
+  .tabela-dados-wrapper {
+    border: none;
+    overflow: visible;
+  }
+
+  .tabela-dados {
+    display: block;
+    width: 100%;
+  }
+
+  .tabela-dados .mat-mdc-header-row {
+    display: none;
+  }
+
+  .tabela-dados .mat-mdc-row {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    padding: 12px 4px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    margin-bottom: 12px;
+  }
+
+  /*
+   * flex-wrap:wrap - sem isso, uma celula com varios elementos que nao
+   * quebram texto sozinhos (ex.: dois botoes curtos lado a lado, tipo
+   * "Editar"/"Desativar") nao tem como encolher: o navegador estica a
+   * celula (e a linha/cartao inteiros) alem da largura da tela em vez de
+   * quebrar linha, criando scroll horizontal na pagina toda. Com wrap, o
+   * rotulo fica numa linha e o valor desce pra proxima se nao couber.
+   */
+  .tabela-dados .mat-mdc-cell {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    height: auto;
+    gap: 4px 12px;
+    padding: 8px 12px;
+    border-bottom: none;
+  }
+
+  .tabela-dados .mat-mdc-cell[data-label]::before {
+    content: attr(data-label);
+    color: var(--muted, #64748b);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+}
