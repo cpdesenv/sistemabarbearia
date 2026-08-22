@@ -52,6 +52,24 @@ function normalizarHora(hora: string | undefined): string | undefined {
   return hora?.slice(0, 5);
 }
 
+/**
+ * Paleta curada para "Cor na agenda" - so' tons claros de azul/ciano/indigo
+ * (estilo faixas de tabela do Excel), em vez de um seletor de cor livre.
+ * Todos passam AA (>=4.5:1) contra texto escuro (--ink); nenhum passaria
+ * contra texto branco, por isso os blocos da agenda usam texto escuro
+ * (ver agenda.css) em vez de branco.
+ */
+export const PALETA_CORES_AGENDA = [
+  '#90CAF9', // azul
+  '#64B5F6', // azul (mais vivo)
+  '#81D4FA', // azul-celeste
+  '#4FC3F7', // azul-celeste (mais vivo)
+  '#4DD0E1', // ciano
+  '#80CBC4', // verde-azulado
+  '#9FA8DA', // indigo claro
+  '#7986CB', // indigo
+];
+
 export const DIAS_SEMANA = [
   { valor: 1, rotulo: 'Segunda' },
   { valor: 2, rotulo: 'Terça' },
@@ -85,6 +103,7 @@ export class ProfissionaisFormulario {
   private readonly router = inject(Router);
 
   protected readonly diasSemana = DIAS_SEMANA;
+  protected readonly paletaCores = PALETA_CORES_AGENDA;
 
   private readonly uuid = this.route.snapshot.paramMap.get('uuid');
   protected readonly modoEdicao = this.uuid !== null;
@@ -99,7 +118,7 @@ export class ProfissionaisFormulario {
     nome: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     email: new FormControl('', { nonNullable: true }),
     telefone: new FormControl('', { nonNullable: true }),
-    corAgenda: new FormControl('#3F51B5', { nonNullable: true, validators: [Validators.required] }),
+    corAgenda: new FormControl(PALETA_CORES_AGENDA[0], { nonNullable: true, validators: [Validators.required] }),
     comissaoPercentualPadrao: new FormControl(0, {
       nonNullable: true,
       validators: [Validators.required, Validators.min(0), Validators.max(100)],
@@ -137,6 +156,10 @@ export class ProfissionaisFormulario {
         this.carregando.set(false);
       },
     );
+  }
+
+  protected selecionarCor(cor: string): void {
+    this.formulario.controls.corAgenda.setValue(cor);
   }
 
   protected adicionarJanela(): void {

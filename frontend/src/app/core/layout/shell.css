@@ -1,4 +1,18 @@
 .shell {
+  /*
+   * Paleta do "chrome" do app (topbar + menu lateral), compartilhada pelos
+   * dois porque ambos viraram uma faixa azul-marinho continua. Definida
+   * aqui (ancestral comum) em vez de dentro de .sidebar: --chrome-accent
+   * usa o tom mais vivido do icone da logo "CP Desenv" em vez de
+   * --mat-sys-primary porque o tone-40 do tema (#005cbb) so' tem 2,9:1 de
+   * contraste contra o fundo escuro, abaixo do minimo AA de 4,5:1 para
+   * texto.
+   */
+  --chrome-bg: #0a1220;
+  --chrome-bg-hover: #16213a;
+  --chrome-text: #c9d3e0;
+  --chrome-accent: #0cbbfe;
+
   display: flex;
   flex-direction: column;
   height: 100vh;
@@ -6,26 +20,79 @@
 
 .topbar {
   flex-shrink: 0;
+  background: var(--chrome-bg);
+}
+
+/* So aparece abaixo do breakpoint (ver media query no fim do arquivo) - em telas largas o menu fica sempre visivel. */
+.topbar__menu-toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  margin-right: 8px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  transition: background-color 160ms ease;
+}
+
+.topbar__menu-toggle:hover,
+.topbar__menu-toggle:focus-visible {
+  background: var(--chrome-bg-hover);
 }
 
 /*
- * Selo do nome do sistema: degrade azul da mesma familia do acento do
- * menu lateral, pra funcionar como uma especie de "wordmark" no topo -
- * destacado do resto do topbar, que fica neutro. --accent (nao
- * --accent-bright) como ponta clara do degrade: --accent-bright da' so'
- * 2,14:1 de contraste com texto branco, abaixo do minimo AA de 3:1 mesmo
- * pra texto grande/negrito; --accent da' 3,38:1.
+ * Nome do sistema: lockup em duas linhas, mesmo padrao do bloco do
+ * usuario a direita (kicker pequeno + linha principal maior).
+ * "Sistema para Barbearia" e' o produto (generico); "Cortes Cavalinho" e'
+ * a barbearia que esta usando esta instancia - por isso ganha destaque
+ * (maior, serifada, a mesma Georgia dos titulos de pagina) enquanto o
+ * nome do produto vira so' um kicker discreto acima.
+ *
+ * O texto fica alinhado com "Dashboard", a primeira opcao do menu
+ * lateral logo abaixo (ambos comecam no mesmo x: o padding padrao de
+ * 16px do mat-toolbar bate com o padding de 16px do .sidebar__item). Por
+ * isso a barra de acento nao pode ser border-left/padding-left no fluxo
+ * normal (empurraria o texto pra direita, desalinhando de "Dashboard") -
+ * vira um ::before posicionado no gutter do proprio toolbar, sem ocupar
+ * espaco no layout.
  */
 .topbar__titulo {
-  display: inline-flex;
-  align-items: center;
-  padding: 7px 18px;
-  border-radius: 999px;
-  background: linear-gradient(135deg, var(--accent), var(--accent-deep));
-  box-shadow: 0 4px 14px color-mix(in srgb, var(--accent-deep) 30%, transparent);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  line-height: 1.2;
+}
+
+.topbar__titulo::before {
+  content: '';
+  position: absolute;
+  left: -11px;
+  top: 3px;
+  bottom: 3px;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--chrome-accent);
+}
+
+.topbar__titulo-kicker {
+  color: var(--chrome-text);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.topbar__titulo-marca {
   color: #fff;
-  font-size: 1.3rem;
-  font-weight: 700;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.6rem;
+  font-weight: 600;
   letter-spacing: -0.01em;
 }
 
@@ -33,59 +100,213 @@
   flex: 1;
 }
 
+/*
+ * Bloco do usuario logado: avatar com iniciais (mesmo degrade azul do
+ * selo do sistema) + nome/perfil empilhados + seta, tudo dentro de um
+ * unico botao que abre o menu com "Sair" - um padrao comum em produtos
+ * profissionais (evita um botao "Sair" solto competindo visualmente com
+ * o nome do usuario).
+ */
 .topbar__usuario {
-  margin-right: 12px;
-  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-right: 4px;
+  padding: 6px 10px 6px 6px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transition: background-color 160ms ease;
+}
+
+.topbar__usuario:hover,
+.topbar__usuario:focus-visible {
+  background: var(--chrome-bg-hover);
+}
+
+.topbar__avatar {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.topbar__usuario-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.25;
+}
+
+.topbar__usuario-nome {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.topbar__usuario-perfil {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--chrome-text);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.topbar__usuario-seta {
+  flex-shrink: 0;
+  margin-left: 2px;
+  color: var(--chrome-text);
+}
+
+/*
+ * Cabecalho dentro do menu "Sair": mesma info (nome/perfil) que fica
+ * escondida do topbar em telas bem estreitas (ver media query no fim do
+ * arquivo, .topbar__usuario-info) - continua acessivel abrindo o menu.
+ */
+.topbar__menu-cabecalho {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--line, #dce7f4);
+  margin-bottom: 4px;
+  color: var(--ink, #0b1930);
+}
+
+.topbar__menu-cabecalho span {
+  font-size: 0.75rem;
+  color: var(--muted, #64748b);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .shell__corpo {
+  position: relative;
   display: flex;
   flex: 1;
   min-height: 0;
 }
 
 .sidebar {
-  /*
-   * Azul-marinho quase preto, o mesmo fundo da logo "CP Desenv" (#070d1a),
-   * levemente clareado para nao ficar um vazio total numa superficie
-   * grande de UI. --sidebar-accent usa o tom mais vivido do icone da
-   * logo em vez de --mat-sys-primary: o tone-40 do tema (#005cbb) so
-   * tem 2,9:1 de contraste contra esse fundo escuro, abaixo do minimo
-   * AA de 4,5:1 para texto.
-   */
-  --sidebar-bg: #0a1220;
-  --sidebar-bg-hover: #16213a;
-  --sidebar-text: #c9d3e0;
-  --sidebar-accent: #0cbbfe;
-
   width: 220px;
   flex-shrink: 0;
-  background: var(--sidebar-bg);
+  /* Vinheta radial (nao cor solida), conferida ao vivo no site de referencia (Central do Projeto). */
+  background: radial-gradient(circle at 45% 6%, #0a2248 0%, #071426 35%, #040b17 100%);
   padding: 16px 0;
 }
 
 .sidebar__item {
+  position: relative;
   display: block;
   padding: 10px 16px;
-  color: var(--sidebar-text);
+  color: var(--chrome-text);
   text-decoration: none;
-  border-left: 3px solid transparent;
-  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+  transition: background-color 160ms ease, color 160ms ease;
 }
 
 .sidebar__item:hover {
-  background: var(--sidebar-bg-hover);
+  background: var(--chrome-bg-hover);
 }
 
+/*
+ * Sem fundo tintado (era color-mix com --chrome-accent) - no site de
+ * referencia o item ativo do menu e' so' texto branco em negrito + a
+ * barra de acento, sem realce de fundo. A barra continua do lado
+ * direito (nao esquerdo, como no site) porque foi alinhada de proposito
+ * com a fronteira do painel claro - ver .sidebar__item--ativo::after.
+ */
 .sidebar__item--ativo {
   font-weight: 600;
-  color: var(--sidebar-accent);
-  background: color-mix(in srgb, var(--sidebar-accent) 16%, transparent);
-  border-left-color: var(--sidebar-accent);
+  color: #fff;
+}
+
+/*
+ * Listra de selecao como pseudo-elemento posicionado, nao border-right:
+ * "right: -1px" avanca 1px por cima do painel claro (.conteudo) de
+ * proposito, garantindo encaixe sem nenhuma fresta mesmo se o navegador
+ * arredondar a largura da .sidebar (220px) de forma diferente do que
+ * arredonda a borda esquerda da .conteudo em alguma largura de janela.
+ * 1px de sobreposicao e' imperceptivel, mas elimina qualquer risco de gap.
+ */
+.sidebar__item--ativo::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: -1px;
+  width: 4px;
+  background: var(--chrome-accent);
 }
 
 .conteudo {
   flex: 1;
   overflow: auto;
   padding: 32px clamp(24px, 4.5%, 54px);
+}
+
+/*
+ * Abaixo de 840px o menu lateral deixa de ocupar espaco fixo no layout
+ * (que em telas de celular sobrava so' ~170px pro conteudo, com a tela
+ * inteira precisando de scroll horizontal) e vira um painel deslizante:
+ * escondido por padrao (translateX -100%), abre por cima do conteudo com
+ * um fundo escurecido atras, fechado pelo botao hamburguer no topbar, por
+ * um toque no fundo, ou ao navegar para uma tela (ver (click)="fecharMenu()"
+ * nos itens, no shell.html).
+ */
+@media (max-width: 840px) {
+  .topbar__menu-toggle {
+    display: flex;
+  }
+
+  .sidebar {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 30;
+    transform: translateX(-100%);
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.25);
+    transition: transform 220ms ease;
+  }
+
+  .sidebar--aberto {
+    transform: translateX(0);
+  }
+
+  .sidebar__fundo {
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    background: rgba(11, 25, 48, 0.45);
+  }
+}
+
+/*
+ * Abaixo de 480px, hamburguer (36px) + titulo (~187px) + cluster do
+ * usuario (~184px) + padding do toolbar (32px) somam mais que a largura
+ * da tela, criando um scroll horizontal na pagina inteira. Nome/perfil
+ * do usuario (~112px com o gap) e' o que mais sobra: em celular pequeno
+ * fica so' o avatar + seta, que ja abre o mesmo menu com "Sair" ao tocar
+ * (o nome continua visivel ali dentro, no botao "Sair").
+ */
+@media (max-width: 480px) {
+  .topbar__usuario-info {
+    display: none;
+  }
+
+  .topbar__usuario {
+    gap: 2px;
+    padding: 6px;
+  }
 }

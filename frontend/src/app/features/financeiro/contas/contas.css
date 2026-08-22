@@ -1,3 +1,7 @@
+.contas {
+  padding: 24px 8px;
+}
+
 .contas__formulario {
   display: flex;
   flex-wrap: wrap;
@@ -11,8 +15,27 @@
   flex-grow: 1;
 }
 
-.contas__tabela {
-  width: 100%;
+.contas__erro {
+  color: #b3261e;
+}
+
+/*
+ * Indicador circular pastel: recorte visual rapido do tipo/status da
+ * linha. Especifico desta tela (nenhuma outra tem esse conceito) - o
+ * resto do visual da tabela (striping, bordas, padding, responsivo) vem
+ * da classe global .tabela-dados (ver styles.scss).
+ */
+.contas__indicador {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+
+.contas__tabela .mat-mdc-cell:has(.contas__indicador) {
+  width: 28px;
+  padding-right: 0;
 }
 
 .contas__vencida {
@@ -20,6 +43,9 @@
   font-weight: 600;
 }
 
-.contas__erro {
-  color: #b3261e;
+@media (max-width: 640px) {
+  .contas__tabela .mat-mdc-cell:has(.contas__indicador) {
+    width: auto;
+    justify-content: flex-start;
+  }
 }

@@ -51,9 +51,9 @@ export class Contas {
   protected readonly rotulosStatusContaPagar = RUTULOS_STATUS_CONTA_PAGAR;
   protected readonly rotulosStatusContaReceber = RUTULOS_STATUS_CONTA_RECEBER;
 
-  protected readonly colunasDespesas = ['data', 'categoria', 'valor', 'descricao'];
-  protected readonly colunasContasPagar = ['descricao', 'valor', 'dataVencimento', 'status', 'acoes'];
-  protected readonly colunasContasReceber = ['clienteNome', 'valor', 'dataVencimento', 'status', 'acoes'];
+  protected readonly colunasDespesas = ['indicador', 'data', 'categoria', 'valor', 'descricao'];
+  protected readonly colunasContasPagar = ['indicador', 'descricao', 'valor', 'dataVencimento', 'status', 'acoes'];
+  protected readonly colunasContasReceber = ['indicador', 'clienteNome', 'valor', 'dataVencimento', 'status', 'acoes'];
 
   protected readonly carregando = signal(true);
   protected readonly mensagemErro = signal<string | null>(null);
@@ -88,6 +88,49 @@ export class Contas {
 
   protected rotuloStatusReceber(status: StatusContaReceber): string {
     return this.rotulosStatusContaReceber[status];
+  }
+
+  /** Classe modificadora do .badge (ver styles.scss) pro status da conta - "vencida" fica so' no rotulo da data, nao muda o badge de status. */
+  protected classeBadgeStatus(status: StatusContaPagar | StatusContaReceber): string {
+    if (status === 'PAGA' || status === 'RECEBIDA') {
+      return 'badge--sucesso';
+    }
+    if (status === 'CANCELADA') {
+      return 'badge--erro';
+    }
+    return 'badge--pendente';
+  }
+
+  /**
+   * Cor do indicador circular de cada linha de despesa (sem status
+   * proprio, ao contrario de conta a pagar/receber). Mesmo azul claro
+   * (#90CAF9) da paleta "Cor na agenda" (ver PALETA_CORES_AGENDA em
+   * profissionais-formulario.ts), reaproveitado aqui pra ficar dentro da
+   * identidade visual em vez de um tom pastel qualquer.
+   */
+  protected corIndicadorDespesa(): string {
+    return '#90CAF9';
+  }
+
+  protected corIndicadorContaPagar(conta: ContaPagar): string {
+    return this.corIndicadorPorStatus(conta.status, conta.vencida);
+  }
+
+  protected corIndicadorContaReceber(conta: ContaReceber): string {
+    return this.corIndicadorPorStatus(conta.status, conta.vencida);
+  }
+
+  private corIndicadorPorStatus(status: StatusContaPagar | StatusContaReceber, vencida: boolean): string {
+    if (vencida) {
+      return '#F0A8A8';
+    }
+    if (status === 'PAGA' || status === 'RECEBIDA') {
+      return '#B7E4C7';
+    }
+    if (status === 'CANCELADA') {
+      return '#D8D8D8';
+    }
+    return '#FFE1A8';
   }
 
   protected podeGerenciar(): boolean {

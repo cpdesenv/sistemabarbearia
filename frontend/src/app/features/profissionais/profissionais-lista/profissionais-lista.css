@@ -36,12 +36,15 @@
   border-radius: 50%;
 }
 
-.profissionais__status--ativo {
-  color: var(--success, #2e7d32);
-  font-weight: 500;
+.profissionais__tabela .mat-mdc-cell:has(.profissionais__cor) {
+  width: 28px;
+  padding-right: 0;
 }
 
-.profissionais__status--inativo {
-  color: var(--mat-sys-error, #b3261e);
-  font-weight: 500;
+@media (max-width: 640px) {
+  .profissionais__tabela .mat-mdc-cell:has(.profissionais__cor) {
+    width: auto;
+    justify-content: flex-start;
+  }
 }
+

@@ -66,29 +66,29 @@
     <mat-card>
       <mat-card-content>
         <h2>Extrato de movimentações</h2>
-        <div class="estoque-detalhe__tabela-wrapper">
-          <table mat-table [dataSource]="movimentos()" class="estoque-detalhe__tabela">
+        <div class="estoque-detalhe__tabela-wrapper tabela-dados-wrapper">
+          <table mat-table [dataSource]="movimentos()" class="estoque-detalhe__tabela tabela-dados">
             <ng-container matColumnDef="tipo">
               <th mat-header-cell *matHeaderCellDef>Tipo</th>
-              <td mat-cell *matCellDef="let movimento">{{ rotuloTipo(movimento.tipo) }}</td>
+              <td mat-cell *matCellDef="let movimento" data-label="Tipo">{{ rotuloTipo(movimento.tipo) }}</td>
             </ng-container>
             <ng-container matColumnDef="quantidade">
               <th mat-header-cell *matHeaderCellDef>Quantidade</th>
-              <td mat-cell *matCellDef="let movimento">{{ movimento.quantidade > 0 ? '+' : '' }}{{ movimento.quantidade }}</td>
+              <td mat-cell *matCellDef="let movimento" data-label="Quantidade">{{ movimento.quantidade > 0 ? '+' : '' }}{{ movimento.quantidade }}</td>
             </ng-container>
             <ng-container matColumnDef="custoUnitario">
               <th mat-header-cell *matHeaderCellDef>Custo unitário</th>
-              <td mat-cell *matCellDef="let movimento">
+              <td mat-cell *matCellDef="let movimento" data-label="Custo unitário">
                 {{ movimento.custoUnitario !== null ? (movimento.custoUnitario | currency: 'BRL') : '—' }}
               </td>
             </ng-container>
             <ng-container matColumnDef="motivo">
               <th mat-header-cell *matHeaderCellDef>Motivo</th>
-              <td mat-cell *matCellDef="let movimento">{{ movimento.motivo || '—' }}</td>
+              <td mat-cell *matCellDef="let movimento" data-label="Motivo">{{ movimento.motivo || '—' }}</td>
             </ng-container>
             <ng-container matColumnDef="criadoEm">
               <th mat-header-cell *matHeaderCellDef>Data</th>
-              <td mat-cell *matCellDef="let movimento">{{ movimento.criadoEm | date: 'dd/MM/yyyy HH:mm' }}</td>
+              <td mat-cell *matCellDef="let movimento" data-label="Data">{{ movimento.criadoEm | date: 'dd/MM/yyyy HH:mm' }}</td>
             </ng-container>
             <tr mat-header-row *matHeaderRowDef="colunasMovimentos"></tr>
             <tr mat-row *matRowDef="let row; columns: colunasMovimentos"></tr>

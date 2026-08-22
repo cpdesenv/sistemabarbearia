@@ -18,31 +18,31 @@
   @if (carregando()) {
     <mat-spinner diameter="32" />
   } @else {
-    <div class="clientes__tabela-wrapper">
-      <table mat-table [dataSource]="clientes()" class="clientes__tabela">
+    <div class="clientes__tabela-wrapper tabela-dados-wrapper">
+      <table mat-table [dataSource]="clientes()" class="clientes__tabela tabela-dados">
         <ng-container matColumnDef="nome">
           <th mat-header-cell *matHeaderCellDef>Nome</th>
-          <td mat-cell *matCellDef="let cliente">{{ cliente.nome }}</td>
+          <td mat-cell *matCellDef="let cliente" data-label="Nome">{{ cliente.nome }}</td>
         </ng-container>
 
         <ng-container matColumnDef="telefone">
           <th mat-header-cell *matHeaderCellDef>Telefone</th>
-          <td mat-cell *matCellDef="let cliente">{{ cliente.telefone || '—' }}</td>
+          <td mat-cell *matCellDef="let cliente" data-label="Telefone">{{ cliente.telefone || '—' }}</td>
         </ng-container>
 
         <ng-container matColumnDef="email">
           <th mat-header-cell *matHeaderCellDef>E-mail</th>
-          <td mat-cell *matCellDef="let cliente">{{ cliente.email || '—' }}</td>
+          <td mat-cell *matCellDef="let cliente" data-label="E-mail">{{ cliente.email || '—' }}</td>
         </ng-container>
 
         <ng-container matColumnDef="origem">
           <th mat-header-cell *matHeaderCellDef>Origem</th>
-          <td mat-cell *matCellDef="let cliente">{{ cliente.origemCadastro }}</td>
+          <td mat-cell *matCellDef="let cliente" data-label="Origem">{{ cliente.origemCadastro }}</td>
         </ng-container>
 
         <ng-container matColumnDef="acoes">
           <th mat-header-cell *matHeaderCellDef></th>
-          <td mat-cell *matCellDef="let cliente" class="clientes__acoes">
+          <td mat-cell *matCellDef="let cliente" class="clientes__acoes" data-label="Ações">
             <a mat-button [routerLink]="[cliente.uuid]">Ver ficha</a>
             @if (podeGerenciar()) {
               <a mat-button [routerLink]="[cliente.uuid, 'editar']">Editar</a>
