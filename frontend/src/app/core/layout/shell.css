@@ -201,7 +201,8 @@
 .sidebar {
   width: 220px;
   flex-shrink: 0;
-  background: var(--chrome-bg);
+  /* Vinheta radial (nao cor solida), conferida ao vivo no site de referencia (Central do Projeto). */
+  background: radial-gradient(circle at 45% 6%, #0a2248 0%, #071426 35%, #040b17 100%);
   padding: 16px 0;
 }
 
@@ -218,10 +219,16 @@
   background: var(--chrome-bg-hover);
 }
 
+/*
+ * Sem fundo tintado (era color-mix com --chrome-accent) - no site de
+ * referencia o item ativo do menu e' so' texto branco em negrito + a
+ * barra de acento, sem realce de fundo. A barra continua do lado
+ * direito (nao esquerdo, como no site) porque foi alinhada de proposito
+ * com a fronteira do painel claro - ver .sidebar__item--ativo::after.
+ */
 .sidebar__item--ativo {
   font-weight: 600;
-  color: var(--chrome-accent);
-  background: color-mix(in srgb, var(--chrome-accent) 16%, transparent);
+  color: #fff;
 }
 
 /*

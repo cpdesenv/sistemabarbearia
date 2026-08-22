@@ -90,6 +90,17 @@ export class Contas {
     return this.rotulosStatusContaReceber[status];
   }
 
+  /** Classe modificadora do .badge (ver styles.scss) pro status da conta - "vencida" fica so' no rotulo da data, nao muda o badge de status. */
+  protected classeBadgeStatus(status: StatusContaPagar | StatusContaReceber): string {
+    if (status === 'PAGA' || status === 'RECEBIDA') {
+      return 'badge--sucesso';
+    }
+    if (status === 'CANCELADA') {
+      return 'badge--erro';
+    }
+    return 'badge--pendente';
+  }
+
   /**
    * Cor do indicador circular de cada linha de despesa (sem status
    * proprio, ao contrario de conta a pagar/receber). Mesmo azul claro

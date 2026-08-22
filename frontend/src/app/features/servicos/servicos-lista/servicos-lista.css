@@ -28,13 +28,3 @@
 .servicos__acoes {
   white-space: nowrap;
 }
-
-.servicos__status--ativo {
-  color: var(--success, #2e7d32);
-  font-weight: 500;
-}
-
-.servicos__status--inativo {
-  color: var(--mat-sys-error, #b3261e);
-  font-weight: 500;
-}

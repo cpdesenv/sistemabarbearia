@@ -29,16 +29,6 @@
   white-space: nowrap;
 }
 
-.produtos__status--ativo {
-  color: var(--success, #2e7d32);
-  font-weight: 500;
-}
-
-.produtos__status--inativo {
-  color: var(--mat-sys-error, #b3261e);
-  font-weight: 500;
-}
-
 .produtos__estoque--baixo {
   color: var(--mat-sys-error, #b3261e);
   font-weight: 600;

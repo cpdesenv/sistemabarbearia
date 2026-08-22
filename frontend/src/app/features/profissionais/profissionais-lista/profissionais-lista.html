@@ -52,8 +52,9 @@
           <th mat-header-cell *matHeaderCellDef>Status</th>
           <td mat-cell *matCellDef="let profissional" data-label="Status">
             <span
-              [class.profissionais__status--ativo]="profissional.ativo"
-              [class.profissionais__status--inativo]="!profissional.ativo"
+              class="badge"
+              [class.badge--sucesso]="profissional.ativo"
+              [class.badge--erro]="!profissional.ativo"
             >
               {{ profissional.ativo ? 'Ativo' : 'Inativo' }}
             </span>
