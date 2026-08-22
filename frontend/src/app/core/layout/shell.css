@@ -169,6 +169,28 @@
   color: var(--chrome-text);
 }
 
+/*
+ * Cabecalho dentro do menu "Sair": mesma info (nome/perfil) que fica
+ * escondida do topbar em telas bem estreitas (ver media query no fim do
+ * arquivo, .topbar__usuario-info) - continua acessivel abrindo o menu.
+ */
+.topbar__menu-cabecalho {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--line, #dce7f4);
+  margin-bottom: 4px;
+  color: var(--ink, #0b1930);
+}
+
+.topbar__menu-cabecalho span {
+  font-size: 0.75rem;
+  color: var(--muted, #64748b);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
 .shell__corpo {
   position: relative;
   display: flex;
@@ -260,5 +282,24 @@
     inset: 0;
     z-index: 20;
     background: rgba(11, 25, 48, 0.45);
+  }
+}
+
+/*
+ * Abaixo de 480px, hamburguer (36px) + titulo (~187px) + cluster do
+ * usuario (~184px) + padding do toolbar (32px) somam mais que a largura
+ * da tela, criando um scroll horizontal na pagina inteira. Nome/perfil
+ * do usuario (~112px com o gap) e' o que mais sobra: em celular pequeno
+ * fica so' o avatar + seta, que ja abre o mesmo menu com "Sair" ao tocar
+ * (o nome continua visivel ali dentro, no botao "Sair").
+ */
+@media (max-width: 480px) {
+  .topbar__usuario-info {
+    display: none;
+  }
+
+  .topbar__usuario {
+    gap: 2px;
+    padding: 6px;
   }
 }

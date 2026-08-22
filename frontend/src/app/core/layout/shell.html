@@ -30,6 +30,10 @@
         </svg>
       </button>
       <mat-menu #menuUsuario="matMenu" xPosition="before">
+        <div class="topbar__menu-cabecalho">
+          <strong>{{ usuarioLogado.nome }}</strong>
+          <span>{{ rotuloPerfil() }}</span>
+        </div>
         <button mat-menu-item (click)="sair()">Sair</button>
       </mat-menu>
     }
