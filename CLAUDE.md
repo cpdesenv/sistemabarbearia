@@ -77,7 +77,7 @@ Automatizar o atendimento e o agendamento de uma barbearia de pequeno/médio por
 
 # 6. FASES DE IMPLEMENTAÇÃO — SEQUÊNCIA REORDENADA
 
-**20 fases (0 a 19)**, mais a **Fase 6-META**, que fica fora da sequência e só é executada quando a conta Meta for aprovada.
+**20 fases (0 a 19)**, mais a **Fase 6-META** e o **CHECKPOINT-VISUAL**, que ficam fora da sequência numerada: a Fase 6-META só é executada quando a conta Meta for aprovada; o CHECKPOINT-VISUAL só é executado quando o cliente validar a identidade visual, antes da Fase 19.
 
 Fases marcadas com **[sub-entregas]** devem ser apresentadas em blocos menores dentro da mesma fase, para que você possa validar em partes sem esperar a fase inteira.
 
@@ -160,6 +160,8 @@ Fases marcadas com **[sub-entregas]** devem ser apresentadas em blocos menores d
 - [ ] Despesa é registrada e reduz o resultado do caixa
 - [ ] Conta a receber (cliente com débito) pode ser lançada e recuperada
 - [ ] Fluxo de caixa mostra: caixa em mãos + a receber — a pagar
+
+**Nota — identidade visual (fora do escopo original desta fase, registrado para rastreabilidade):** durante o desenvolvimento da Fase 5, foi aplicado ao painel administrativo um primeiro rascunho de identidade visual, em PRs próprios (não fazem parte dos critérios de aceite acima): paleta extraída por amostragem de pixel da logo CP Desenv (Material 3, `$azure-palette` + `$blue-palette`), menu lateral e topbar unificados numa faixa azul-marinho com vinheta radial, tipografia Inter com títulos em Georgia, layout de tabela em estilo planilha (`.tabela-dados`) aplicado às telas com listagem, badges em pílula e responsividade mobile (menu em painel deslizante abaixo de 840px). Toda escolha de cor foi conferida por cálculo de contraste WCAG AA, não só por inspeção visual. **Este rascunho é provisório** — serve apenas para haver algo apresentável durante o desenvolvimento. A validação formal com o cliente e a consolidação da identidade definitiva acontecem no checkpoint **CHECKPOINT-VISUAL** (ver Seção 6, antes da Fase 19).
 
 `git commit -m "feat: implementa comanda, formas de pagamento, caixa diario, controle de estoque e gestao financeira"`
 
@@ -647,6 +649,29 @@ Crescimento: +18,0%  (+R$ 4.500)
 - [ ] O painel mostra claramente que a mensageria está em modo mock
 
 `git commit -m "feat: prepara ambiente de producao com observabilidade, backup e conformidade LGPD"`
+
+---
+
+## CHECKPOINT-VISUAL — Validação de identidade visual com o cliente **(fora da sequência numerada, executar antes da Fase 19)**
+
+**Objetivo:** validar formalmente com o cliente (Cortes Cavalinho) o rascunho de identidade visual aplicado ao painel administrativo durante a Fase 5 (ver nota na Fase 5), antes de propagar esse padrão para telas voltadas ao cliente final — portal público (Fase 19) e documentos entregues a ele (comprovante da Fase 6, NFS-e da Fase 16).
+
+**Contexto:** o rascunho atual (paleta extraída da logo CP Desenv, menu lateral e topbar em azul-marinho, tipografia, layout de tabelas) foi implementado sem validação formal do cliente — só para haver algo apresentável durante o desenvolvimento. Antes de consolidar esse padrão como definitivo, é preciso confirmar com o cliente se a direção visual está correta ou precisa de ajuste.
+
+**Entregáveis**
+
+- Apresentação do painel atual ao cliente
+- Coleta de feedback objetivo: paleta de cores, uso da logo, tipografia, tom geral
+- Ajustes solicitados pelo cliente aplicados e revalidados
+- Decisões finais registradas em `docs/identidade-visual.md` (paleta aprovada, fontes, regras de uso da logo), como referência para a Fase 19
+
+**Critérios de aceite**
+
+- [ ] Cliente validou a paleta de cores e o estilo geral do painel (ou solicitou ajustes específicos, já aplicados)
+- [ ] `docs/identidade-visual.md` documenta as decisões finais aprovadas
+- [ ] A Fase 19 pode ser executada usando essa documentação como referência, sem nenhuma decisão de identidade visual pendente
+
+`git commit -m "docs: registra identidade visual validada com o cliente"`
 
 ---
 
