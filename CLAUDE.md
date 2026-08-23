@@ -67,6 +67,8 @@ Automatizar o atendimento e o agendamento de uma barbearia de pequeno/médio por
 
 [**IDÊNTICO À V3** — Mesmo ritual: ao iniciar, explique e pergunte; ao concluir, implemente com testes, atualize Flyway, documento como executar/testar, sugira commit, marque checklist, pause para validação.]
 
+**Adição ao ritual (a partir da Fase 6):** antes de abrir o Pull Request da fase, rodar `/security-review` sobre o diff da branch. Findings de severidade relevante (segredos, injeção, autorização quebrada, dados sensíveis expostos em log, etc.) devem ser corrigidos antes do PR; achados de baixo risco ou que exigem uma decisão de produto podem ser levados para a validação humana junto com o restante da fase, mas nunca ficam silenciosamente ignorados. Isso complementa — não substitui — a validação humana que já encerra cada fase.
+
 ---
 
 # 5. MODELO DE DOMÍNIO
