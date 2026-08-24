@@ -42,11 +42,17 @@ services:
       JWT_REFRESH_TTL_DIAS: ${JWT_REFRESH_TTL_DIAS:-7}
       ADMIN_EMAIL: ${ADMIN_EMAIL:-}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-barbearia}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-barbearia123}
+      MINIO_BUCKET_COMPROVANTES: ${MINIO_BUCKET_COMPROVANTES:-comprovantes}
     ports:
       - "8080:8080"
     depends_on:
       postgres:
         condition: service_healthy
+      minio:
+        condition: service_started
     restart: unless-stopped
 
   frontend:

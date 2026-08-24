@@ -41,6 +41,21 @@ export interface Comanda {
   atualizadoEm: string;
 }
 
+export type StatusComprovante = 'PENDENTE' | 'DISPONIVEL' | 'FALHA';
+
+export interface Comprovante {
+  uuid: string;
+  numero: number;
+  status: StatusComprovante;
+  geradoEm: string | null;
+}
+
+export const RUTULOS_STATUS_COMPROVANTE: Record<StatusComprovante, string> = {
+  PENDENTE: 'Gerando…',
+  DISPONIVEL: 'Disponível',
+  FALHA: 'Falha ao gerar',
+};
+
 export interface TotalPorFormaPagamento {
   formaPagamento: FormaPagamento;
   total: number;

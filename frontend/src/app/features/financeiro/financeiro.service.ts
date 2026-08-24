@@ -5,6 +5,7 @@ import { Observable } from 'rxjs';
 import {
   CaixaDoDia,
   Comanda,
+  Comprovante,
   ContaPagar,
   ContaReceber,
   CriarContaPagarRequest,
@@ -27,6 +28,10 @@ export class FinanceiroService {
 
   obterComanda(uuid: string): Observable<Comanda> {
     return this.http.get<Comanda>(`/api/comandas/${uuid}`);
+  }
+
+  obterComandaPorAgendamento(agendamentoUuid: string): Observable<Comanda> {
+    return this.http.get<Comanda>(`/api/comandas/por-agendamento/${agendamentoUuid}`);
   }
 
   adicionarItem(comandaUuid: string, servicoUuid: string, quantidade = 1): Observable<Comanda> {
@@ -55,6 +60,18 @@ export class FinanceiroService {
 
   estornar(comandaUuid: string, motivo: string): Observable<Comanda> {
     return this.http.post<Comanda>(`/api/comandas/${comandaUuid}/estornar`, { motivo });
+  }
+
+  obterComprovante(comandaUuid: string): Observable<Comprovante> {
+    return this.http.get<Comprovante>(`/api/comandas/${comandaUuid}/comprovante`);
+  }
+
+  baixarComprovante(comandaUuid: string): Observable<Blob> {
+    return this.http.get(`/api/comandas/${comandaUuid}/comprovante/arquivo`, { responseType: 'blob' });
+  }
+
+  reenviarComprovante(comandaUuid: string): Observable<Comprovante> {
+    return this.http.post<Comprovante>(`/api/comandas/${comandaUuid}/comprovante/reenviar`, {});
   }
 
   caixaDoDia(data: string): Observable<CaixaDoDia> {

@@ -43,6 +43,7 @@ import com.barbearia.financeiro.dto.EstornarComandaRequest;
 import com.barbearia.financeiro.dto.TotalPorFormaPagamentoDto;
 import com.barbearia.financeiro.dto.TotalPorProfissionalDto;
 import com.barbearia.financeiro.repository.ComandaRepository;
+import com.barbearia.fiscal.service.ComprovanteService;
 import com.barbearia.produto.domain.Produto;
 import com.barbearia.produto.repository.ProdutoRepository;
 import com.barbearia.produto.service.EstoqueService;
@@ -82,6 +83,7 @@ public class ComandaService {
     private final EstoqueService estoqueService;
     private final BarbeariaRepository barbeariaRepository;
     private final AuditoriaService auditoriaService;
+    private final ComprovanteService comprovanteService;
 
     @Transactional
     public ComandaDto abrirParaAgendamento(UUID agendamentoUuid, Long usuarioId, HttpServletRequest httpRequest) {
@@ -116,6 +118,16 @@ public class ComandaService {
     @Transactional(readOnly = true)
     public ComandaDto obter(UUID uuid) {
         return paraDto(buscarPorUuid(uuid));
+    }
+
+    /** Comanda mais recente de um agendamento (ABERTA, FECHADA ou ESTORNADA) — usado pela agenda para linkar de volta a comanda/comprovante de um agendamento ja finalizado. */
+    @Transactional(readOnly = true)
+    public ComandaDto obterMaisRecentePorAgendamento(UUID agendamentoUuid) {
+        List<Comanda> historico = comandaRepository.findByAgendamento_UuidPublicoOrderByCriadoEmDesc(agendamentoUuid);
+        if (historico.isEmpty()) {
+            throw new RecursoNaoEncontradoException("Nenhuma comanda encontrada para este agendamento.");
+        }
+        return paraDto(historico.get(0));
     }
 
     @Transactional
@@ -266,6 +278,13 @@ public class ComandaService {
                 "Comanda fechada. Total: " + comanda.getValorTotal() + ", forma de pagamento: "
                         + comanda.getFormaPagamento(),
                 httpRequest);
+
+        // Reserva o numero do comprovante na MESMA transacao do fechamento (Fase 6):
+        // se o fechamento der rollback, o numero nunca chega a ser consumido (zero
+        // buracos). A geracao do arquivo em si (PDF + upload) e feita depois, fora
+        // desta transacao, para nao bloquear o fechamento por causa de storage —
+        // ver ComandaController#fechar e ComprovanteService#gerarArquivoParaComanda.
+        comprovanteService.reservarParaComanda(comanda);
 
         return paraDto(comanda);
     }

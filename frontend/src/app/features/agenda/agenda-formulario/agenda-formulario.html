@@ -40,6 +40,11 @@
                 Cancelar
               </button>
             }
+            @if (agendamento.status === 'FINALIZADO') {
+              <button mat-stroked-button [disabled]="executandoAcao()" (click)="verComanda()">
+                Ver comanda
+              </button>
+            }
           </div>
         </mat-card-content>
       </mat-card>
