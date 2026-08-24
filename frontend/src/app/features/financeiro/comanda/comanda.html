@@ -151,6 +151,34 @@
       </mat-card>
     }
 
+    @if (dados.status === 'FECHADA') {
+      <mat-card class="comanda__comprovante">
+        <mat-card-content>
+          <h2>Comprovante</h2>
+          @if (comprovante(); as comp) {
+            <p>
+              <strong>Nº {{ comp.numero }}</strong> —
+              {{ rotulosStatusComprovante[comp.status] }}
+            </p>
+            <div class="comanda__acoes">
+              @if (comp.status === 'DISPONIVEL') {
+                <button mat-stroked-button type="button" [disabled]="baixandoComprovante()"
+                  (click)="baixarComprovante()">
+                  Baixar PDF
+                </button>
+              }
+              <button mat-stroked-button type="button" [disabled]="baixandoComprovante()"
+                (click)="reenviarComprovante()">
+                Reenviar
+              </button>
+            </div>
+          } @else {
+            <p>Gerando comprovante…</p>
+          }
+        </mat-card-content>
+      </mat-card>
+    }
+
     <div class="comanda__acoes">
       <a mat-stroked-button routerLink="/agenda">Voltar para a agenda</a>
       @if (estaAberta()) {

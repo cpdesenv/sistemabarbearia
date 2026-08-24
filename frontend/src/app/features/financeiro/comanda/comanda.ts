@@ -18,7 +18,14 @@ import { Produto } from '../../produtos/produtos.model';
 import { ProdutosService } from '../../produtos/produtos.service';
 import { Servico } from '../../servicos/servicos.model';
 import { ServicosService } from '../../servicos/servicos.service';
-import { Comanda, FormaPagamento, RUTULOS_FORMA_PAGAMENTO, RUTULOS_STATUS_COMANDA } from '../financeiro.model';
+import {
+  Comanda,
+  Comprovante,
+  FormaPagamento,
+  RUTULOS_FORMA_PAGAMENTO,
+  RUTULOS_STATUS_COMANDA,
+  RUTULOS_STATUS_COMPROVANTE,
+} from '../financeiro.model';
 import { FinanceiroService } from '../financeiro.service';
 
 @Component({
@@ -50,6 +57,7 @@ export class ComandaComponent {
 
   protected readonly rotulosStatus = RUTULOS_STATUS_COMANDA;
   protected readonly rotulosFormaPagamento = RUTULOS_FORMA_PAGAMENTO;
+  protected readonly rotulosStatusComprovante = RUTULOS_STATUS_COMPROVANTE;
   protected readonly formasPagamento: FormaPagamento[] = ['DINHEIRO', 'CARTAO_DEBITO', 'CARTAO_CREDITO', 'PIX', 'OUTRO'];
   protected readonly colunasItens = ['descricao', 'valorBruto', 'valorDescontoRateado', 'valorLiquido', 'comissaoValor', 'acoes'];
 
@@ -57,6 +65,8 @@ export class ComandaComponent {
   protected readonly executandoAcao = signal(false);
   protected readonly mensagemErro = signal<string | null>(null);
   protected readonly comanda = signal<Comanda | null>(null);
+  protected readonly comprovante = signal<Comprovante | null>(null);
+  protected readonly baixandoComprovante = signal(false);
   protected readonly servicos = signal<Servico[]>([]);
   protected readonly produtos = signal<Produto[]>([]);
 
@@ -179,6 +189,43 @@ export class ComandaComponent {
       });
   }
 
+  protected baixarComprovante(): void {
+    const comanda = this.comanda();
+    if (!comanda) {
+      return;
+    }
+    this.baixandoComprovante.set(true);
+    this.financeiroService.baixarComprovante(comanda.uuid).subscribe({
+      next: (blob) => {
+        this.baixandoComprovante.set(false);
+        baixarBlob(blob, `comprovante-${comanda.uuid}.pdf`);
+      },
+      error: () => this.baixandoComprovante.set(false),
+    });
+  }
+
+  protected reenviarComprovante(): void {
+    const comanda = this.comanda();
+    if (!comanda) {
+      return;
+    }
+    this.baixandoComprovante.set(true);
+    this.financeiroService.reenviarComprovante(comanda.uuid).subscribe({
+      next: (comprovante) => {
+        this.comprovante.set(comprovante);
+        this.baixandoComprovante.set(false);
+      },
+      error: () => this.baixandoComprovante.set(false),
+    });
+  }
+
+  private carregarComprovante(comandaUuid: string): void {
+    this.financeiroService.obterComprovante(comandaUuid).subscribe({
+      next: (comprovante) => this.comprovante.set(comprovante),
+      error: () => this.comprovante.set(null),
+    });
+  }
+
   private carregar(): void {
     this.carregando.set(true);
     this.financeiroService.obterComanda(this.uuid).subscribe({
@@ -208,5 +255,19 @@ export class ComandaComponent {
     this.descontoMotivo.set(comanda.descontoMotivo ?? '');
     this.formaPagamentoSelecionada.set(comanda.formaPagamento ?? '');
     this.carregando.set(false);
+    if (comanda.status === 'FECHADA') {
+      this.carregarComprovante(comanda.uuid);
+    } else {
+      this.comprovante.set(null);
+    }
   }
+}
+
+function baixarBlob(blob: Blob, nomeArquivo: string): void {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = nomeArquivo;
+  link.click();
+  URL.revokeObjectURL(url);
 }
