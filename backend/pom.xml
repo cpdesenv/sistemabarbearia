@@ -88,6 +88,19 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- Fase 6: geracao de PDF do comprovante (recibo interno, sem valor fiscal) -->
+        <dependency>
+            <groupId>com.github.librepdf</groupId>
+            <artifactId>openpdf</artifactId>
+            <version>2.2.5</version>
+        </dependency>
+        <!-- Fase 6: storage de objetos (MinIO), ja provisionado no docker-compose desde a Fase 0 -->
+        <dependency>
+            <groupId>io.minio</groupId>
+            <artifactId>minio</artifactId>
+            <version>8.5.17</version>
+        </dependency>
+
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
@@ -123,6 +136,11 @@
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>postgresql</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>minio</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>

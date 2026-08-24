@@ -28,6 +28,7 @@ import com.barbearia.financeiro.dto.ComandaDto;
 import com.barbearia.financeiro.dto.DefinirFormaPagamentoRequest;
 import com.barbearia.financeiro.dto.EstornarComandaRequest;
 import com.barbearia.financeiro.service.ComandaService;
+import com.barbearia.fiscal.service.ComprovanteService;
 import com.barbearia.shared.security.UsuarioAutenticado;
 
 @RestController
@@ -37,6 +38,7 @@ import com.barbearia.shared.security.UsuarioAutenticado;
 public class ComandaController {
 
     private final ComandaService comandaService;
+    private final ComprovanteService comprovanteService;
 
     @PostMapping("/abrir-para-agendamento/{agendamentoUuid}")
     @ResponseStatus(HttpStatus.CREATED)
@@ -99,7 +101,14 @@ public class ComandaController {
     @PreAuthorize("hasAnyRole('ADMIN', 'GERENTE', 'RECEPCAO', 'BARBEIRO')")
     public ResponseEntity<ComandaDto> fechar(@PathVariable UUID uuid,
             @AuthenticationPrincipal UsuarioAutenticado principal, HttpServletRequest httpRequest) {
-        return ResponseEntity.ok(comandaService.fechar(uuid, principal.getUsuario().getId(), httpRequest));
+        ComandaDto comanda = comandaService.fechar(uuid, principal.getUsuario().getId(), httpRequest);
+        // So chamado apos o fechamento ja ter sido commitado (fora da transacao de
+        // ComandaService#fechar) — o numero do comprovante ja foi reservado la
+        // dentro; aqui so gera o arquivo, de forma resiliente (nunca lanca, ver
+        // ComprovanteService#gerarArquivoParaComanda) para nao derrubar a resposta
+        // de fechamento por causa de uma falha de storage.
+        comprovanteService.gerarArquivoParaComanda(uuid);
+        return ResponseEntity.ok(comanda);
     }
 
     @PostMapping("/{uuid}/estornar")
