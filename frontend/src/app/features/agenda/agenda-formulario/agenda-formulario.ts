@@ -226,6 +226,23 @@ export class AgendaFormulario {
     });
   }
 
+  /** Agendamento ja finalizado: leva para a comanda (e o comprovante) em vez de tentar abrir uma nova. */
+  protected verComanda(): void {
+    if (!this.uuid) {
+      return;
+    }
+    this.executandoAcao.set(true);
+    this.mensagemErro.set(null);
+
+    this.financeiroService.obterComandaPorAgendamento(this.uuid).subscribe({
+      next: (comanda) => this.router.navigate(['/financeiro/comandas', comanda.uuid]),
+      error: (erro: HttpErrorResponse) => {
+        this.executandoAcao.set(false);
+        this.mensagemErro.set(erro.error?.mensagem ?? 'Não foi possível encontrar a comanda deste agendamento.');
+      },
+    });
+  }
+
   protected cancelar(): void {
     if (!this.uuid) {
       return;

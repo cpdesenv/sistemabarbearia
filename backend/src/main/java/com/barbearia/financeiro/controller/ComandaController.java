@@ -53,6 +53,11 @@ public class ComandaController {
         return ResponseEntity.ok(comandaService.obter(uuid));
     }
 
+    @GetMapping("/por-agendamento/{agendamentoUuid}")
+    public ResponseEntity<ComandaDto> obterPorAgendamento(@PathVariable UUID agendamentoUuid) {
+        return ResponseEntity.ok(comandaService.obterMaisRecentePorAgendamento(agendamentoUuid));
+    }
+
     @PostMapping("/{uuid}/itens")
     @PreAuthorize("hasAnyRole('ADMIN', 'GERENTE', 'RECEPCAO', 'BARBEIRO')")
     public ResponseEntity<ComandaDto> adicionarItem(@PathVariable UUID uuid,

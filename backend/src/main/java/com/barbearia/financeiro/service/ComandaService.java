@@ -120,6 +120,16 @@ public class ComandaService {
         return paraDto(buscarPorUuid(uuid));
     }
 
+    /** Comanda mais recente de um agendamento (ABERTA, FECHADA ou ESTORNADA) — usado pela agenda para linkar de volta a comanda/comprovante de um agendamento ja finalizado. */
+    @Transactional(readOnly = true)
+    public ComandaDto obterMaisRecentePorAgendamento(UUID agendamentoUuid) {
+        List<Comanda> historico = comandaRepository.findByAgendamento_UuidPublicoOrderByCriadoEmDesc(agendamentoUuid);
+        if (historico.isEmpty()) {
+            throw new RecursoNaoEncontradoException("Nenhuma comanda encontrada para este agendamento.");
+        }
+        return paraDto(historico.get(0));
+    }
+
     @Transactional
     public ComandaDto adicionarItemServico(UUID comandaUuid, AdicionarItemComandaRequest requisicao, Long usuarioId,
             HttpServletRequest httpRequest) {

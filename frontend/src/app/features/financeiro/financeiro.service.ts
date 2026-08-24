@@ -30,6 +30,10 @@ export class FinanceiroService {
     return this.http.get<Comanda>(`/api/comandas/${uuid}`);
   }
 
+  obterComandaPorAgendamento(agendamentoUuid: string): Observable<Comanda> {
+    return this.http.get<Comanda>(`/api/comandas/por-agendamento/${agendamentoUuid}`);
+  }
+
   adicionarItem(comandaUuid: string, servicoUuid: string, quantidade = 1): Observable<Comanda> {
     return this.http.post<Comanda>(`/api/comandas/${comandaUuid}/itens`, { servicoUuid, quantidade });
   }
