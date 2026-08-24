@@ -24,6 +24,7 @@ import com.barbearia.agenda.repository.AgendamentoRepository;
 import com.barbearia.cliente.domain.Cliente;
 import com.barbearia.cliente.repository.ClienteRepository;
 import com.barbearia.financeiro.domain.Comanda;
+import com.barbearia.financeiro.domain.FormaPagamento;
 import com.barbearia.financeiro.domain.StatusComanda;
 import com.barbearia.financeiro.repository.ComandaRepository;
 import com.barbearia.fiscal.service.ComprovanteService;
@@ -120,7 +121,16 @@ class ComprovanteNumeracaoConcorrenciaTest extends IntegrationTestBase {
         Comanda comanda = new Comanda();
         comanda.setAgendamento(agendamento);
         comanda.setStatus(StatusComanda.FECHADA);
-        comanda.setFechadaEm(Instant.now());
+        // Uma comanda FECHADA de verdade sempre tem forma de pagamento (regra
+        // aplicada em ComandaService#fechar) — sem isso, EnumMap.merge(null, ...)
+        // em ComandaService#calcularCaixaDoDia lanca NullPointerException.
+        comanda.setFormaPagamento(FormaPagamento.DINHEIRO);
+        // Essas comandas sao commitadas de verdade (sem rollback, ver
+        // javadoc da classe), entao ficam no Postgres compartilhado pelo
+        // resto da suite. Fechar num passado distante — nunca "hoje" — evita
+        // que entrem na agregacao de GET /api/caixa (que filtra por data) de
+        // qualquer outro teste que rode depois deste na mesma suite.
+        comanda.setFechadaEm(Instant.now().minus(3650, ChronoUnit.DAYS));
         return comandaRepository.save(comanda);
     }
 }
