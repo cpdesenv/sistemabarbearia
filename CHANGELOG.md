@@ -4,6 +4,27 @@ Todas as mudanças notáveis deste projeto serão documentadas neste arquivo.
 
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
+## [Unreleased] - Reforma de UX/UI do painel administrativo
+
+Fora da numeração de fases (pedida antes da Fase 7); identidade visual
+permanece **provisória** até o CHECKPOINT-VISUAL.
+
+### Alterado
+
+- Consolidação dos tokens de design (cores, espaçamento, breakpoints) e
+  alinhamento visual do shell e da tela de login à mesma identidade.
+- Confirmação de ações destrutivas unificada (`ConfirmDialogService`) em
+  bloqueios, comanda, contas a pagar/receber e ativação/desativação de
+  produto, serviço e profissional.
+- Componente compartilhado de busca de cliente por nome/telefone
+  (autocomplete), substituindo a busca duplicada em Agenda e Contas a
+  receber.
+- Telas de estoque (filtro e paginação), dashboard (estados "em breve" e
+  atalhos) e agenda mobile alinhadas ao mesmo padrão visual das demais
+  listagens.
+- Tela de profissional reformulada (sem abas, tabelas compactas, seletor
+  de cor com paleta ampliada e contraste WCAG AA conferido).
+
 ## [0.5.0] - Fase 5 — Comanda, pagamento, caixa, estoque e financeiro
 
 ### Adicionado

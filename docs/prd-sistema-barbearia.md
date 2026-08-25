@@ -181,6 +181,14 @@ Desenv, layout de tabelas, responsividade mobile), aplicado durante a Fase
 5 — **provisório**, sujeito à validação formal no CHECKPOINT-VISUAL (ver
 Fase 5 e CHECKPOINT-VISUAL abaixo).
 
+Também fora da numeração de fases, pedida antes da Fase 7: uma reforma de
+UX/UI do painel administrativo que consolidou os tokens de design (cores,
+espaçamento, breakpoints) e alinhou shell/login à mesma identidade visual,
+unificou a confirmação de ações destrutivas e a busca de cliente (agora um
+componente compartilhado), e aplicou o mesmo padrão visual às telas
+restantes (estoque, dashboard, agenda mobile, profissional) — igualmente
+**provisória**, sujeita à mesma validação no CHECKPOINT-VISUAL.
+
 ## 6. Ritual de trabalho por fase
 
 Cada fase segue o mesmo ritual (regra operacional — a versão que rege o
