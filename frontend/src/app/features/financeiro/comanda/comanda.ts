@@ -124,7 +124,18 @@ export class ComandaComponent {
     if (!comanda) {
       return;
     }
-    this.executarComTratamentoDeErro(this.financeiroService.removerItem(comanda.uuid, itemUuid));
+    this.confirmDialog
+      .confirm({
+        title: 'Remover item',
+        message: 'Remover este item da comanda?',
+        confirmLabel: 'Remover',
+        danger: true,
+      })
+      .subscribe((resultado) => {
+        if (resultado.confirmed) {
+          this.executarComTratamentoDeErro(this.financeiroService.removerItem(comanda.uuid, itemUuid));
+        }
+      });
   }
 
   protected aplicarDesconto(): void {

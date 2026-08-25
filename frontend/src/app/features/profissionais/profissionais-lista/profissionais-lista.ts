@@ -10,6 +10,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTableModule } from '@angular/material/table';
 
 import { AuthService } from '../../../core/auth/auth.service';
+import { ConfirmDialogService } from '../../../core/ui/confirm-dialog/confirm-dialog.service';
 import { Profissional } from '../profissionais.model';
 import { ProfissionaisService } from '../profissionais.service';
 
@@ -33,6 +34,7 @@ export class ProfissionaisLista {
   private readonly profissionaisService = inject(ProfissionaisService);
   private readonly formBuilder = inject(FormBuilder);
   private readonly authService = inject(AuthService);
+  private readonly confirmDialog = inject(ConfirmDialogService);
 
   protected readonly colunas = ['cor', 'nome', 'contato', 'comissao', 'status', 'acoes'];
   protected readonly profissionais = signal<Profissional[]>([]);
@@ -68,9 +70,22 @@ export class ProfissionaisLista {
   }
 
   protected alternarStatus(profissional: Profissional): void {
-    this.profissionaisService
-      .atualizarStatus(profissional.uuid, !profissional.ativo)
-      .subscribe(() => this.carregarPagina());
+    if (!profissional.ativo) {
+      this.profissionaisService.atualizarStatus(profissional.uuid, true).subscribe(() => this.carregarPagina());
+      return;
+    }
+    this.confirmDialog
+      .confirm({
+        title: 'Desativar profissional',
+        message: `Desativar "${profissional.nome}"? Ele deixa de aparecer para agendamento, mas pode ser reativado depois.`,
+        confirmLabel: 'Desativar',
+        danger: true,
+      })
+      .subscribe((resultado) => {
+        if (resultado.confirmed) {
+          this.profissionaisService.atualizarStatus(profissional.uuid, false).subscribe(() => this.carregarPagina());
+        }
+      });
   }
 
   private carregarPagina(): void {

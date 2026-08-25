@@ -37,5 +37,5 @@
 }
 
 .estoque-detalhe__erro {
-  color: #b00020;
+  color: var(--mat-sys-error, #b3261e);
 }

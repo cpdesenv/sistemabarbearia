@@ -94,14 +94,16 @@ html {
   /*
    * Pares fundo/texto para os 3 estados semanticos usados em badges e
    * caixas de aviso (Clientes, Contas a pagar/receber, mensagens de
-   * formulario). --error tambem existe como cor "plana" (texto/icone),
-   * para substituir os hex soltos (var(--mat-sys-error, #b3261e),
-   * #b00020) usados hoje em mensagens de erro de telas diferentes por um
-   * unico vermelho. Contraste de cada par de badge conferido >=5:1.
+   * formulario). Nao existe um "--error" piano (so' texto/icone): o
+   * padrao ja estabelecido em 13 telas do sistema para isso e'
+   * var(--mat-sys-error, #b3261e) - o proprio token de erro do tema
+   * Material, com fallback manual - e continua sendo o certo a usar
+   * (ver comanda.css/estoque-detalhe.css, unicos dois lugares com um
+   * hex solto e diferente, #b00020, corrigidos para o mesmo padrao).
+   * Contraste de cada par de badge conferido >=5:1.
    */
   --success-bg: #d7f0dc;
   --success-text: #1e6b2f;
-  --error: #b3261e;
   --error-bg: #fbe0de;
   --error-text: #b3261e;
   --warning: #8a5a00;
@@ -233,6 +235,43 @@ body {
 .mat-mdc-unelevated-button.mat-primary:disabled,
 .mat-mdc-raised-button.mat-primary:disabled {
   background-image: none;
+  box-shadow: none;
+  transform: none;
+}
+
+/*
+ * Equivalente "warn" do botao primario acima, para a acao destrutiva
+ * PRINCIPAL de uma tela (ex.: "Estornar" numa comanda fechada) ter peso
+ * visual real, em vez do mesmo peso de um botao stroked qualquer - hoje
+ * so' mat-primary tinha destaque, entao "Fechar comanda" (positiva) e
+ * "Estornar" (destrutiva, irreversivel) pareciam igualmente "seguras".
+ * Preenchimento solido (sem degrade) de proposito, pra nao parecer uma
+ * variacao de cor do botao primario - e' warn.mat-flat-button/mat-
+ * raised-button que usam este estilo; acoes destrutivas menores e
+ * repetidas por linha (ex.: "Remover" item de tabela) continuam como
+ * mat-button, sem este peso.
+ */
+.mat-mdc-unelevated-button.mat-warn,
+.mat-mdc-raised-button.mat-warn {
+  --mdc-filled-button-container-color: var(--error-text);
+  --mdc-protected-button-container-color: var(--error-text);
+  --mdc-filled-button-container-shape: 9px;
+  --mdc-protected-button-container-shape: 9px;
+  border-radius: 9px;
+  box-shadow: 0 7px 18px color-mix(in srgb, var(--error-text) 24%, transparent);
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.mat-mdc-unelevated-button.mat-warn:hover,
+.mat-mdc-raised-button.mat-warn:hover {
+  --mdc-filled-button-container-color: color-mix(in srgb, var(--error-text) 88%, black);
+  --mdc-protected-button-container-color: color-mix(in srgb, var(--error-text) 88%, black);
+  box-shadow: 0 10px 22px color-mix(in srgb, var(--error-text) 30%, transparent);
+  transform: translateY(-1px);
+}
+
+.mat-mdc-unelevated-button.mat-warn:disabled,
+.mat-mdc-raised-button.mat-warn:disabled {
   box-shadow: none;
   transform: none;
 }

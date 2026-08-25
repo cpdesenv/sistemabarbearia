@@ -11,6 +11,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTableModule } from '@angular/material/table';
 
 import { AuthService } from '../../../core/auth/auth.service';
+import { ConfirmDialogService } from '../../../core/ui/confirm-dialog/confirm-dialog.service';
 import { Produto } from '../produtos.model';
 import { ProdutosService } from '../produtos.service';
 
@@ -35,6 +36,7 @@ export class ProdutosLista {
   private readonly produtosService = inject(ProdutosService);
   private readonly formBuilder = inject(FormBuilder);
   private readonly authService = inject(AuthService);
+  private readonly confirmDialog = inject(ConfirmDialogService);
 
   protected readonly colunas = ['nome', 'categoria', 'precoVenda', 'estoque', 'status', 'acoes'];
   protected readonly produtos = signal<Produto[]>([]);
@@ -74,7 +76,22 @@ export class ProdutosLista {
   }
 
   protected alternarStatus(produto: Produto): void {
-    this.produtosService.atualizarStatus(produto.uuid, !produto.ativo).subscribe(() => this.carregarPagina());
+    if (!produto.ativo) {
+      this.produtosService.atualizarStatus(produto.uuid, true).subscribe(() => this.carregarPagina());
+      return;
+    }
+    this.confirmDialog
+      .confirm({
+        title: 'Desativar produto',
+        message: `Desativar "${produto.nome}"? Ele deixa de aparecer para venda, mas pode ser reativado depois.`,
+        confirmLabel: 'Desativar',
+        danger: true,
+      })
+      .subscribe((resultado) => {
+        if (resultado.confirmed) {
+          this.produtosService.atualizarStatus(produto.uuid, false).subscribe(() => this.carregarPagina());
+        }
+      });
   }
 
   private carregarPagina(): void {
