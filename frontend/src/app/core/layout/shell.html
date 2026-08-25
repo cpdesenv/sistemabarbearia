@@ -44,7 +44,7 @@
       <div class="sidebar__fundo" (click)="fecharMenu()"></div>
     }
 
-    <nav class="sidebar" [class.sidebar--aberto]="menuAberto()">
+    <nav class="sidebar" [class.sidebar--aberto]="menuAberto()" role="navigation" aria-label="Menu principal">
       @for (item of itensMenu(); track item.rota) {
         <a
           class="sidebar__item"

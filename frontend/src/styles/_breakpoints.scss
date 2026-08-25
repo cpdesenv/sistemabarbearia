@@ -1,0 +1,15 @@
+// Breakpoints compartilhados entre os estilos globais (styles.scss) e os
+// estilos de componente que tambem precisam reagir ao mesmo layout
+// responsivo (core/layout/shell.css, features/login/login.css). Ficam
+// como variaveis SCSS, nao custom properties CSS: o valor de uma media
+// feature (@media (max-width: ...)) nao aceita "var()".
+//
+// $bp-xs (480px): abaixo disso, o topbar esconde nome/perfil do usuario
+//   logado, deixando so' avatar+seta (core/layout/shell.css).
+// $bp-sm (640px): abaixo disso, tabelas de dados (.tabela-dados) viram
+//   cartoes empilhados em vez de tabela com scroll horizontal.
+// $bp-md (840px): abaixo disso, o menu lateral sai do fluxo e vira painel
+//   deslizante (core/layout/shell.css).
+$bp-xs: 480px;
+$bp-sm: 640px;
+$bp-md: 840px;

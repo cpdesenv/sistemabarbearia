@@ -39,7 +39,7 @@ const ITENS_MENU: ItemMenu[] = [
   selector: 'app-shell',
   imports: [RouterOutlet, RouterLink, RouterLinkActive, MatToolbarModule, MatButtonModule, MatMenuModule],
   templateUrl: './shell.html',
-  styleUrl: './shell.css',
+  styleUrl: './shell.scss',
 })
 export class Shell {
   private readonly authService = inject(AuthService);

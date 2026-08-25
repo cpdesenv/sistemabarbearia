@@ -1,9 +1,45 @@
+/*
+ * Mesma vinheta azul-marinho do menu lateral (core/layout/shell.css),
+ * para a marca ficar reconhecivel antes e depois do login - a tela de
+ * login e' a unica do sistema fora da arvore do Shell, entao usa os
+ * tokens --chrome-* globais (:root, styles.scss) direto, sem herdar de
+ * ".shell". Geometria do degrade adaptada pra pagina inteira (circulo
+ * centralizado no topo) em vez da faixa estreita e alta do menu lateral -
+ * mesmas 3 cores, forma diferente por causa da proporcao da tela.
+ */
 .login {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 28px;
   min-height: 100vh;
   padding: 16px;
+  background: radial-gradient(circle at 50% -10%, var(--chrome-vignette-1) 0%, var(--chrome-vignette-2) 45%, var(--chrome-vignette-3) 100%);
+}
+
+/* Mesmo lockup kicker + marca do topbar (.topbar__titulo-kicker / .topbar__titulo-marca em shell.css), maior aqui por ser a peca central da tela. */
+.login__marca {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.login__marca-kicker {
+  color: var(--chrome-text);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.login__marca-nome {
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 2.1rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
 .login__card {
@@ -18,7 +54,7 @@
 }
 
 .login__erro {
-  color: var(--mat-sys-error, #b3261e);
+  color: var(--error);
   margin: 0 0 8px;
   font-size: 0.875rem;
 }

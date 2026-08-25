@@ -1,4 +1,5 @@
 @use '@angular/material' as mat;
+@use 'styles/breakpoints' as bp;
 
 /*
  * Identidade visual de apresentacao (primeiro rascunho, para demo com o
@@ -9,7 +10,10 @@
  * profundo/violaceo que combina com o degrade azul-claro -> azul-escuro do
  * icone da logo, sem repetir o mesmo tom do primary.
  * Sera trocado pela identidade visual definitiva da barbearia quando ela
- * existir (ver Fase 19 - dados cadastrais e logo do cliente).
+ * existir (ver CHECKPOINT-VISUAL / Fase 19 - dados cadastrais e logo do
+ * cliente). Ate la', o trabalho de UX feito em cima desta paleta e' de
+ * consolidacao/consistencia (tokens unicos, contraste, foco visivel) -
+ * ver docs/prd-sistema-barbearia.md - nao de reinvencao de marca.
  */
 html {
   @include mat.theme((
@@ -30,8 +34,7 @@ html {
    * "sucesso" - antes desse token, 4 telas usavam var(--mat-sys-primary,
    * #2e7d32) so' pelo fallback verde, o que ficou visivelmente errado
    * assim que primary passou de laranja para azul (badge "Ativo" ficou
-   * azul). Ver docs/limitacoes.md ou o audit de paleta para o resto do
-   * plano de tokens semanticos (--warning, --info).
+   * azul).
    */
   --success: #2e7d32;
 
@@ -52,6 +55,75 @@ html {
   --accent-bright: #16bff5;
   --accent-deep: #075ce5;
   --green: #16a3a8;
+
+  /*
+   * Acento pensado para uso sobre fundo escuro (o chrome azul-marinho do
+   * menu lateral/topbar, core/layout/shell.css): --accent-deep nao tem
+   * contraste suficiente sobre um fundo ja escuro/azulado (fica abaixo do
+   * minimo AA de 4,5:1). Antes vivia como custom property local dentro de
+   * ".shell"; centralizado aqui para nao existir um segundo azul de
+   * acento sem nome espalhado pelo sistema.
+   */
+  --accent-on-dark: #0cbbfe;
+
+  /*
+   * "Chrome" escuro: menu lateral + topbar (core/layout/shell.css) e o
+   * fundo da tela de login (features/login/login.css), que passou a usar
+   * a mesma vinheta para dar a mesma identidade de marca antes e depois
+   * de entrar. Era definido so' localmente dentro de ".shell"; promovido
+   * para :root porque a tela de login vive fora da arvore de componentes
+   * do Shell (rota separada, sem ancestral em comum no DOM) e nao
+   * herdaria uma custom property so' local.
+   */
+  --chrome-bg: #0a1220;
+  --chrome-bg-hover: #16213a;
+  --chrome-text: #c9d3e0;
+  --chrome-vignette-1: #0a2248;
+  --chrome-vignette-2: #071426;
+  --chrome-vignette-3: #040b17;
+
+  /*
+   * Voz de marca para titulos: serifada (Georgia), usada de proposito so'
+   * em títulos de pagina (.conteudo h1) e na marca do topbar - o resto do
+   * sistema segue Inter. Nomeado como token para ficar claro que e' uma
+   * decisao de identidade, nao uma mistura acidental de fontes, e para
+   * poder ser reaproveitado (ex.: titulo da tela de login).
+   */
+  --font-display: Georgia, "Times New Roman", serif;
+
+  /*
+   * Pares fundo/texto para os 3 estados semanticos usados em badges e
+   * caixas de aviso (Clientes, Contas a pagar/receber, mensagens de
+   * formulario). --error tambem existe como cor "plana" (texto/icone),
+   * para substituir os hex soltos (var(--mat-sys-error, #b3261e),
+   * #b00020) usados hoje em mensagens de erro de telas diferentes por um
+   * unico vermelho. Contraste de cada par de badge conferido >=5:1.
+   */
+  --success-bg: #d7f0dc;
+  --success-text: #1e6b2f;
+  --error: #b3261e;
+  --error-bg: #fbe0de;
+  --error-text: #b3261e;
+  --warning: #8a5a00;
+  --warning-bg: #fdecc4;
+  --warning-text: #8a5a00;
+  --warning-border: color-mix(in srgb, var(--warning-text) 35%, var(--warning-bg));
+
+  /*
+   * Escala de espacamento (base 4px). Nao substitui todo padding/margin
+   * do sistema - so' os pontos estruturais compartilhados (tabela de
+   * dados, titulos) que ja usavam um multiplo exato de 4px. Valores que
+   * eram ajuste fino (ex.: padding de badge, margem do eyebrow) ficam
+   * como estao, fora da escala.
+   */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 32px;
+  --space-8: 40px;
 }
 
 * {
@@ -71,8 +143,31 @@ body {
 }
 
 /*
+ * Foco de teclado visivel em qualquer elemento interativo. Varias telas
+ * do sistema tem elementos clicaveis proprios, sem estilo de foco do
+ * Material (linhas/botoes de ".tabela-dados", itens do menu lateral,
+ * blocos de agendamento) - esta regra cobre o sistema inteiro de uma vez,
+ * do mesmo jeito que ".tabela-dados" e ".badge" cobrem todas as telas.
+ * Pensada para fundo claro (--accent-deep sobre --paper/--card, contraste
+ * alto); o chrome escuro do menu lateral tem seu proprio override em
+ * core/layout/shell.css, usando --accent-on-dark em vez deste.
+ *
+ * !important e' necessario pelo mesmo motivo do ".mat-mdc-card" acima: os
+ * componentes MDC do Material (".mdc-button" etc.) ja vem com
+ * "outline: none" proprio, com especificidade maior que um simples
+ * ":focus-visible" - confirmado ao vivo (o botao "Entrar" do login
+ * recebia :focus-visible mas outline-style continuava "none" sem o
+ * !important).
+ */
+:focus-visible {
+  outline: 2px solid var(--accent-deep) !important;
+  outline-offset: 2px !important;
+  border-radius: 4px;
+}
+
+/*
  * Titulo de pagina, no mesmo estilo da referencia "Visao geral": serifada
- * (Georgia, so' para o titulo - o resto do sistema segue em Inter),
+ * (--font-display, so' para o titulo - o resto do sistema segue Inter),
  * tamanho grande, peso medio, tracking negativo. Toda tela do sistema usa
  * um <h1> simples como titulo, entao um unico seletor global cobre o
  * sistema inteiro de uma vez.
@@ -84,8 +179,8 @@ body {
  * diferente, que a encapsulacao do Shell nunca alcanca.
  */
 .conteudo h1 {
-  margin: 0 0 20px;
-  font-family: Georgia, "Times New Roman", serif;
+  margin: 0 0 var(--space-5);
+  font-family: var(--font-display);
   font-size: clamp(26px, 3vw, 34px);
   font-weight: 500;
   line-height: 1.08;
@@ -121,9 +216,16 @@ body {
   transition: transform 160ms ease, box-shadow 160ms ease;
 }
 
+/* Hover levemente mais escuro que o degrade base, derivado dos mesmos
+   dois tokens (color-mix com preto) em vez de um terceiro par de hex
+   solto proximo mas nao identico a --accent-bright/--accent-deep. */
 .mat-mdc-unelevated-button.mat-primary:hover,
 .mat-mdc-raised-button.mat-primary:hover {
-  background-image: linear-gradient(135deg, #0eb4ed, #0554d4);
+  background-image: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--accent-bright) 92%, black),
+    color-mix(in srgb, var(--accent-deep) 92%, black)
+  );
   box-shadow: 0 10px 22px color-mix(in srgb, var(--accent-deep) 30%, transparent);
   transform: translateY(-1px);
 }
@@ -163,7 +265,7 @@ body {
  */
 .tabela-dados-wrapper {
   overflow-x: auto;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--line);
   border-radius: 8px;
 }
 
@@ -174,11 +276,11 @@ body {
 
 /* Cabecalho em azul escuro (--ink, mesmo tom de texto/marca usado no resto do sistema) com texto branco, no lugar do cinza neutro anterior. */
 .tabela-dados .mat-mdc-header-row {
-  background: var(--ink, #0b1930);
+  background: var(--ink);
 }
 
 .tabela-dados .mat-mdc-header-cell {
-  padding: 16px 18px;
+  padding: var(--space-4) 18px;
   border-bottom: none;
   color: #fff;
   font-size: 0.8rem;
@@ -188,9 +290,9 @@ body {
 }
 
 .tabela-dados .mat-mdc-cell {
-  padding: 16px 18px;
-  border-bottom: 1px solid #e0e0e0;
-  color: var(--ink, #0b1930);
+  padding: var(--space-4) 18px;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink);
   font-size: 0.92rem;
 }
 
@@ -198,24 +300,27 @@ body {
   transition: background-color 140ms ease;
 }
 
+/* Zebra e hover derivados dos tokens de superficie (--paper e' quase
+   identico ao tom usado antes so' como hex solto) em vez de hex soltos
+   sem nome - --card cobre exatamente o branco das linhas impares. */
 .tabela-dados .mat-mdc-row:nth-child(even) {
-  background: #f0f8fc;
+  background: var(--paper);
 }
 
 .tabela-dados .mat-mdc-row:nth-child(odd) {
-  background: #ffffff;
+  background: var(--card);
 }
 
 .tabela-dados .mat-mdc-row:hover {
-  background: #e8f4f8;
+  background: color-mix(in srgb, var(--accent) 8%, var(--card));
 }
 
 .tabela-dados .mat-mdc-button:not(.mat-warn) {
-  color: #0066cc;
+  color: var(--accent-deep);
 }
 
 /*
- * Abaixo de 640px cada linha vira um cartao empilhado (rotulo: valor por
+ * Abaixo de $bp-sm cada linha vira um cartao empilhado (rotulo: valor por
  * celula, via atributo data-label no template) em vez de tabela
  * espremida com scroll horizontal. height:auto explicito porque o
  * Material define uma altura fixa padrao (52px no M3) em .mat-mdc-row,
@@ -226,7 +331,7 @@ body {
  * sao pareados pela especificacao do CSS (se um nao e' "visible" o outro
  * vira "auto" tambem), o que criava um scroll vertical indesejado.
  */
-@media (max-width: 640px) {
+@media (max-width: bp.$bp-sm) {
   .tabela-dados-wrapper {
     border: none;
     overflow: visible;
@@ -245,10 +350,10 @@ body {
     display: flex;
     flex-direction: column;
     height: auto;
-    padding: 12px 4px;
-    border: 1px solid #e0e0e0;
+    padding: var(--space-3) var(--space-1);
+    border: 1px solid var(--line);
     border-radius: 8px;
-    margin-bottom: 12px;
+    margin-bottom: var(--space-3);
   }
 
   /*
@@ -265,14 +370,14 @@ body {
     justify-content: space-between;
     align-items: center;
     height: auto;
-    gap: 4px 12px;
-    padding: 8px 12px;
+    gap: 4px var(--space-3);
+    padding: var(--space-2) var(--space-3);
     border-bottom: none;
   }
 
   .tabela-dados .mat-mdc-cell[data-label]::before {
     content: attr(data-label);
-    color: var(--muted, #64748b);
+    color: var(--muted);
     font-size: 0.75rem;
     font-weight: 600;
     text-transform: uppercase;
@@ -287,8 +392,9 @@ body {
  * Substitui o padrao anterior de so' colorir o texto do status (sem
  * fundo), usado em Servicos/Produtos/Profissionais (Ativo/Inativo) e em
  * Contas a pagar/receber (Pendente/Paga/Cancelada/Recebida/Vencida).
- * Contraste de cada par conferido (todos >=5:1, acima do minimo AA de
- * 4,5:1 para texto normal).
+ * Cores vindas dos tokens --success-bg/--error-bg/--warning-bg (e pares
+ * de texto) definidos em :root - contraste de cada par conferido (todos
+ * >=5:1, acima do minimo AA de 4,5:1 para texto normal).
  */
 .badge {
   display: inline-flex;
@@ -303,16 +409,16 @@ body {
 }
 
 .badge--sucesso {
-  background: #d7f0dc;
-  color: #1e6b2f;
+  background: var(--success-bg);
+  color: var(--success-text);
 }
 
 .badge--erro {
-  background: #fbe0de;
-  color: #b3261e;
+  background: var(--error-bg);
+  color: var(--error-text);
 }
 
 .badge--pendente {
-  background: #fdecc4;
-  color: #8a5a00;
+  background: var(--warning-bg);
+  color: var(--warning-text);
 }
