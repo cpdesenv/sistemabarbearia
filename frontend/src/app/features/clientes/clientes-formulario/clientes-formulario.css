@@ -32,8 +32,8 @@
 }
 
 .cliente-formulario__duplicado {
-  background: #fff3e0;
-  border: 1px solid #ffb74d;
+  background: var(--warning-bg);
+  border: 1px solid var(--warning-border);
   border-radius: 4px;
   padding: 12px 16px;
   margin: 8px 0;

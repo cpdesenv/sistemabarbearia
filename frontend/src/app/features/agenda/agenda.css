@@ -25,17 +25,39 @@
 
 .agenda__erro {
   color: var(--mat-sys-error, #b3261e);
-  background: #fdecea;
+  background: var(--error-bg);
   border-radius: 4px;
   padding: 8px 16px;
   margin-bottom: 12px;
 }
 
+/*
+ * A grade "Dia" e' uma grade de calendario com colunas por profissional,
+ * nao uma tabela tabular - abaixo de bp-sm ela mantem o scroll horizontal
+ * (empilhar as colunas nao faria sentido, perderia a comparacao lado a
+ * lado entre profissionais). O "truque" de sombra so'-CSS abaixo (sem
+ * JavaScript) e' o que sinaliza que ha mais coluna pra ver: um gradiente
+ * de mascara que acompanha o scroll (background-attachment: local) some
+ * quando a borda correspondente do conteudo esta visivel, sobreposto a
+ * um gradiente de sombra fixo (attachment: scroll) que so' aparece onde
+ * a mascara nao cobre. Cor da mascara e' --paper porque e' o fundo real
+ * atras deste elemento (ele mesmo nao tem cor propria).
+ */
 .agenda-dia {
   display: flex;
   overflow-x: auto;
   border: 1px solid var(--line, #dce7f4);
   border-radius: 4px;
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(to right, var(--paper) 30%, transparent),
+    linear-gradient(to left, var(--paper) 30%, transparent),
+    radial-gradient(farthest-side at 0 50%, rgba(11, 25, 48, 0.18), transparent),
+    radial-gradient(farthest-side at 100% 50%, rgba(11, 25, 48, 0.18), transparent);
+  background-repeat: no-repeat;
+  background-size: 48px 100%, 48px 100%, 14px 90%, 14px 90%;
+  background-position: 0 0, 100% 0, 0 0, 100% 0;
+  background-attachment: local, local, scroll, scroll;
 }
 
 .agenda-dia__coluna-horarios {
