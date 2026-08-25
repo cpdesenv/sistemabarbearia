@@ -461,3 +461,18 @@ body {
   background: var(--warning-bg);
   color: var(--warning-text);
 }
+
+/*
+ * O painel do mat-menu tem max-width:280px fixo pelo Material (nao e'
+ * exposto como custom property overridavel) - estreito demais pro grid
+ * de 16 cores (8 colunas) do seletor "Cor na agenda" do formulario de
+ * profissional, o que forcava scroll dentro do menu. Essa regra so'
+ * afeta o menu marcado com essa classe via panelClass no <mat-menu>, sem
+ * mexer no menu de usuario da topbar nem em outros mat-menu do sistema.
+ * Fica aqui (nao no CSS do componente) porque o painel e' projetado no
+ * overlay do CDK, fora do encapsulamento de estilo do componente - uma
+ * regra local no .css do componente nao alcancaria esse elemento.
+ */
+.profissional-formulario__cor-menu-panel.mat-mdc-menu-panel {
+  max-width: none;
+}

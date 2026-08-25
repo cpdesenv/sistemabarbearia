@@ -1,74 +1,139 @@
 .profissional-formulario {
-  padding: 16px;
-  max-width: 720px;
+  padding: var(--space-4, 16px);
+  max-width: none;
 }
 
+/*
+ * O appearance="outline" do Material troca a cor/espessura da borda do
+ * campo para a cor de destaque (azul) ao focar - aqui o foco so' e'
+ * sinalizado pelo anel global de :focus-visible (styles.scss), entao a
+ * borda do proprio campo fica igual, focado ou nao.
+ */
 .profissional-formulario__form {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--space-2, 8px);
+  --mat-form-field-outlined-focus-outline-color: var(--mat-form-field-outlined-outline-color);
+  --mat-form-field-outlined-focus-outline-width: var(--mat-form-field-outlined-outline-width);
+  --mat-form-field-outlined-focus-label-text-color: var(--mat-form-field-outlined-label-text-color);
+}
+
+.profissional-formulario__colunas {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-6, 24px);
+  align-items: start;
+  margin-top: var(--space-2, 8px);
+}
+
+.profissional-formulario__coluna {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2, 8px);
+}
+
+.profissional-formulario__coluna h2 {
+  margin: 0;
+}
+
+@media (max-width: 900px) {
+  .profissional-formulario__colunas {
+    grid-template-columns: 1fr;
+  }
 }
 
 .profissional-formulario__grade {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 0 16px;
+  gap: 0 var(--space-4, 16px);
 }
 
 .profissional-formulario__ajuda {
-  color: var(--mat-sys-on-surface-variant, #666);
+  color: var(--muted, #64748b);
   font-size: 0.875rem;
-  margin: 0 0 8px;
+  margin: 0;
 }
 
-.profissional-formulario__servicos {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-bottom: 8px;
+/*
+ * Linhas destas duas tabelas contem campos de formulario (nao so' texto),
+ * entao a altura padrao do Material fica bem maior que o necessario aqui.
+ * Os tokens abaixo (nomes conferidos no pacote @angular/material 22
+ * instalado) reduzem a altura de linha/campo so' dentro deste componente,
+ * sem mexer no `.tabela-dados` global usado por Servicos/Clientes/etc.
+ */
+.profissional-formulario__tabela-wrapper {
+  --mat-table-header-container-height: 36px;
+  --mat-table-row-item-container-height: 36px;
+  --mat-form-field-container-height: 36px;
+  --mat-form-field-container-vertical-padding: 4px;
+  --mat-checkbox-touch-target-display: none;
 }
 
-.profissional-formulario__servico-linha {
-  display: flex;
-  align-items: center;
-  gap: 16px;
+/*
+ * !important necessario: esta selector tem a mesma especificidade
+ * (.classe .classe) do `.tabela-dados .mat-mdc-cell` global, entao sem
+ * isso o resultado depende da ordem de carregamento dos estilos (mesmo
+ * problema documentado em profissionais-lista.css/estoque-lista.css).
+ */
+.profissional-formulario__tabela-wrapper .mat-mdc-header-cell,
+.profissional-formulario__tabela-wrapper .mat-mdc-cell {
+  padding: 2px 12px !important;
 }
 
 .profissional-formulario__comissao-override {
-  width: 140px;
+  width: 110px;
 }
 
-.profissional-formulario__janelas {
+.profissional-formulario__janela-dia {
+  width: 160px;
+}
+
+.profissional-formulario__janela-horario {
+  width: 110px;
+}
+
+.profissional-formulario__janelas-acoes {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-bottom: 8px;
-}
-
-.profissional-formulario__janela-linha {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-
-.profissional-formulario__botao-adicionar {
-  align-self: flex-start;
-  margin-bottom: 16px;
+  gap: var(--space-2, 8px);
 }
 
 .profissional-formulario__paleta-rotulo {
   display: block;
-  margin: 8px 0 6px;
-  color: var(--mat-sys-on-surface-variant, #666);
+  color: var(--muted, #64748b);
   font-size: 0.75rem;
 }
 
+/*
+ * Grid fixo (nao flex-wrap) para as 16 cores desenharem sempre um
+ * retangulo organizado (8x2), em vez de fluir livre e mudar de forma
+ * conforme a largura do formulario (que agora ocupa a tela toda).
+ */
+.profissional-formulario__cor-botao {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  width: fit-content;
+}
+
+.profissional-formulario__cor-botao-amostra {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid var(--line, #dce7f4);
+}
+
 .profissional-formulario__paleta {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(8, 30px);
   gap: 10px;
-  margin-bottom: 12px;
+  padding: var(--space-2, 8px);
+}
+
+@media (max-width: 480px) {
+  .profissional-formulario__paleta {
+    grid-template-columns: repeat(4, 30px);
+  }
 }
 
 .profissional-formulario__cor-swatch {

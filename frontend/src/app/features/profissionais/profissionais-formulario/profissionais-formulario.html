@@ -39,80 +39,170 @@
           </div>
 
           <span class="profissional-formulario__paleta-rotulo">Cor na agenda</span>
-          <div class="profissional-formulario__paleta" role="radiogroup" aria-label="Cor na agenda">
-            @for (cor of paletaCores; track cor) {
-              <button
-                type="button"
-                class="profissional-formulario__cor-swatch"
-                [class.profissional-formulario__cor-swatch--selecionada]="formulario.controls.corAgenda.value === cor"
-                [style.background]="cor"
-                role="radio"
-                [attr.aria-checked]="formulario.controls.corAgenda.value === cor"
-                [attr.aria-label]="'Selecionar cor ' + cor"
-                (click)="selecionarCor(cor)"
-              ></button>
-            }
-          </div>
-
-          <h2>Serviços que este profissional atende</h2>
-          <p class="profissional-formulario__ajuda">
-            Marque os serviços atendidos. Deixe a comissão em branco para usar a comissão padrão acima.
-          </p>
-
-          <div class="profissional-formulario__servicos">
-            @for (item of servicosSelecionaveis(); track item.servico.uuid) {
-              <div class="profissional-formulario__servico-linha" [formGroup]="item.grupo">
-                <mat-checkbox formControlName="selecionado">{{ item.servico.nome }}</mat-checkbox>
-                <mat-form-field appearance="outline" class="profissional-formulario__comissao-override">
-                  <mat-label>Comissão (%)</mat-label>
-                  <input matInput type="number" formControlName="comissaoPercentual" />
-                </mat-form-field>
-              </div>
-            }
-            @if (servicosSelecionaveis().length === 0) {
-              <p>Nenhum serviço ativo cadastrado ainda.</p>
-            }
-          </div>
-
-          <h2>Grade de horários</h2>
-          <p class="profissional-formulario__ajuda">
-            Adicione uma janela para cada turno atendido. É possível ter duas janelas no mesmo dia (ex.: manhã e
-            tarde).
-          </p>
-
-          <div class="profissional-formulario__janelas">
-            @for (janela of janelas.controls; track $index; let i = $index) {
-              <div class="profissional-formulario__janela-linha" [formGroup]="janela">
-                <mat-form-field appearance="outline">
-                  <mat-label>Dia</mat-label>
-                  <mat-select formControlName="diaSemana">
-                    @for (dia of diasSemana; track dia.valor) {
-                      <mat-option [value]="dia.valor">{{ dia.rotulo }}</mat-option>
-                    }
-                  </mat-select>
-                </mat-form-field>
-
-                <mat-form-field appearance="outline">
-                  <mat-label>Início</mat-label>
-                  <input matInput type="time" formControlName="horaInicio" />
-                </mat-form-field>
-
-                <mat-form-field appearance="outline">
-                  <mat-label>Fim</mat-label>
-                  <input matInput type="time" formControlName="horaFim" />
-                </mat-form-field>
-
-                <button mat-button type="button" (click)="removerJanela(i)">Remover</button>
-              </div>
-            }
-            @if (janelas.length === 0) {
-              <p>Nenhuma janela cadastrada ainda.</p>
-            }
-          </div>
-
-          <button mat-stroked-button type="button" (click)="adicionarJanela()" class="profissional-formulario__botao-adicionar">
-            + Adicionar janela
+          <button
+            type="button"
+            mat-stroked-button
+            class="profissional-formulario__cor-botao"
+            #corTrigger="matMenuTrigger"
+            [matMenuTriggerFor]="menuCores"
+          >
+            <span
+              class="profissional-formulario__cor-botao-amostra"
+              [style.background]="formulario.controls.corAgenda.value"
+            ></span>
+            {{ corSelecionadaNome() }}
           </button>
+
+          <mat-menu #menuCores="matMenu" class="profissional-formulario__cor-menu-panel">
+            <div class="profissional-formulario__paleta" role="radiogroup" aria-label="Cor na agenda">
+              @for (item of paletaCores; track item.cor) {
+                <button
+                  type="button"
+                  class="profissional-formulario__cor-swatch"
+                  [class.profissional-formulario__cor-swatch--selecionada]="formulario.controls.corAgenda.value === item.cor"
+                  [style.background]="item.cor"
+                  role="radio"
+                  [attr.aria-checked]="formulario.controls.corAgenda.value === item.cor"
+                  [attr.aria-label]="'Selecionar cor ' + item.nome"
+                  [title]="item.nome"
+                  (click)="selecionarCor(item.cor)"
+                ></button>
+              }
+            </div>
+          </mat-menu>
+
+          <div class="profissional-formulario__colunas">
+            <section class="profissional-formulario__coluna">
+              <h2>Serviços</h2>
+              <p class="profissional-formulario__ajuda">
+                Marque os serviços atendidos. Deixe a comissão em branco para usar a comissão padrão acima.
+              </p>
+
+              @if (servicosSelecionaveis().length === 0) {
+                <p>Nenhum serviço ativo cadastrado ainda.</p>
+              } @else {
+                <div class="profissional-formulario__tabela-wrapper tabela-dados-wrapper">
+                  <table mat-table [dataSource]="servicosSelecionaveis()" class="tabela-dados">
+                    <ng-container matColumnDef="servico">
+                      <th mat-header-cell *matHeaderCellDef>Serviço</th>
+                      <td mat-cell *matCellDef="let item" data-label="Serviço" [formGroup]="item.grupo">
+                        <mat-checkbox formControlName="selecionado">{{ item.servico.nome }}</mat-checkbox>
+                      </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="comissao">
+                      <th mat-header-cell *matHeaderCellDef>Comissão (%)</th>
+                      <td mat-cell *matCellDef="let item" data-label="Comissão (%)" [formGroup]="item.grupo">
+                        <mat-form-field
+                          appearance="outline"
+                          subscriptSizing="dynamic"
+                          class="profissional-formulario__comissao-override"
+                        >
+                          <input matInput type="number" formControlName="comissaoPercentual" />
+                        </mat-form-field>
+                      </td>
+                    </ng-container>
+
+                    <tr mat-header-row *matHeaderRowDef="colunasServicos"></tr>
+                    <tr mat-row *matRowDef="let row; columns: colunasServicos"></tr>
+                  </table>
+                </div>
+              }
+            </section>
+
+            <section class="profissional-formulario__coluna">
+              <h2>Grade de horários</h2>
+              <p class="profissional-formulario__ajuda">
+                Adicione uma janela para cada turno atendido. É possível ter duas janelas no mesmo dia (ex.: manhã e
+                tarde).
+              </p>
+
+              @if (janelas.length === 0) {
+                <p>Nenhuma janela cadastrada ainda.</p>
+              } @else {
+                <div class="profissional-formulario__tabela-wrapper tabela-dados-wrapper">
+                  <table mat-table [dataSource]="janelasVisiveis()" class="tabela-dados">
+                    <ng-container matColumnDef="selecionar">
+                      <th mat-header-cell *matHeaderCellDef>
+                        <mat-checkbox
+                          [checked]="todasJanelasSelecionadas()"
+                          [indeterminate]="algumaJanelaSelecionada()"
+                          [attr.aria-label]="'Selecionar todas as janelas'"
+                          (change)="alternarSelecaoTodasJanelas()"
+                        />
+                      </th>
+                      <td mat-cell *matCellDef="let janela; let i = index" data-label="Selecionar">
+                        <mat-checkbox
+                          [checked]="estaJanelaSelecionada(i)"
+                          [attr.aria-label]="'Selecionar janela ' + (i + 1)"
+                          (change)="alternarSelecaoJanela(i)"
+                        />
+                      </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="dia">
+                      <th mat-header-cell *matHeaderCellDef>Dia</th>
+                      <td mat-cell *matCellDef="let janela" data-label="Dia" [formGroup]="janela">
+                        <mat-form-field
+                          appearance="outline"
+                          subscriptSizing="dynamic"
+                          class="profissional-formulario__janela-dia"
+                        >
+                          <mat-select formControlName="diaSemana">
+                            @for (dia of diasSemana; track dia.valor) {
+                              <mat-option [value]="dia.valor">{{ dia.rotulo }}</mat-option>
+                            }
+                          </mat-select>
+                        </mat-form-field>
+                      </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="inicio">
+                      <th mat-header-cell *matHeaderCellDef>Início</th>
+                      <td mat-cell *matCellDef="let janela" data-label="Início" [formGroup]="janela">
+                        <mat-form-field
+                          appearance="outline"
+                          subscriptSizing="dynamic"
+                          class="profissional-formulario__janela-horario"
+                        >
+                          <input matInput type="time" formControlName="horaInicio" />
+                        </mat-form-field>
+                      </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="fim">
+                      <th mat-header-cell *matHeaderCellDef>Fim</th>
+                      <td mat-cell *matCellDef="let janela" data-label="Fim" [formGroup]="janela">
+                        <mat-form-field
+                          appearance="outline"
+                          subscriptSizing="dynamic"
+                          class="profissional-formulario__janela-horario"
+                        >
+                          <input matInput type="time" formControlName="horaFim" />
+                        </mat-form-field>
+                      </td>
+                    </ng-container>
+
+                    <tr mat-header-row *matHeaderRowDef="colunasJanelas"></tr>
+                    <tr mat-row *matRowDef="let row; columns: colunasJanelas"></tr>
+                  </table>
+                </div>
+              }
+
+              <div class="profissional-formulario__janelas-acoes">
+                <button mat-stroked-button type="button" (click)="adicionarJanela()">+ Adicionar janela</button>
+                <button
+                  mat-stroked-button
+                  type="button"
+                  color="warn"
+                  [disabled]="janelasSelecionadas().size === 0"
+                  (click)="excluirJanelasSelecionadas()"
+                >
+                  Excluir grade
+                </button>
+              </div>
+            </section>
+          </div>
 
           @if (mensagemErro()) {
             <p class="profissional-formulario__erro" role="alert">{{ mensagemErro() }}</p>
