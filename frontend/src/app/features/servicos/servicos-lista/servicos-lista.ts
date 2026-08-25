@@ -11,6 +11,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTableModule } from '@angular/material/table';
 
 import { AuthService } from '../../../core/auth/auth.service';
+import { ConfirmDialogService } from '../../../core/ui/confirm-dialog/confirm-dialog.service';
 import { Servico } from '../servicos.model';
 import { ServicosService } from '../servicos.service';
 
@@ -35,6 +36,7 @@ export class ServicosLista {
   private readonly servicosService = inject(ServicosService);
   private readonly formBuilder = inject(FormBuilder);
   private readonly authService = inject(AuthService);
+  private readonly confirmDialog = inject(ConfirmDialogService);
 
   protected readonly colunas = ['nome', 'categoria', 'preco', 'duracao', 'status', 'acoes'];
   protected readonly servicos = signal<Servico[]>([]);
@@ -70,7 +72,22 @@ export class ServicosLista {
   }
 
   protected alternarStatus(servico: Servico): void {
-    this.servicosService.atualizarStatus(servico.uuid, !servico.ativo).subscribe(() => this.carregarPagina());
+    if (!servico.ativo) {
+      this.servicosService.atualizarStatus(servico.uuid, true).subscribe(() => this.carregarPagina());
+      return;
+    }
+    this.confirmDialog
+      .confirm({
+        title: 'Desativar serviço',
+        message: `Desativar "${servico.nome}"? Ele deixa de aparecer para agendamento, mas pode ser reativado depois.`,
+        confirmLabel: 'Desativar',
+        danger: true,
+      })
+      .subscribe((resultado) => {
+        if (resultado.confirmed) {
+          this.servicosService.atualizarStatus(servico.uuid, false).subscribe(() => this.carregarPagina());
+        }
+      });
   }
 
   private carregarPagina(): void {

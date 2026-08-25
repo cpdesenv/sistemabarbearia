@@ -187,7 +187,7 @@
         </button>
       }
       @if (dados.status === 'FECHADA' && podeEstornar()) {
-        <button mat-stroked-button color="warn" type="button" [disabled]="executandoAcao()" (click)="estornar()">
+        <button mat-flat-button color="warn" type="button" [disabled]="executandoAcao()" (click)="estornar()">
           Estornar
         </button>
       }

@@ -1,24 +1,48 @@
-<section>
+<section class="dashboard">
   <p class="eyebrow">Sistema para Barbearia</p>
   <h1>Dashboard</h1>
-  <p>Indicadores e graficos serao implementados na Fase 12.</p>
 
-  <mat-card class="dashboard__card-estoque">
-    <mat-card-content>
-      <h2>Produtos a repor</h2>
-      @if (produtosParaRepor().length === 0) {
-        <p>Nenhum produto abaixo do estoque mínimo.</p>
-      } @else {
-        <ul>
-          @for (produto of produtosParaRepor(); track produto.uuid) {
-            <li>
-              <strong>{{ produto.nome }}</strong> — saldo {{ produto.estoqueAtual }} {{ produto.unidade }}
-              (mínimo {{ produto.estoqueMinimo }})
-            </li>
+  <div class="dashboard__grade">
+    <mat-card class="dashboard__card">
+      <mat-card-content>
+        <div class="dashboard__card-titulo">
+          <h2>Produtos a repor</h2>
+          @if (produtosParaRepor().length > 0) {
+            <span class="badge badge--erro">{{ produtosParaRepor().length }}</span>
           }
-        </ul>
-        <a routerLink="/produtos/estoque">Ver estoque e movimentações</a>
-      }
-    </mat-card-content>
-  </mat-card>
+        </div>
+        @if (produtosParaRepor().length === 0) {
+          <p class="dashboard__vazio">Nenhum produto abaixo do estoque mínimo.</p>
+        } @else {
+          <ul class="dashboard__lista-estoque">
+            @for (produto of produtosParaRepor(); track produto.uuid) {
+              <li>
+                <strong>{{ produto.nome }}</strong>
+                <span>saldo {{ produto.estoqueAtual }} {{ produto.unidade }} (mínimo {{ produto.estoqueMinimo }})</span>
+              </li>
+            }
+          </ul>
+          <a routerLink="/produtos/estoque">Ver estoque e movimentações</a>
+        }
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="dashboard__card dashboard__card--em-breve">
+      <mat-card-content>
+        <h2>Indicadores e gráficos</h2>
+        <p class="dashboard__vazio">
+          Faturamento do dia e do mês, atendimentos, ticket médio e ocupação da agenda chegam aqui assim que o
+          módulo de relatórios estiver pronto.
+        </p>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <h2 class="dashboard__atalhos-titulo">Atalhos</h2>
+  <nav class="dashboard__atalhos" aria-label="Atalhos do dashboard">
+    <a class="dashboard__atalho" routerLink="/agenda">Agenda</a>
+    <a class="dashboard__atalho" routerLink="/clientes">Clientes</a>
+    <a class="dashboard__atalho" routerLink="/financeiro/caixa">Caixa do dia</a>
+    <a class="dashboard__atalho" routerLink="/financeiro/contas">Contas a pagar/receber</a>
+  </nav>
 </section>

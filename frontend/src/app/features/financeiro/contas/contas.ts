@@ -12,8 +12,8 @@ import { MatTabsModule } from '@angular/material/tabs';
 
 import { AuthService } from '../../../core/auth/auth.service';
 import { ConfirmDialogService } from '../../../core/ui/confirm-dialog/confirm-dialog.service';
+import { ClienteBusca } from '../../../shared/cliente-busca/cliente-busca';
 import { Cliente } from '../../clientes/clientes.model';
-import { ClientesService } from '../../clientes/clientes.service';
 import {
   ContaPagar,
   ContaReceber,
@@ -31,6 +31,7 @@ import { FinanceiroService } from '../financeiro.service';
     CurrencyPipe,
     DatePipe,
     FormsModule,
+    ClienteBusca,
     MatButtonModule,
     MatCardModule,
     MatFormFieldModule,
@@ -44,16 +45,15 @@ import { FinanceiroService } from '../financeiro.service';
 })
 export class Contas {
   private readonly financeiroService = inject(FinanceiroService);
-  private readonly clientesService = inject(ClientesService);
   private readonly authService = inject(AuthService);
   private readonly confirmDialog = inject(ConfirmDialogService);
 
   protected readonly rotulosStatusContaPagar = RUTULOS_STATUS_CONTA_PAGAR;
   protected readonly rotulosStatusContaReceber = RUTULOS_STATUS_CONTA_RECEBER;
 
-  protected readonly colunasDespesas = ['indicador', 'data', 'categoria', 'valor', 'descricao'];
-  protected readonly colunasContasPagar = ['indicador', 'descricao', 'valor', 'dataVencimento', 'status', 'acoes'];
-  protected readonly colunasContasReceber = ['indicador', 'clienteNome', 'valor', 'dataVencimento', 'status', 'acoes'];
+  protected readonly colunasDespesas = ['data', 'categoria', 'valor', 'descricao'];
+  protected readonly colunasContasPagar = ['descricao', 'valor', 'dataVencimento', 'status', 'acoes'];
+  protected readonly colunasContasReceber = ['clienteNome', 'valor', 'dataVencimento', 'status', 'acoes'];
 
   protected readonly carregando = signal(true);
   protected readonly mensagemErro = signal<string | null>(null);
@@ -71,8 +71,6 @@ export class Contas {
   protected readonly novaContaPagarValor = signal(0);
   protected readonly novaContaPagarVencimento = signal('');
 
-  protected readonly buscaCliente = signal('');
-  protected readonly resultadosClientes = signal<Cliente[]>([]);
   protected readonly clienteSelecionado = signal<{ uuid: string; nome: string } | null>(null);
   protected readonly novaContaReceberDescricao = signal('');
   protected readonly novaContaReceberValor = signal(0);
@@ -99,38 +97,6 @@ export class Contas {
       return 'badge--erro';
     }
     return 'badge--pendente';
-  }
-
-  /**
-   * Cor do indicador circular de cada linha de despesa (sem status
-   * proprio, ao contrario de conta a pagar/receber). Mesmo azul claro
-   * (#90CAF9) da paleta "Cor na agenda" (ver PALETA_CORES_AGENDA em
-   * profissionais-formulario.ts), reaproveitado aqui pra ficar dentro da
-   * identidade visual em vez de um tom pastel qualquer.
-   */
-  protected corIndicadorDespesa(): string {
-    return '#90CAF9';
-  }
-
-  protected corIndicadorContaPagar(conta: ContaPagar): string {
-    return this.corIndicadorPorStatus(conta.status, conta.vencida);
-  }
-
-  protected corIndicadorContaReceber(conta: ContaReceber): string {
-    return this.corIndicadorPorStatus(conta.status, conta.vencida);
-  }
-
-  private corIndicadorPorStatus(status: StatusContaPagar | StatusContaReceber, vencida: boolean): string {
-    if (vencida) {
-      return '#F0A8A8';
-    }
-    if (status === 'PAGA' || status === 'RECEBIDA') {
-      return '#B7E4C7';
-    }
-    if (status === 'CANCELADA') {
-      return '#D8D8D8';
-    }
-    return '#FFE1A8';
   }
 
   protected podeGerenciar(): boolean {
@@ -191,10 +157,20 @@ export class Contas {
   }
 
   protected marcarPaga(uuid: string): void {
-    this.financeiroService.marcarContaPagarPaga(uuid).subscribe({
-      next: () => this.carregarContasPagar(),
-      error: (erro: HttpErrorResponse) => this.tratarErro(erro),
-    });
+    this.confirmDialog
+      .confirm({
+        title: 'Marcar conta como paga',
+        message: 'Confirma que esta conta foi paga? Ela passa a contar como saída no caixa.',
+        confirmLabel: 'Marcar como paga',
+      })
+      .subscribe((resultado) => {
+        if (resultado.confirmed) {
+          this.financeiroService.marcarContaPagarPaga(uuid).subscribe({
+            next: () => this.carregarContasPagar(),
+            error: (erro: HttpErrorResponse) => this.tratarErro(erro),
+          });
+        }
+      });
   }
 
   protected cancelarContaPagar(uuid: string): void {
@@ -217,21 +193,8 @@ export class Contas {
       });
   }
 
-  protected buscarClientes(): void {
-    const termo = this.buscaCliente().trim();
-    if (!termo) {
-      this.resultadosClientes.set([]);
-      return;
-    }
-    this.clientesService.listar({ busca: termo, size: 5 }).subscribe((pagina) => {
-      this.resultadosClientes.set(pagina.content);
-    });
-  }
-
   protected selecionarCliente(cliente: Cliente): void {
     this.clienteSelecionado.set({ uuid: cliente.uuid, nome: cliente.nome });
-    this.resultadosClientes.set([]);
-    this.buscaCliente.set('');
   }
 
   protected registrarContaReceber(): void {
@@ -260,10 +223,20 @@ export class Contas {
   }
 
   protected marcarRecebida(uuid: string): void {
-    this.financeiroService.marcarContaReceberRecebida(uuid).subscribe({
-      next: () => this.carregarContasReceber(),
-      error: (erro: HttpErrorResponse) => this.tratarErro(erro),
-    });
+    this.confirmDialog
+      .confirm({
+        title: 'Marcar conta como recebida',
+        message: 'Confirma que esta conta foi recebida? Ela passa a contar como entrada no caixa.',
+        confirmLabel: 'Marcar como recebida',
+      })
+      .subscribe((resultado) => {
+        if (resultado.confirmed) {
+          this.financeiroService.marcarContaReceberRecebida(uuid).subscribe({
+            next: () => this.carregarContasReceber(),
+            error: (erro: HttpErrorResponse) => this.tratarErro(erro),
+          });
+        }
+      });
   }
 
   protected cancelarContaReceber(uuid: string): void {

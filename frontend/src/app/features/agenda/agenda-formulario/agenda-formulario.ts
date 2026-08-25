@@ -12,8 +12,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 
 import { ConfirmDialogService } from '../../../core/ui/confirm-dialog/confirm-dialog.service';
+import { ClienteBusca } from '../../../shared/cliente-busca/cliente-busca';
 import { Cliente } from '../../clientes/clientes.model';
-import { ClientesService } from '../../clientes/clientes.service';
 import { FinanceiroService } from '../../financeiro/financeiro.service';
 import { Profissional } from '../../profissionais/profissionais.model';
 import { ProfissionaisService } from '../../profissionais/profissionais.service';
@@ -29,6 +29,7 @@ import { AgendaService } from '../agenda.service';
     FormsModule,
     ReactiveFormsModule,
     RouterLink,
+    ClienteBusca,
     MatButtonModule,
     MatCardModule,
     MatCheckboxModule,
@@ -44,7 +45,6 @@ export class AgendaFormulario {
   private readonly formBuilder = inject(FormBuilder);
   private readonly agendaService = inject(AgendaService);
   private readonly financeiroService = inject(FinanceiroService);
-  private readonly clientesService = inject(ClientesService);
   private readonly profissionaisService = inject(ProfissionaisService);
   private readonly servicosService = inject(ServicosService);
   private readonly confirmDialog = inject(ConfirmDialogService);
@@ -66,8 +66,6 @@ export class AgendaFormulario {
   protected readonly servicosSelecionados = signal<Set<string>>(new Set());
   protected readonly agendamentoAtual = signal<Agendamento | null>(null);
 
-  protected readonly buscaCliente = signal('');
-  protected readonly resultadosClientes = signal<Cliente[]>([]);
   protected readonly clienteSelecionado = signal<{ uuid: string; nome: string } | null>(null);
 
   protected readonly podeRemarcar = computed(() => {
@@ -128,21 +126,8 @@ export class AgendaFormulario {
     this.servicosSelecionados.set(atual);
   }
 
-  protected buscarClientes(): void {
-    const termo = this.buscaCliente().trim();
-    if (!termo) {
-      this.resultadosClientes.set([]);
-      return;
-    }
-    this.clientesService.listar({ busca: termo, size: 5 }).subscribe((pagina) => {
-      this.resultadosClientes.set(pagina.content);
-    });
-  }
-
   protected selecionarCliente(cliente: Cliente): void {
     this.clienteSelecionado.set({ uuid: cliente.uuid, nome: cliente.nome });
-    this.resultadosClientes.set([]);
-    this.buscaCliente.set('');
   }
 
   protected salvar(): void {

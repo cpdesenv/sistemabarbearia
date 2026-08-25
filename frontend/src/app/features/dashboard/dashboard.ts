@@ -8,7 +8,8 @@ import { ProdutosService } from '../produtos/produtos.service';
 @Component({
   selector: 'app-dashboard',
   imports: [RouterLink, MatCardModule],
-  templateUrl: './dashboard.html'
+  templateUrl: './dashboard.html',
+  styleUrl: './dashboard.css',
 })
 export class Dashboard {
   private readonly produtosService = inject(ProdutosService);

@@ -13,6 +13,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatTableModule } from '@angular/material/table';
 
 import { AuthService } from '../../core/auth/auth.service';
+import { ConfirmDialogService } from '../../core/ui/confirm-dialog/confirm-dialog.service';
 import { Profissional } from '../profissionais/profissionais.model';
 import { ProfissionaisService } from '../profissionais/profissionais.service';
 import { Bloqueio } from './bloqueios.model';
@@ -41,6 +42,7 @@ export class Bloqueios {
   private readonly profissionaisService = inject(ProfissionaisService);
   private readonly formBuilder = inject(FormBuilder);
   private readonly authService = inject(AuthService);
+  private readonly confirmDialog = inject(ConfirmDialogService);
 
   protected readonly colunas = ['profissional', 'inicio', 'fim', 'motivo', 'acoes'];
   protected readonly bloqueios = signal<Bloqueio[]>([]);
@@ -122,7 +124,18 @@ export class Bloqueios {
   }
 
   protected remover(bloqueio: Bloqueio): void {
-    this.bloqueiosService.remover(bloqueio.uuid).subscribe(() => this.carregarPagina());
+    this.confirmDialog
+      .confirm({
+        title: 'Remover bloqueio',
+        message: `Remover o bloqueio "${bloqueio.motivo}"? O horário volta a ficar disponível na agenda.`,
+        confirmLabel: 'Remover',
+        danger: true,
+      })
+      .subscribe((resultado) => {
+        if (resultado.confirmed) {
+          this.bloqueiosService.remover(bloqueio.uuid).subscribe(() => this.carregarPagina());
+        }
+      });
   }
 
   private carregarPagina(): void {

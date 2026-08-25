@@ -1,6 +1,17 @@
 <section class="estoque-lista">
   <h1>Estoque e movimentações</h1>
 
+  <form [formGroup]="filtro" (ngSubmit)="buscar()" class="estoque-lista__filtro">
+    <mat-form-field appearance="outline">
+      <mat-label>Buscar por nome</mat-label>
+      <input matInput formControlName="nome" />
+    </mat-form-field>
+
+    <mat-checkbox formControlName="apenasAtivos">Somente ativos</mat-checkbox>
+
+    <button mat-stroked-button type="submit">Filtrar</button>
+  </form>
+
   @if (carregando()) {
     <mat-spinner diameter="32" />
   } @else {
@@ -42,5 +53,12 @@
           [class.estoque-lista__linha--baixa]="estaAbaixoDoMinimo(row)"></tr>
       </table>
     </div>
+
+    <mat-paginator
+      [length]="totalElementos()"
+      [pageSize]="tamanhoPagina()"
+      [pageSizeOptions]="[10, 20, 50]"
+      (page)="mudarPagina($event)"
+    />
   }
 </section>

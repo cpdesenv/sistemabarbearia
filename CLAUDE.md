@@ -51,23 +51,37 @@ como está.
 - Implemente **uma fase por vez**, na ordem do PRD. Nunca implemente fases
   futuras antecipadamente, mesmo que pareça mais eficiente.
 - Ao iniciar uma fase, explique o plano técnico antes de codar.
-- Ao concluir, implemente com testes, atualize as migrations Flyway,
-  documente como executar/testar, sugira a mensagem de commit da fase
-  (indicada no PRD), marque o checklist de critérios de aceite e **pare
-  para validação humana** antes de seguir para a próxima fase.
+- Ao concluir a implementação (código + testes + migrations Flyway +
+  documentação de como executar/testar), verifique um a um os critérios
+  de aceite da fase no PRD — só marque `[x]` o que foi realmente
+  confirmado (por teste automatizado ou verificação manual), nunca por
+  suposição. Apresente o checklist preenchido e **pare para validação
+  humana** antes de qualquer ação abaixo.
 - A partir da Fase 6 (inclusive), rode `/security-review` sobre o diff da
   branch antes de abrir o Pull Request. Corrija achados de severidade
   relevante (segredos, injeção, autorização quebrada, dado sensível
   exposto em log) antes do PR; achados de baixo risco ou que dependam de
   decisão de produto vão para a validação humana junto com o restante da
   fase — nunca fique em silêncio sobre um achado.
+- **Só após aprovação explícita** do checklist de critérios de aceite:
+  crie o commit da fase (mensagem sugerida no PRD), publique a branch e
+  abra o Pull Request.
+- Acompanhe a pipeline de CI do PR e reporte o resultado. Se algum check
+  falhar, corrija e reenvie — nunca ignore ou pule verificação de CI.
+- Com a CI verde, **peça uma segunda aprovação explícita, específica
+  para o merge** (não reaproveite a aprovação do commit/PR) antes de
+  mesclar a branch em `master`.
+- Após o merge, atualize a seção "Status de implementação" do PRD e o
+  `CHANGELOG.md` marcando a fase como concluída.
 
 ## Regra de aprovação
 
 **Nenhuma ação é realizada sem a minha aprovação explícita** — isso inclui
 escrever ou alterar código, criar ou editar migrations, criar commits,
-abrir Pull Requests, e editar `docs/prd-sistema-barbearia.md` ou este
-arquivo. Apresente o plano, espere a validação, depois execute.
+abrir Pull Requests, mesclar Pull Requests (merge para `master` — sempre
+uma aprovação própria, separada da que autorizou o commit/PR), e editar
+`docs/prd-sistema-barbearia.md` ou este arquivo. Apresente o plano, espere
+a validação, depois execute.
 
 ## Referências rápidas
 

@@ -190,16 +190,28 @@ completude):
 - Uma fase por vez; nunca implementar fases futuras antecipadamente.
 - Explicar as decisões técnicas em português do Brasil antes/durante a
   implementação.
-- Ao concluir, implementar com testes, atualizar as migrations Flyway,
-  documentar como executar/testar, sugerir o commit da fase, marcar o
-  checklist de critérios de aceite e **parar para validação humana** antes
-  de seguir para a próxima fase.
+- Ao concluir a implementação (código + testes + migrations Flyway +
+  documentação de como executar/testar), verificar um a um os critérios de
+  aceite da fase — só marcar `[x]` o que foi realmente confirmado (por
+  teste automatizado ou verificação manual), nunca por suposição.
+  Apresentar o checklist preenchido e **parar para validação humana** antes
+  de qualquer ação abaixo.
 - A partir da Fase 6 (inclusive): rodar `/security-review` sobre o diff da
   branch antes de abrir o Pull Request. Achados de severidade relevante
   (segredos, injeção, autorização quebrada, dado sensível exposto em log
   etc.) são corrigidos antes do PR; achados de baixo risco ou que exigem
   decisão de produto são levados para a validação humana junto com o
   restante da fase, nunca ficam silenciosamente ignorados.
+- Só após aprovação explícita do checklist de critérios de aceite: criar o
+  commit da fase (mensagem sugerida no PRD), publicar a branch e abrir o
+  Pull Request.
+- Acompanhar a pipeline de CI do PR e reportar o resultado. Se algum check
+  falhar, corrigir e reenviar — nunca ignorar ou pular verificação de CI.
+- Com a CI verde, pedir uma segunda aprovação explícita, específica para o
+  merge (não reaproveitar a aprovação do commit/PR), antes de mesclar a
+  branch em `master`.
+- Após o merge, atualizar a seção "Status de implementação" deste documento
+  e o `CHANGELOG.md` marcando a fase como concluída.
 
 ## 7. Fases de implementação
 

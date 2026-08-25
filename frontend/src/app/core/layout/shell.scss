@@ -1,18 +1,6 @@
-.shell {
-  /*
-   * Paleta do "chrome" do app (topbar + menu lateral), compartilhada pelos
-   * dois porque ambos viraram uma faixa azul-marinho continua. Definida
-   * aqui (ancestral comum) em vez de dentro de .sidebar: --chrome-accent
-   * usa o tom mais vivido do icone da logo "CP Desenv" em vez de
-   * --mat-sys-primary porque o tone-40 do tema (#005cbb) so' tem 2,9:1 de
-   * contraste contra o fundo escuro, abaixo do minimo AA de 4,5:1 para
-   * texto.
-   */
-  --chrome-bg: #0a1220;
-  --chrome-bg-hover: #16213a;
-  --chrome-text: #c9d3e0;
-  --chrome-accent: #0cbbfe;
+@use '../../../styles/breakpoints' as bp;
 
+.shell {
   display: flex;
   flex-direction: column;
   height: 100vh;
@@ -50,8 +38,9 @@
  * usuario a direita (kicker pequeno + linha principal maior).
  * "Sistema para Barbearia" e' o produto (generico); "Cortes Cavalinho" e'
  * a barbearia que esta usando esta instancia - por isso ganha destaque
- * (maior, serifada, a mesma Georgia dos titulos de pagina) enquanto o
- * nome do produto vira so' um kicker discreto acima.
+ * (maior, serifada, --font-display) enquanto o nome do produto vira so'
+ * um kicker discreto acima. Mesmo lockup reaproveitado na tela de login
+ * (features/login/login.css), fora da arvore do Shell.
  *
  * O texto fica alinhado com "Dashboard", a primeira opcao do menu
  * lateral logo abaixo (ambos comecam no mesmo x: o padding padrao de
@@ -77,7 +66,7 @@
   bottom: 3px;
   width: 3px;
   border-radius: 2px;
-  background: var(--chrome-accent);
+  background: var(--accent-on-dark);
 }
 
 .topbar__titulo-kicker {
@@ -90,7 +79,7 @@
 
 .topbar__titulo-marca {
   color: #fff;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--font-display);
   font-size: 1.6rem;
   font-weight: 600;
   letter-spacing: -0.01em;
@@ -202,7 +191,7 @@
   width: 220px;
   flex-shrink: 0;
   /* Vinheta radial (nao cor solida), conferida ao vivo no site de referencia (Central do Projeto). */
-  background: radial-gradient(circle at 45% 6%, #0a2248 0%, #071426 35%, #040b17 100%);
+  background: radial-gradient(circle at 45% 6%, var(--chrome-vignette-1) 0%, var(--chrome-vignette-2) 35%, var(--chrome-vignette-3) 100%);
   padding: 16px 0;
 }
 
@@ -215,7 +204,8 @@
   transition: background-color 160ms ease, color 160ms ease;
 }
 
-.sidebar__item:hover {
+.sidebar__item:hover,
+.sidebar__item:focus-visible {
   background: var(--chrome-bg-hover);
 }
 
@@ -246,7 +236,7 @@
   bottom: 0;
   right: -1px;
   width: 4px;
-  background: var(--chrome-accent);
+  background: var(--accent-on-dark);
 }
 
 .conteudo {
@@ -256,7 +246,18 @@
 }
 
 /*
- * Abaixo de 840px o menu lateral deixa de ocupar espaco fixo no layout
+ * Foco de teclado sobre o chrome escuro: o anel global (styles.scss)
+ * usa --accent-deep, pensado para fundo claro - sobre o azul-marinho do
+ * menu/topbar ele nao bate o contraste minimo AA (mesmo motivo pelo qual
+ * --accent-on-dark existe em vez de --accent-deep aqui). So' a cor muda;
+ * espessura/offset continuam vindo da regra global.
+ */
+.shell :focus-visible {
+  outline-color: var(--accent-on-dark) !important;
+}
+
+/*
+ * Abaixo de $bp-md o menu lateral deixa de ocupar espaco fixo no layout
  * (que em telas de celular sobrava so' ~170px pro conteudo, com a tela
  * inteira precisando de scroll horizontal) e vira um painel deslizante:
  * escondido por padrao (translateX -100%), abre por cima do conteudo com
@@ -264,7 +265,7 @@
  * um toque no fundo, ou ao navegar para uma tela (ver (click)="fecharMenu()"
  * nos itens, no shell.html).
  */
-@media (max-width: 840px) {
+@media (max-width: bp.$bp-md) {
   .topbar__menu-toggle {
     display: flex;
   }
@@ -293,14 +294,14 @@
 }
 
 /*
- * Abaixo de 480px, hamburguer (36px) + titulo (~187px) + cluster do
+ * Abaixo de $bp-xs, hamburguer (36px) + titulo (~187px) + cluster do
  * usuario (~184px) + padding do toolbar (32px) somam mais que a largura
  * da tela, criando um scroll horizontal na pagina inteira. Nome/perfil
  * do usuario (~112px com o gap) e' o que mais sobra: em celular pequeno
  * fica so' o avatar + seta, que ja abre o mesmo menu com "Sair" ao tocar
  * (o nome continua visivel ali dentro, no botao "Sair").
  */
-@media (max-width: 480px) {
+@media (max-width: bp.$bp-xs) {
   .topbar__usuario-info {
     display: none;
   }

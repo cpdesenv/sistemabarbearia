@@ -47,12 +47,6 @@
             } @else {
               <div class="contas__tabela-scroll tabela-dados-wrapper">
                 <table mat-table [dataSource]="despesas()" class="contas__tabela tabela-dados">
-                  <ng-container matColumnDef="indicador">
-                    <th mat-header-cell *matHeaderCellDef></th>
-                    <td mat-cell *matCellDef="let d">
-                      <span class="contas__indicador" [style.background]="corIndicadorDespesa()"></span>
-                    </td>
-                  </ng-container>
                   <ng-container matColumnDef="data">
                     <th mat-header-cell *matHeaderCellDef>Data</th>
                     <td mat-cell *matCellDef="let d" data-label="Data">{{ d.data | date: 'dd/MM/yyyy' }}</td>
@@ -111,12 +105,6 @@
             } @else {
               <div class="contas__tabela-scroll tabela-dados-wrapper">
                 <table mat-table [dataSource]="contasPagar()" class="contas__tabela tabela-dados">
-                  <ng-container matColumnDef="indicador">
-                    <th mat-header-cell *matHeaderCellDef></th>
-                    <td mat-cell *matCellDef="let c">
-                      <span class="contas__indicador" [style.background]="corIndicadorContaPagar(c)"></span>
-                    </td>
-                  </ng-container>
                   <ng-container matColumnDef="descricao">
                     <th mat-header-cell *matHeaderCellDef>Descrição</th>
                     <td mat-cell *matCellDef="let c" data-label="Descrição">{{ c.descricao }}</td>
@@ -168,16 +156,7 @@
                     <button mat-button type="button" (click)="clienteSelecionado.set(null)">Trocar</button>
                   </p>
                 } @else {
-                  <mat-form-field appearance="outline">
-                    <mat-label>Buscar cliente</mat-label>
-                    <input matInput [ngModel]="buscaCliente()" (ngModelChange)="buscaCliente.set($event)"
-                      (keyup)="buscarClientes()" />
-                  </mat-form-field>
-                  @for (cliente of resultadosClientes(); track cliente.uuid) {
-                    <button mat-stroked-button type="button" (click)="selecionarCliente(cliente)">
-                      {{ cliente.nome }}
-                    </button>
-                  }
+                  <app-cliente-busca label="Buscar cliente" (clienteEscolhido)="selecionarCliente($event)" />
                 }
                 <mat-form-field appearance="outline" class="contas__campo-largo">
                   <mat-label>Descrição</mat-label>
@@ -206,12 +185,6 @@
             } @else {
               <div class="contas__tabela-scroll tabela-dados-wrapper">
                 <table mat-table [dataSource]="contasReceber()" class="contas__tabela tabela-dados">
-                  <ng-container matColumnDef="indicador">
-                    <th mat-header-cell *matHeaderCellDef></th>
-                    <td mat-cell *matCellDef="let c">
-                      <span class="contas__indicador" [style.background]="corIndicadorContaReceber(c)"></span>
-                    </td>
-                  </ng-container>
                   <ng-container matColumnDef="clienteNome">
                     <th mat-header-cell *matHeaderCellDef>Cliente</th>
                     <td mat-cell *matCellDef="let c" data-label="Cliente">{{ c.clienteNome }}</td>

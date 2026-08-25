@@ -2,6 +2,14 @@
   padding: 16px;
 }
 
+.estoque-lista__filtro {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
 .estoque-lista__tabela-wrapper {
   overflow-x: auto;
 }

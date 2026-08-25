@@ -1,0 +1,15 @@
+<mat-form-field appearance="outline" class="cliente-busca__campo">
+  <mat-label>{{ label }}</mat-label>
+  <input matInput [formControl]="controle" [matAutocomplete]="auto" autocomplete="off" />
+</mat-form-field>
+
+<mat-autocomplete #auto="matAutocomplete" [displayWith]="semExibicao" (optionSelected)="selecionar($event)">
+  @for (cliente of opcoes(); track cliente.uuid) {
+    <mat-option [value]="cliente">
+      {{ cliente.nome }} @if (cliente.telefone) { — {{ cliente.telefone }} }
+    </mat-option>
+  }
+  @if (mostrarSemResultado()) {
+    <mat-option disabled>Nenhum cliente encontrado</mat-option>
+  }
+</mat-autocomplete>
