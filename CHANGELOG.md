@@ -25,6 +25,48 @@ permanece **provisória** até o CHECKPOINT-VISUAL.
 - Tela de profissional reformulada (sem abas, tabelas compactas, seletor
   de cor com paleta ampliada e contraste WCAG AA conferido).
 
+## [0.7.0] - Fase 7 — Clube Cavalinho / Assinaturas
+
+### Adicionado
+
+- Módulo `assinatura`: `PlanoAssinatura` (preço mensal, cortes inclusos por
+  ciclo, desconto percentual em adicionais, serviços que consomem saldo) e
+  `Assinatura` (cliente, plano, status `ATIVA`/`CANCELADA`/`INADIMPLENTE`/
+  `SUSPENSA`, saldo de cortes, datas de início/próxima renovação/
+  cancelamento). Índice único parcial garante no máximo uma assinatura em
+  curso (`ATIVA`/`INADIMPLENTE`) por cliente.
+- Consumo de saldo integrado à abertura de comanda: serviço incluso no
+  plano do cliente assinante, com saldo disponível, nasce como item
+  coberto pela assinatura (valor zerado, sem comissão nesta comanda);
+  saldo zerado ou serviço fora do plano é cobrado normalmente. Devolução
+  de saldo ao remover o item ou estornar a comanda. Ajuste atômico de
+  saldo (`AssinaturaRepository.ajustarSaldo`, mesmo padrão de
+  `ProdutoRepository.ajustarEstoque`) — testado sob concorrência real (20
+  tentativas simultâneas com saldo 1, exatamente uma consome).
+- Job diário de renovação (`AssinaturaRenovacaoScheduler`, `@Scheduled`):
+  reabastece o saldo para o valor do plano (sem acumular ciclo não usado)
+  e gera a mensalidade do próximo ciclo quando a do ciclo anterior foi
+  recebida; caso contrário marca a assinatura `INADIMPLENTE` (com
+  auditoria) e tenta de novo na execução seguinte. **Sem gateway de
+  pagamento** (fora do escopo do projeto): cada mensalidade é uma
+  `ContaReceber` comum, recebida manualmente pela recepção, no mesmo fluxo
+  já existente de Contas a Receber.
+- `GET /api/assinaturas/relatorio-receita`: diferencia receita de
+  mensalidades de assinatura (recebidas no mês) de receita avulsa
+  (comandas fechadas no mês). `GET /api/assinaturas/resumo`: contagem por
+  status e receita recorrente mensal (soma do preço das assinaturas
+  ativas).
+- Endpoints `/api/planos-assinatura` (CRUD, `ADMIN`/`GERENTE`) e
+  `/api/assinaturas` (assinar — `ADMIN`/`GERENTE`/`RECEPCAO`, cancelar —
+  `ADMIN`/`GERENTE`, listar por status).
+- Frontend: tela **Clube Cavalinho** (`/clube-cavalinho`) com abas
+  Assinantes (resumo, nova assinatura via busca de cliente, cancelamento
+  com motivo) e Meus planos (CRUD, seleção dos serviços inclusos).
+- 8 novos testes de integração cobrindo consumo/esgotamento de saldo,
+  unicidade de assinatura por cliente, renovação com mensalidade paga,
+  inadimplência e retry, relatório de receita e concorrência no consumo
+  de saldo.
+
 ## [0.5.0] - Fase 5 — Comanda, pagamento, caixa, estoque e financeiro
 
 ### Adicionado

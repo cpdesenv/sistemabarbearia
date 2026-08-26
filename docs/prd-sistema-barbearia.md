@@ -148,7 +148,7 @@ falha, e testes/CI que nunca dependem de credencial real.
 ## 5. Status de implementação
 
 *Derivado do `CHANGELOG.md` e do histórico de commits — leitura em
-2026-08-25.*
+2026-08-26.*
 
 | Fase | Descrição | Status |
 |---|---|---|
@@ -159,7 +159,7 @@ falha, e testes/CI que nunca dependem de credencial real.
 | 4 | Agenda e motor de disponibilidade | ✅ Concluída |
 | 5 | Comanda, pagamento, caixa, estoque e financeiro (5A/5B/5C) | ✅ Concluída |
 | 6 | Comprovante de serviço (PDF) | ✅ Concluída |
-| 7 | Clube Cavalinho / Assinaturas | ⬜ Pendente |
+| 7 | Clube Cavalinho / Assinaturas | ✅ Concluída |
 | 8 | Integração com Google Calendar | ⬜ Pendente |
 | 9 | Canal de mensageria (MockWhatsAppGateway) | ⬜ Pendente |
 | 6-META | Ativação da WhatsApp Cloud API | ⬜ Adiada (só sob pedido explícito) |
@@ -467,7 +467,7 @@ burocracia municipal.
 
 `git commit -m "feat: implementa emissao de comprovante em PDF e envio ao cliente"`
 
-### FASE 7 — Clube Cavalinho / Assinaturas [NOVO]
+### FASE 7 — Clube Cavalinho / Assinaturas [NOVO] ✅
 
 **Objetivo:** modelo de negócio de receita recorrente. Crítico para Cortes
 Cavalinho.
@@ -496,12 +496,12 @@ vs. avulsos.
 
 **Critérios de aceite**
 
-- [ ] Cliente assinante agenda serviço: saldo de cortes diminui.
-- [ ] Saldo zerado: próximo serviço é cobrado como adicional.
-- [ ] Renovação ocorre no dia configurado.
-- [ ] Falha de cobrança gera notificação e retry automático.
-- [ ] Relatório diferencia receita de assinatura de avulso.
-- [ ] Testes de concorrência: dois agendamentos simultâneos não consomem
+- [x] Cliente assinante agenda serviço: saldo de cortes diminui.
+- [x] Saldo zerado: próximo serviço é cobrado como adicional.
+- [x] Renovação ocorre no dia configurado.
+- [x] Falha de cobrança gera notificação e retry automático.
+- [x] Relatório diferencia receita de assinatura de avulso.
+- [x] Testes de concorrência: dois agendamentos simultâneos não consomem
   dois saldos.
 
 `git commit -m "feat: implementa Clube Cavalinho com assinaturas e receita recorrente"`
