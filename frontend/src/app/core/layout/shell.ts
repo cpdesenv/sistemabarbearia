@@ -32,6 +32,7 @@ const ITENS_MENU: ItemMenu[] = [
   { rota: '/financeiro/caixa', rotulo: 'Caixa do dia' },
   { rota: '/financeiro/contas', rotulo: 'Contas a pagar/receber' },
   { rota: '/financeiro/fluxo-caixa', rotulo: 'Fluxo de caixa' },
+  { rota: '/clube-cavalinho', rotulo: 'Clube Cavalinho' },
   { rota: '/configuracoes/barbearia', rotulo: 'Configurações', perfis: ['ADMIN'] },
 ];
 

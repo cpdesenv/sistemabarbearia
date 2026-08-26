@@ -1,0 +1,224 @@
+<section class="clube">
+  <h1>Clube Cavalinho</h1>
+
+  @if (carregando()) {
+    <mat-spinner diameter="32" />
+  } @else {
+    @if (mensagemErro()) {
+      <p class="clube__erro" role="alert">{{ mensagemErro() }}</p>
+    }
+
+    <mat-tab-group [dynamicHeight]="true">
+      <mat-tab label="Assinantes">
+        <mat-card>
+          <mat-card-content>
+            @if (resumo(); as r) {
+              <div class="clube__resumo">
+                <div class="clube__resumo-item">
+                  <span class="clube__resumo-valor">{{ r.ativas }}</span>
+                  <span class="clube__resumo-rotulo">Ativas</span>
+                </div>
+                <div class="clube__resumo-item">
+                  <span class="clube__resumo-valor">{{ r.inadimplentes }}</span>
+                  <span class="clube__resumo-rotulo">Inadimplentes</span>
+                </div>
+                <div class="clube__resumo-item">
+                  <span class="clube__resumo-valor">{{ r.suspensas }}</span>
+                  <span class="clube__resumo-rotulo">Suspensas</span>
+                </div>
+                <div class="clube__resumo-item">
+                  <span class="clube__resumo-valor">{{ r.canceladas }}</span>
+                  <span class="clube__resumo-rotulo">Canceladas</span>
+                </div>
+                <div class="clube__resumo-item clube__resumo-item--destaque">
+                  <span class="clube__resumo-valor">{{ r.receitaRecorrenteMensal | currency: 'BRL' }}</span>
+                  <span class="clube__resumo-rotulo">Receita recorrente/mês</span>
+                </div>
+              </div>
+            }
+
+            @if (podeAssinar()) {
+              <h2>Nova assinatura</h2>
+              <div class="clube__formulario">
+                @if (clienteSelecionado(); as cliente) {
+                  <p>Cliente: <strong>{{ cliente.nome }}</strong>
+                    <button mat-button type="button" (click)="clienteSelecionado.set(null)">Trocar</button>
+                  </p>
+                } @else {
+                  <app-cliente-busca label="Buscar cliente" (clienteEscolhido)="selecionarCliente($event)" />
+                }
+                <mat-form-field appearance="outline">
+                  <mat-label>Plano</mat-label>
+                  <mat-select [ngModel]="planoEscolhidoUuid()" (ngModelChange)="planoEscolhidoUuid.set($event)">
+                    @for (plano of planos(); track plano.uuid) {
+                      @if (plano.ativo) {
+                        <mat-option [value]="plano.uuid">
+                          {{ plano.nome }} — {{ plano.precoMensal | currency: 'BRL' }}/mês
+                        </mat-option>
+                      }
+                    }
+                  </mat-select>
+                </mat-form-field>
+                <button mat-flat-button color="primary" type="button" (click)="registrarAssinatura()">
+                  Assinar
+                </button>
+              </div>
+            }
+
+            <div class="clube__filtro">
+              <mat-form-field appearance="outline">
+                <mat-label>Filtrar por status</mat-label>
+                <mat-select [ngModel]="filtroStatus()" (ngModelChange)="filtrarPorStatus($event)">
+                  <mat-option value="">Todos</mat-option>
+                  <mat-option value="ATIVA">Ativa</mat-option>
+                  <mat-option value="INADIMPLENTE">Inadimplente</mat-option>
+                  <mat-option value="SUSPENSA">Suspensa</mat-option>
+                  <mat-option value="CANCELADA">Cancelada</mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+
+            @if (assinaturas().length === 0) {
+              <p>Nenhuma assinatura encontrada.</p>
+            } @else {
+              <div class="clube__tabela-scroll tabela-dados-wrapper">
+                <table mat-table [dataSource]="assinaturas()" class="clube__tabela tabela-dados">
+                  <ng-container matColumnDef="cliente">
+                    <th mat-header-cell *matHeaderCellDef>Cliente</th>
+                    <td mat-cell *matCellDef="let a" data-label="Cliente">{{ a.clienteNome }}</td>
+                  </ng-container>
+                  <ng-container matColumnDef="plano">
+                    <th mat-header-cell *matHeaderCellDef>Plano</th>
+                    <td mat-cell *matCellDef="let a" data-label="Plano">{{ a.planoNome }}</td>
+                  </ng-container>
+                  <ng-container matColumnDef="status">
+                    <th mat-header-cell *matHeaderCellDef>Status</th>
+                    <td mat-cell *matCellDef="let a" data-label="Status">
+                      <span class="badge" [class]="classeBadgeStatus(a.status)">{{ rotuloStatus(a.status) }}</span>
+                    </td>
+                  </ng-container>
+                  <ng-container matColumnDef="saldo">
+                    <th mat-header-cell *matHeaderCellDef>Saldo de cortes</th>
+                    <td mat-cell *matCellDef="let a" data-label="Saldo de cortes">{{ a.saldoCortesAtual }}</td>
+                  </ng-container>
+                  <ng-container matColumnDef="proximaRenovacao">
+                    <th mat-header-cell *matHeaderCellDef>Próxima renovação</th>
+                    <td mat-cell *matCellDef="let a" data-label="Próxima renovação">
+                      {{ a.dataProximaRenovacao | date: 'dd/MM/yyyy' }}
+                    </td>
+                  </ng-container>
+                  <ng-container matColumnDef="acoes">
+                    <th mat-header-cell *matHeaderCellDef></th>
+                    <td mat-cell *matCellDef="let a" data-label="Ações">
+                      @if ((a.status === 'ATIVA' || a.status === 'INADIMPLENTE') && podeGerenciar()) {
+                        <button mat-button color="warn" type="button" (click)="cancelarAssinatura(a)">
+                          Cancelar
+                        </button>
+                      }
+                    </td>
+                  </ng-container>
+                  <tr mat-header-row *matHeaderRowDef="colunasAssinaturas"></tr>
+                  <tr mat-row *matRowDef="let row; columns: colunasAssinaturas"></tr>
+                </table>
+              </div>
+            }
+          </mat-card-content>
+        </mat-card>
+      </mat-tab>
+
+      <mat-tab label="Meus planos">
+        <mat-card>
+          <mat-card-content>
+            @if (podeGerenciar()) {
+              <h2>Novo plano</h2>
+              <div class="clube__formulario">
+                <mat-form-field appearance="outline">
+                  <mat-label>Nome do plano</mat-label>
+                  <input matInput [ngModel]="novoPlanoNome()" (ngModelChange)="novoPlanoNome.set($event)" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Preço mensal (R$)</mat-label>
+                  <input matInput type="number" min="0" step="0.01" [ngModel]="novoPlanoPreco()"
+                    (ngModelChange)="novoPlanoPreco.set($event)" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Cortes por ciclo</mat-label>
+                  <input matInput type="number" min="1" step="1" [ngModel]="novoPlanoCortes()"
+                    (ngModelChange)="novoPlanoCortes.set($event)" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Desconto em adicionais (%)</mat-label>
+                  <input matInput type="number" min="0" max="100" step="1" [ngModel]="novoPlanoDesconto()"
+                    (ngModelChange)="novoPlanoDesconto.set($event)" />
+                </mat-form-field>
+
+                <fieldset class="clube__servicos-inclusos">
+                  <legend>Serviços inclusos (consomem saldo de cortes)</legend>
+                  @for (servico of servicosAtivos(); track servico.uuid) {
+                    <mat-checkbox
+                      [checked]="novoPlanoServicosUuids().includes(servico.uuid)"
+                      (change)="alternarServicoNoPlano(servico.uuid, $event.checked)">
+                      {{ servico.nome }}
+                    </mat-checkbox>
+                  }
+                </fieldset>
+
+                <button mat-flat-button color="primary" type="button" (click)="registrarPlano()">
+                  Criar plano
+                </button>
+              </div>
+            }
+
+            <h2>Planos cadastrados</h2>
+            @if (planos().length === 0) {
+              <p>Nenhum plano cadastrado.</p>
+            } @else {
+              <div class="clube__tabela-scroll tabela-dados-wrapper">
+                <table mat-table [dataSource]="planos()" class="clube__tabela tabela-dados">
+                  <ng-container matColumnDef="nome">
+                    <th mat-header-cell *matHeaderCellDef>Nome</th>
+                    <td mat-cell *matCellDef="let p" data-label="Nome">{{ p.nome }}</td>
+                  </ng-container>
+                  <ng-container matColumnDef="precoMensal">
+                    <th mat-header-cell *matHeaderCellDef>Preço mensal</th>
+                    <td mat-cell *matCellDef="let p" data-label="Preço mensal">{{ p.precoMensal | currency: 'BRL' }}</td>
+                  </ng-container>
+                  <ng-container matColumnDef="cortes">
+                    <th mat-header-cell *matHeaderCellDef>Cortes/ciclo</th>
+                    <td mat-cell *matCellDef="let p" data-label="Cortes/ciclo">{{ p.cortesIncluidosPorCiclo }}</td>
+                  </ng-container>
+                  <ng-container matColumnDef="desconto">
+                    <th mat-header-cell *matHeaderCellDef>Desconto adicional</th>
+                    <td mat-cell *matCellDef="let p" data-label="Desconto adicional">
+                      {{ p.percentualDescontoAdicional }}%
+                    </td>
+                  </ng-container>
+                  <ng-container matColumnDef="status">
+                    <th mat-header-cell *matHeaderCellDef>Status</th>
+                    <td mat-cell *matCellDef="let p" data-label="Status">
+                      <span class="badge" [class]="p.ativo ? 'badge--sucesso' : 'badge--erro'">
+                        {{ p.ativo ? 'Ativo' : 'Inativo' }}
+                      </span>
+                    </td>
+                  </ng-container>
+                  <ng-container matColumnDef="acoes">
+                    <th mat-header-cell *matHeaderCellDef></th>
+                    <td mat-cell *matCellDef="let p" data-label="Ações">
+                      @if (podeGerenciar()) {
+                        <button mat-button type="button" (click)="alternarStatusPlano(p)">
+                          {{ p.ativo ? 'Desativar' : 'Ativar' }}
+                        </button>
+                      }
+                    </td>
+                  </ng-container>
+                  <tr mat-header-row *matHeaderRowDef="colunasPlanos"></tr>
+                  <tr mat-row *matRowDef="let row; columns: colunasPlanos"></tr>
+                </table>
+              </div>
+            }
+          </mat-card-content>
+        </mat-card>
+      </mat-tab>
+    </mat-tab-group>
+  }
+</section>

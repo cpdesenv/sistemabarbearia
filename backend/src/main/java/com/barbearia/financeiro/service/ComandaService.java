@@ -10,6 +10,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.dao.DataIntegrityViolationException;
@@ -25,8 +26,11 @@ import com.barbearia.agenda.domain.StatusAgendamento;
 import com.barbearia.agenda.repository.AgendamentoRepository;
 import com.barbearia.agenda.service.AgendamentoService;
 import com.barbearia.agenda.service.AvailabilityService;
+import com.barbearia.assinatura.domain.Assinatura;
+import com.barbearia.assinatura.service.AssinaturaService;
 import com.barbearia.barbearia.domain.Barbearia;
 import com.barbearia.barbearia.repository.BarbeariaRepository;
+import com.barbearia.cliente.domain.Cliente;
 import com.barbearia.financeiro.domain.Comanda;
 import com.barbearia.financeiro.domain.ComandaItem;
 import com.barbearia.financeiro.domain.FormaPagamento;
@@ -84,6 +88,7 @@ public class ComandaService {
     private final BarbeariaRepository barbeariaRepository;
     private final AuditoriaService auditoriaService;
     private final ComprovanteService comprovanteService;
+    private final AssinaturaService assinaturaService;
 
     @Transactional
     public ComandaDto abrirParaAgendamento(UUID agendamentoUuid, Long usuarioId, HttpServletRequest httpRequest) {
@@ -195,6 +200,9 @@ public class ComandaService {
                 .findFirst()
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Item nao encontrado nesta comanda."));
         comanda.removerItem(item);
+        if (item.isCobertoPorAssinatura()) {
+            assinaturaService.devolverSaldo(item.getAssinatura());
+        }
 
         recalcularTotais(comanda);
         comanda = comandaRepository.save(comanda);
@@ -308,6 +316,8 @@ public class ComandaService {
             if (item.getTipo() == TipoItemComanda.PRODUTO) {
                 estoqueService.devolverPorComanda(item.getProduto(), item.getQuantidade(), comanda.getId(),
                         usuarioId, httpRequest);
+            } else if (item.isCobertoPorAssinatura()) {
+                assinaturaService.devolverSaldo(item.getAssinatura());
             }
         }
 
@@ -362,9 +372,14 @@ public class ComandaService {
     private ComandaDto abrirNovaComanda(Agendamento agendamento, Long usuarioId, HttpServletRequest httpRequest) {
         Comanda comanda = new Comanda();
         comanda.setAgendamento(agendamento);
+        Cliente cliente = agendamento.getCliente();
         for (AgendamentoServico agendamentoServico : agendamento.getServicos()) {
-            comanda.adicionarItem(new ComandaItem(agendamentoServico.getServico(),
-                    agendamentoServico.getServico().getNome(), agendamentoServico.getPreco()));
+            Servico servico = agendamentoServico.getServico();
+            Optional<Assinatura> assinaturaQueCobriu = assinaturaService.tentarConsumirSaldo(cliente, servico);
+            ComandaItem item = assinaturaQueCobriu
+                    .map(assinatura -> new ComandaItem(servico, servico.getNome(), assinatura))
+                    .orElseGet(() -> new ComandaItem(servico, servico.getNome(), agendamentoServico.getPreco()));
+            comanda.adicionarItem(item);
         }
         recalcularTotais(comanda);
 
@@ -458,7 +473,7 @@ public class ComandaService {
                         item.getProduto() != null ? item.getProduto().getUuidPublico() : null,
                         item.getDescricao(), item.getQuantidade(), item.getValorUnitario(), item.getValorBruto(),
                         item.getValorDescontoRateado(), item.getValorLiquido(), item.getComissaoPercentualAplicado(),
-                        item.getComissaoValor()))
+                        item.getComissaoValor(), item.isCobertoPorAssinatura()))
                 .toList();
         BigDecimal comissaoTotal = comanda.getItens().stream()
                 .map(ComandaItem::getComissaoValor)

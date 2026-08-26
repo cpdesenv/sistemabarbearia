@@ -17,5 +17,6 @@ public record ComandaItemDto(
         BigDecimal valorDescontoRateado,
         BigDecimal valorLiquido,
         BigDecimal comissaoPercentualAplicado,
-        BigDecimal comissaoValor) {
+        BigDecimal comissaoValor,
+        boolean cobertoPorAssinatura) {
 }
