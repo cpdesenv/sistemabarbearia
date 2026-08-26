@@ -330,6 +330,52 @@ curl -X POST http://localhost:8080/api/contas-receber/<uuid-conta>/receber -H "A
 curl http://localhost:8080/api/financeiro/fluxo-caixa -H "Authorization: Bearer <accessToken>"
 ```
 
+## Clube Cavalinho — assinaturas (Fase 7)
+
+Modelo de receita recorrente. **Não há gateway de pagamento no projeto**: a
+mensalidade de cada ciclo é lançada como uma `ContaReceber` comum (mesmo
+fluxo de "Contas a receber" da Fase 5C), recebida manualmente pela
+recepção. Um job diário (`AssinaturaRenovacaoScheduler`, `@Scheduled`, roda
+às 03:00) renova cada assinatura `ATIVA`/`INADIMPLENTE` cuja data de
+renovação chegou: se a mensalidade do ciclo anterior já foi recebida,
+reabastece o saldo de cortes (reset para o valor do plano, sem acumular) e
+gera a próxima cobrança; senão, marca a assinatura `INADIMPLENTE` e tenta
+de novo no dia seguinte ("retry automático").
+
+Ao abrir a comanda de um cliente assinante, cada serviço incluso no plano
+consome 1 corte do saldo automaticamente (item nasce com valor zero,
+`cobertoPorAssinatura: true`); com saldo zerado ou serviço fora do plano, o
+item é cobrado normalmente.
+
+```bash
+# Criar um plano (ADMIN/GERENTE)
+curl -X POST http://localhost:8080/api/planos-assinatura \
+  -H "Authorization: Bearer <accessToken>" -H "Content-Type: application/json" \
+  -d '{"nome":"Plano Mensal","precoMensal":89.90,"cortesIncluidosPorCiclo":2,
+       "percentualDescontoAdicional":10,"servicosInclusosUuids":["<uuid-servico>"]}'
+
+# Assinar um cliente a um plano (ADMIN/GERENTE/RECEPCAO)
+curl -X POST http://localhost:8080/api/assinaturas \
+  -H "Authorization: Bearer <accessToken>" -H "Content-Type: application/json" \
+  -d '{"clienteUuid":"<uuid-cliente>","planoUuid":"<uuid-plano>"}'
+
+# Resumo (contagem por status + receita recorrente mensal)
+curl http://localhost:8080/api/assinaturas/resumo -H "Authorization: Bearer <accessToken>"
+
+# Relatorio de receita de assinatura vs. avulso, por mes
+curl "http://localhost:8080/api/assinaturas/relatorio-receita?mes=2026-08" \
+  -H "Authorization: Bearer <accessToken>"
+
+# Cancelar (ADMIN/GERENTE) - saldo segue valido ate a data de efeito informada
+curl -X POST http://localhost:8080/api/assinaturas/<uuid-assinatura>/cancelar \
+  -H "Authorization: Bearer <accessToken>" -H "Content-Type: application/json" \
+  -d '{"motivo":"Pedido do cliente","dataEfeito":"2026-09-26"}'
+```
+
+Painel: menu **Clube Cavalinho** (aba "Assinantes" — resumo, nova
+assinatura, cancelamento; aba "Meus planos" — CRUD de planos e escolha dos
+serviços inclusos).
+
 ## Como executar os testes
 
 Backend (usa Testcontainers — requer Docker disponível para o usuário que

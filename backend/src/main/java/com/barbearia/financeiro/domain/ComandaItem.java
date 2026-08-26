@@ -21,6 +21,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import com.barbearia.assinatura.domain.Assinatura;
 import com.barbearia.produto.domain.Produto;
 import com.barbearia.servico.domain.Servico;
 
@@ -35,6 +36,11 @@ import com.barbearia.servico.domain.Servico;
  * um item de produto so' acontece no fechamento/estorno da comanda, nunca ao
  * simplesmente adicionar/remover o item (ver {@code ComandaService#fechar}/
  * {@code #estornar} e {@code EstoqueService}).
+ *
+ * <p>Um item de servico coberto pelo saldo de uma {@link Assinatura} (ver
+ * {@code AssinaturaService#tentarConsumirSaldo}) nasce com {@link #assinatura}
+ * preenchida e valor zerado — ja foi pago via mensalidade, entao nao soma no
+ * caixa nem gera comissao desta comanda.
  */
 @Entity
 @Table(name = "comanda_item")
@@ -65,6 +71,10 @@ public class ComandaItem {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "produto_id")
     private Produto produto;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "assinatura_id")
+    private Assinatura assinatura;
 
     @Column(nullable = false)
     private String descricao;
@@ -112,5 +122,21 @@ public class ComandaItem {
         this.valorUnitario = valorUnitario;
         this.valorBruto = valorUnitario;
         this.valorLiquido = valorUnitario;
+    }
+
+    /** Item de servico coberto pelo saldo de uma assinatura — ver {@code AssinaturaService#tentarConsumirSaldo}. */
+    public ComandaItem(Servico servico, String descricao, Assinatura assinatura) {
+        this.tipo = TipoItemComanda.SERVICO;
+        this.servico = servico;
+        this.assinatura = assinatura;
+        this.descricao = descricao;
+        this.quantidade = 1;
+        this.valorUnitario = BigDecimal.ZERO;
+        this.valorBruto = BigDecimal.ZERO;
+        this.valorLiquido = BigDecimal.ZERO;
+    }
+
+    public boolean isCobertoPorAssinatura() {
+        return assinatura != null;
     }
 }

@@ -25,4 +25,9 @@ public interface ComandaRepository extends JpaRepository<Comanda, Long> {
 
     @Query("SELECT COALESCE(SUM(c.valorTotal), 0) FROM Comanda c WHERE c.status = :status")
     BigDecimal somarValorTotalPorStatus(@Param("status") StatusComanda status);
+
+    @Query("SELECT COALESCE(SUM(c.valorTotal), 0) FROM Comanda c "
+            + "WHERE c.status = :status AND c.fechadaEm BETWEEN :inicio AND :fim")
+    BigDecimal somarValorTotalPorStatusEPeriodo(@Param("status") StatusComanda status, @Param("inicio") Instant inicio,
+            @Param("fim") Instant fim);
 }

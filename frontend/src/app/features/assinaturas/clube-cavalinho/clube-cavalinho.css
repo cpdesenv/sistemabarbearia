@@ -1,0 +1,67 @@
+.clube {
+  padding: 24px 8px;
+}
+
+.clube__formulario {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.clube__filtro {
+  margin-bottom: 16px;
+  max-width: 260px;
+}
+
+.clube__erro {
+  color: var(--mat-sys-error, #b3261e);
+}
+
+.clube__resumo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.clube__resumo-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 20px;
+  border: 1px solid var(--divider, #d8d8d8);
+  border-radius: 8px;
+  min-width: 120px;
+}
+
+.clube__resumo-item--destaque {
+  border-color: var(--mat-sys-primary, #1a237e);
+}
+
+.clube__resumo-valor {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.clube__resumo-rotulo {
+  font-size: 0.85rem;
+  opacity: 0.75;
+}
+
+.clube__servicos-inclusos {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border: 1px solid var(--divider, #d8d8d8);
+  border-radius: 8px;
+  padding: 12px 16px;
+  min-width: 260px;
+}
+
+.clube__servicos-inclusos legend {
+  font-size: 0.85rem;
+  opacity: 0.75;
+  padding: 0 4px;
+}

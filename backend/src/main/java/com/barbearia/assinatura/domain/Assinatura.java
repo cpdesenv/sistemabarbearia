@@ -1,6 +1,5 @@
-package com.barbearia.financeiro.domain;
+package com.barbearia.assinatura.domain;
 
-import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
@@ -23,21 +22,25 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import com.barbearia.assinatura.domain.Assinatura;
 import com.barbearia.cliente.domain.Cliente;
 
 /**
- * Debito de um cliente (ex.: servico fiado, ou a mensalidade de uma
- * {@link Assinatura} — ver {@code AssinaturaService}). Todo valor
- * {@code PENDENTE} conta como "esperado" no fluxo de caixa, independente da
- * data de vencimento — ver {@code FluxoCaixaService}.
+ * Assinatura de um cliente a um {@link PlanoAssinatura}. So' pode existir uma
+ * assinatura ATIVA ou INADIMPLENTE por cliente por vez (indice unico parcial
+ * {@code idx_assinatura_cliente_em_curso} — ver
+ * V22__cria_tabelas_plano_assinatura_e_assinatura.sql).
+ *
+ * <p>{@code saldoCortesAtual} e' ajustado por UPDATE atomico
+ * ({@code AssinaturaRepository#ajustarSaldo}), no mesmo padrao de
+ * {@code ProdutoRepository#ajustarEstoque}, para que dois agendamentos
+ * simultaneos do mesmo cliente nunca consumam saldo em duplicidade.
  */
 @Entity
-@Table(name = "conta_receber")
+@Table(name = "assinatura")
 @Getter
 @Setter
 @NoArgsConstructor
-public class ContaReceber {
+public class Assinatura {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -50,24 +53,28 @@ public class ContaReceber {
     @JoinColumn(name = "cliente_id", nullable = false)
     private Cliente cliente;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "assinatura_id")
-    private Assinatura assinatura;
-
-    private String descricao;
-
-    @Column(nullable = false)
-    private BigDecimal valor;
-
-    @Column(name = "data_vencimento", nullable = false)
-    private LocalDate dataVencimento;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "plano_assinatura_id", nullable = false)
+    private PlanoAssinatura plano;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private StatusContaReceber status = StatusContaReceber.PENDENTE;
+    private StatusAssinatura status = StatusAssinatura.ATIVA;
 
-    @Column(name = "data_recebimento")
-    private LocalDate dataRecebimento;
+    @Column(name = "saldo_cortes_atual", nullable = false)
+    private int saldoCortesAtual;
+
+    @Column(name = "data_inicio", nullable = false)
+    private LocalDate dataInicio;
+
+    @Column(name = "data_proxima_renovacao", nullable = false)
+    private LocalDate dataProximaRenovacao;
+
+    @Column(name = "data_cancelamento")
+    private LocalDate dataCancelamento;
+
+    @Column(name = "motivo_cancelamento")
+    private String motivoCancelamento;
 
     @CreationTimestamp
     @Column(name = "criado_em", nullable = false, updatable = false)

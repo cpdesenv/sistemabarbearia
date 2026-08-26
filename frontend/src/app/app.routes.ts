@@ -130,6 +130,11 @@ export const routes: Routes = [
           import('./features/financeiro/fluxo-caixa/fluxo-caixa').then((m) => m.FluxoCaixaComponent)
       },
       {
+        path: 'clube-cavalinho',
+        loadComponent: () =>
+          import('./features/assinaturas/clube-cavalinho/clube-cavalinho').then((m) => m.ClubeCavalinho)
+      },
+      {
         path: 'produtos',
         loadComponent: () =>
           import('./features/produtos/produtos-lista/produtos-lista').then((m) => m.ProdutosLista)
