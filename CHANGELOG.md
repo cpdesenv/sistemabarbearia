@@ -4,6 +4,54 @@ Todas as mudanças notáveis deste projeto serão documentadas neste arquivo.
 
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
+## [0.8.0] - Fase 8 — Integração com Google Calendar
+
+### Adicionado
+
+- OAuth2 com o Google Calendar: tela Integrações → Google Calendar
+  (`/configuracoes/integracoes/google-calendar`, `ADMIN`), botão
+  Conectar → fluxo Authorization Code → refresh token criptografado
+  (AES-256-GCM, novo `CriptografiaService` genérico em
+  `shared/criptografia`) na tabela singleton
+  `integracao_google_calendar`. Renovação do access token delegada ao
+  `UserCredentials`/`HttpCredentialsAdapter` oficial do Google — sem
+  código de refresh manual.
+- Outbox transacional (`agendamento_calendar_outbox`, primeiro uso desse
+  padrão no projeto): a intenção de sincronizar é gravada na mesma
+  transação que confirma/remarca/cancela o agendamento;
+  `CalendarOutboxWorker` (`@Scheduled`, mesmo estilo do
+  `AssinaturaRenovacaoScheduler`) processa com backoff exponencial
+  (1/5/15/30/60 min, até 8 tentativas antes de `FALHA_PERMANENTE`) — uma
+  falha na chamada ao Google nunca bloqueia a operação de agenda.
+- Ciclo de vida do evento: confirmar agendamento cria o evento (título
+  `Serviço(s) — Nome do Cliente`, descrição com telefone/observação,
+  fuso horário da barbearia); remarcar atualiza (só se já sincronizado);
+  cancelar remove (ou cancela a pendência, se ainda não sincronizado).
+  `googleEventId`/`googleCalendarId` salvos no agendamento.
+- Configurável: calendário único (com cor por profissional, paleta fixa
+  da API do Google) ou um calendário por profissional
+  (`profissional.googleCalendarId`).
+- Painel de agendamentos fora de sincronia e botão "Ressincronizar
+  agenda" (zera tentativas e força reprocessamento imediato).
+- `MockCalendarGateway`/`MockGoogleOAuthGateway`
+  (`@ConditionalOnProperty`, primeiro uso desse mecanismo no projeto;
+  padrão quando `app.calendar.gateway` não é definido) — zero
+  credencial Google necessária em dev e em toda a suíte de testes.
+  `GoogleCalendarGateway`/`GoogleOAuthGatewayImpl` (implementação real,
+  via SDK oficial do Google) prontos para ativar com
+  `CALENDAR_GATEWAY=google` quando houver um projeto Google Cloud
+  configurado.
+- 20 novos testes (`CriptografiaServiceTest`, `CalendarOutboxWorkerTest`,
+  `AgendamentoCalendarSyncIntegrationTest`,
+  `IntegracaoGoogleCalendarControllerIntegrationTest`), incluindo teste
+  automatizado garantindo que o refresh token nunca aparece em log.
+
+**Lacuna conhecida:** 4 dos 7 critérios de aceite da fase (conectar,
+evento aparecer no Google, mover/remover evento real, renovação de
+token expirado) só puderam ser validados com o gateway mock — sem
+projeto Google Cloud configurado ainda. Ver nota na Fase 8 do
+`docs/prd-sistema-barbearia.md`.
+
 ## [Unreleased] - Reforma de UX/UI do painel administrativo
 
 Fora da numeração de fases (pedida antes da Fase 7); identidade visual

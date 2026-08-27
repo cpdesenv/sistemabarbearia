@@ -148,7 +148,7 @@ falha, e testes/CI que nunca dependem de credencial real.
 ## 5. Status de implementação
 
 *Derivado do `CHANGELOG.md` e do histórico de commits — leitura em
-2026-08-26.*
+2026-08-27.*
 
 | Fase | Descrição | Status |
 |---|---|---|
@@ -160,7 +160,7 @@ falha, e testes/CI que nunca dependem de credencial real.
 | 5 | Comanda, pagamento, caixa, estoque e financeiro (5A/5B/5C) | ✅ Concluída |
 | 6 | Comprovante de serviço (PDF) | ✅ Concluída |
 | 7 | Clube Cavalinho / Assinaturas | ✅ Concluída |
-| 8 | Integração com Google Calendar | ⬜ Pendente |
+| 8 | Integração com Google Calendar | ✅ Concluída (mock — ativação real pendente de credencial Google) |
 | 9 | Canal de mensageria (MockWhatsAppGateway) | ⬜ Pendente |
 | 6-META | Ativação da WhatsApp Cloud API | ⬜ Adiada (só sob pedido explícito) |
 | 10 | Agente de IA: atendimento e agendamento | ⬜ Pendente |
@@ -513,7 +513,7 @@ vs. avulsos.
 
 `git commit -m "feat: implementa Clube Cavalinho com assinaturas e receita recorrente"`
 
-### FASE 8 — Integração com Google Calendar
+### FASE 8 — Integração com Google Calendar ✅
 
 **Objetivo:** a barbearia enxerga a agenda no celular, no app que já usa.
 
@@ -536,14 +536,24 @@ vs. avulsos.
 
 **Critérios de aceite**
 
-- [ ] Conecto a conta Google pelo painel em menos de 1 minuto.
-- [ ] Agendamento criado aparece no Google Calendar em até 10 segundos.
-- [ ] Remarcar move o evento; cancelar remove o evento.
-- [ ] Com a rede para o Google derrubada, o agendamento continua sendo
+- [~] Conecto a conta Google pelo painel em menos de 1 minuto.
+- [~] Agendamento criado aparece no Google Calendar em até 10 segundos.
+- [~] Remarcar move o evento; cancelar remove o evento.
+- [x] Com a rede para o Google derrubada, o agendamento continua sendo
   criado e sincroniza sozinho quando volta.
-- [ ] Token expirado renova sozinho, sem intervenção.
-- [ ] Nenhum token aparece em log.
-- [ ] A suíte de testes passa sem nenhuma credencial Google configurada.
+- [~] Token expirado renova sozinho, sem intervenção.
+- [x] Nenhum token aparece em log.
+- [x] A suíte de testes passa sem nenhuma credencial Google configurada.
+
+**Nota (registrada em 2026-08-27):** os 4 itens marcados `[~]` foram
+validados apenas com o `MockCalendarGateway`/`MockGoogleOAuthGateway`
+(fluxo completo testado em automação e manualmente no navegador) — não
+há ainda um projeto Google Cloud com credenciais OAuth2 reais para
+validar contra a API de verdade. O código de ativação real
+(`GoogleCalendarGateway`/`GoogleOAuthGatewayImpl`) já está implementado
+e coberto por `@ConditionalOnProperty(app.calendar.gateway=google)`;
+falta apenas configurar `GOOGLE_CALENDAR_CLIENT_ID`/`_SECRET` e
+revalidar esses 4 itens manualmente quando a conta existir.
 
 `git commit -m "feat: integra agendamentos com Google Calendar via OAuth2 e outbox"`
 
