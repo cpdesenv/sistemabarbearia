@@ -11,6 +11,11 @@ app:
   jwt:
     secret: ${JWT_SECRET}
 
+whatsapp:
+  # Sem default em producao: e o segredo que autentica o webhook (HMAC),
+  # ainda que a integracao real da Meta so chegue na Fase 6-META.
+  webhook-secret: ${WHATSAPP_WEBHOOK_SECRET}
+
 logging:
   level:
     com.barbearia: INFO

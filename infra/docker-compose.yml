@@ -46,6 +46,17 @@ services:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-barbearia}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-barbearia123}
       MINIO_BUCKET_COMPROVANTES: ${MINIO_BUCKET_COMPROVANTES:-comprovantes}
+      CALENDAR_GATEWAY: ${CALENDAR_GATEWAY:-mock}
+      # Precisa do MESMO default (dev-safe) do application.yml: como esta chave e'
+      # sempre declarada aqui, um fallback vazio sobrescreveria o default do Spring
+      # com uma string vazia (que nao decodifica pra 32 bytes e derruba o backend).
+      CALENDAR_TOKEN_ENCRYPTION_KEY: ${CALENDAR_TOKEN_ENCRYPTION_KEY:-ZGV2LW5hby11c2UtZW0tcHJvZHVjYW8tdHJvcXVlMDE=}
+      GOOGLE_CALENDAR_CLIENT_ID: ${GOOGLE_CALENDAR_CLIENT_ID:-}
+      GOOGLE_CALENDAR_CLIENT_SECRET: ${GOOGLE_CALENDAR_CLIENT_SECRET:-}
+      GOOGLE_CALENDAR_REDIRECT_URI: ${GOOGLE_CALENDAR_REDIRECT_URI:-}
+      CALENDAR_FRONTEND_CALLBACK_URI: ${CALENDAR_FRONTEND_CALLBACK_URI:-}
+      WHATSAPP_GATEWAY: ${WHATSAPP_GATEWAY:-mock}
+      WHATSAPP_WEBHOOK_SECRET: ${WHATSAPP_WEBHOOK_SECRET:-dev-somente-troque-em-producao}
     ports:
       - "8080:8080"
     depends_on:

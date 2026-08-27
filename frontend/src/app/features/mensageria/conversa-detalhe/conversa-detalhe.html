@@ -1,0 +1,27 @@
+<section class="conversa-detalhe">
+  <h1>Conversa</h1>
+
+  @if (carregando()) {
+    <mat-spinner diameter="32" />
+  } @else if (mensagens().length === 0) {
+    <p>Nenhuma mensagem nesta conversa.</p>
+  } @else {
+    <div class="conversa-detalhe__chat">
+      @for (mensagem of mensagens(); track mensagem.uuid) {
+        <div
+          class="conversa-detalhe__bolha"
+          [class.conversa-detalhe__bolha--entrada]="mensagem.direcao === 'ENTRADA'"
+          [class.conversa-detalhe__bolha--saida]="mensagem.direcao === 'SAIDA'"
+        >
+          <p class="conversa-detalhe__texto">{{ mensagem.conteudo }}</p>
+          <p class="conversa-detalhe__meta">
+            {{ mensagem.criadoEm | date: 'dd/MM/yyyy HH:mm' }}
+            @if (mensagem.direcao === 'SAIDA') {
+              · {{ mensagem.status }}
+            }
+          </p>
+        </div>
+      }
+    </div>
+  }
+</section>
