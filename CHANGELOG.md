@@ -4,6 +4,20 @@ Todas as mudanças notáveis deste projeto serão documentadas neste arquivo.
 
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
+## [Unreleased]
+
+### Corrigido
+
+- `CalendarOutboxWorker` (Fase 8): `processarPendencias()` chamava
+  `this.processarUm(id)` diretamente — uma auto-invocação que não passa
+  pelo proxy do Spring, então `@Transactional` era silenciosamente
+  ignorado. Só se manifestava em produção (o `@Scheduled` real roda numa
+  thread do agendador sem transação ambiente): toda tentativa de
+  sincronizar um agendamento com o Google Calendar explodia com
+  `LazyInitializationException` ao acessar `agendamento.getCliente()`/
+  `getProfissional()`. Corrigido com uma referência `@Lazy` ao próprio
+  bean, o padrão recomendado pelo Spring para esse caso.
+
 ## [0.8.0] - Fase 8 — Integração com Google Calendar
 
 ### Adicionado
