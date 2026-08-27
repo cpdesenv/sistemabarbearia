@@ -1,0 +1,11 @@
+.conversas {
+  padding: 16px;
+}
+
+.conversas__tabela-wrapper {
+  overflow-x: auto;
+}
+
+.conversas__tabela {
+  width: 100%;
+}

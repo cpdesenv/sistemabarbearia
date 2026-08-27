@@ -1,0 +1,42 @@
+<section class="conversas">
+  <h1>Conversas</h1>
+
+  @if (carregando()) {
+    <mat-spinner diameter="32" />
+  } @else if (conversas().length === 0) {
+    <p>Nenhuma conversa ainda.</p>
+  } @else {
+    <div class="conversas__tabela-wrapper tabela-dados-wrapper">
+      <table mat-table [dataSource]="conversas()" class="conversas__tabela tabela-dados">
+        <ng-container matColumnDef="clienteNome">
+          <th mat-header-cell *matHeaderCellDef>Cliente</th>
+          <td mat-cell *matCellDef="let conversa" data-label="Cliente">
+            <a [routerLink]="[conversa.uuid]">{{ conversa.clienteNome }}</a>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="telefoneE164">
+          <th mat-header-cell *matHeaderCellDef>Telefone</th>
+          <td mat-cell *matCellDef="let conversa" data-label="Telefone">{{ conversa.telefoneE164 }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="ultimaMensagemEm">
+          <th mat-header-cell *matHeaderCellDef>Última mensagem</th>
+          <td mat-cell *matCellDef="let conversa" data-label="Última mensagem">
+            {{ conversa.ultimaMensagemEm ? (conversa.ultimaMensagemEm | date: 'dd/MM/yyyy HH:mm') : '—' }}
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="colunas"></tr>
+        <tr mat-row *matRowDef="let row; columns: colunas"></tr>
+      </table>
+    </div>
+
+    <mat-paginator
+      [length]="totalElementos()"
+      [pageSize]="tamanhoPagina()"
+      [pageSizeOptions]="[10, 20, 50]"
+      (page)="mudarPagina($event)"
+    />
+  }
+</section>

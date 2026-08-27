@@ -38,6 +38,9 @@ app:
     login:
       tentativas: 5
       janela-minutos: 1
+    whatsapp:
+      requisicoes: 60
+      janela-minutos: 1
   storage:
     minio:
       endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
@@ -58,3 +61,12 @@ app:
       client-id: ${GOOGLE_CALENDAR_CLIENT_ID:}
       client-secret: ${GOOGLE_CALENDAR_CLIENT_SECRET:}
       redirect-uri: ${GOOGLE_CALENDAR_REDIRECT_URI:http://localhost:8080/api/integracoes/google-calendar/callback}
+
+whatsapp:
+  # "mock" (padrao) nunca chama nenhum provedor real — usado em dev/teste sem
+  # nenhuma credencial da Meta (Fase 9). A implementacao real (Cloud API) so
+  # entra na Fase 6-META, sob pedido explicito.
+  gateway: ${WHATSAPP_GATEWAY:mock}
+  webhook-secret: ${WHATSAPP_WEBHOOK_SECRET:dev-somente-troque-em-producao}
+  outbox-intervalo-ms: ${WHATSAPP_OUTBOX_INTERVALO_MS:5000}
+  simulacao-status-delay-ms: ${WHATSAPP_SIMULACAO_STATUS_DELAY_MS:10000}
