@@ -233,6 +233,13 @@ public class AgendamentoService {
         }
     }
 
+    @Transactional(readOnly = true)
+    public List<AgendamentoDto> listarPorCliente(UUID clienteUuidPublico) {
+        return agendamentoRepository.findByCliente_UuidPublicoOrderByInicioDesc(clienteUuidPublico).stream()
+                .map(this::paraDto)
+                .toList();
+    }
+
     private AgendamentoDto paraDto(Agendamento agendamento) {
         List<AgendamentoServicoDto> servicos = agendamento.getServicos().stream()
                 .map(item -> new AgendamentoServicoDto(item.getServico().getUuidPublico(),

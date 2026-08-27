@@ -18,6 +18,8 @@ public interface AgendamentoRepository extends JpaRepository<Agendamento, Long>,
 
     Optional<Agendamento> findByUuidPublico(UUID uuidPublico);
 
+    List<Agendamento> findByCliente_UuidPublicoOrderByInicioDesc(UUID clienteUuidPublico);
+
     /**
      * Agendamentos do profissional que ocupam a agenda (status diferente de
      * CANCELADO/NAO_COMPARECEU) e que se sobrepoem ao periodo informado.

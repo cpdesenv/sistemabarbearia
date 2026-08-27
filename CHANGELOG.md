@@ -25,6 +25,14 @@ permanece **provisória** até o CHECKPOINT-VISUAL.
 - Tela de profissional reformulada (sem abas, tabelas compactas, seletor
   de cor com paleta ampliada e contraste WCAG AA conferido).
 
+### Corrigido
+
+- Histórico da ficha do cliente (`GET /api/clientes/{uuid}/ficha`) nunca
+  retornava os agendamentos, atendimentos (comandas) e notas fiscais
+  reais do cliente — `ClienteService.ficha()` sempre devolvia listas
+  vazias, mesmo com dados de verdade no banco. Corrigido conectando a
+  ficha aos dados reais das Fases 4-6 (issue #36).
+
 ## [0.7.0] - Fase 7 — Clube Cavalinho / Assinaturas
 
 ### Adicionado
