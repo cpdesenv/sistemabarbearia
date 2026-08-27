@@ -1,7 +1,6 @@
 package com.barbearia.cliente.service;
 
 import java.time.Instant;
-import java.util.List;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -12,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 
+import com.barbearia.agenda.service.AgendamentoService;
 import com.barbearia.cliente.domain.Cliente;
 import com.barbearia.cliente.dto.AnonimizarClienteRequest;
 import com.barbearia.cliente.dto.ClienteDto;
@@ -22,6 +22,8 @@ import com.barbearia.cliente.dto.SalvarClienteRequest;
 import com.barbearia.cliente.exception.ClienteDuplicadoException;
 import com.barbearia.cliente.repository.ClienteRepository;
 import com.barbearia.cliente.repository.ClienteSpecifications;
+import com.barbearia.financeiro.service.ComandaService;
+import com.barbearia.fiscal.service.ComprovanteService;
 import com.barbearia.shared.auditoria.AuditoriaService;
 import com.barbearia.shared.exception.NegocioException;
 import com.barbearia.shared.exception.RecursoNaoEncontradoException;
@@ -35,6 +37,9 @@ public class ClienteService {
     private final ClienteRepository clienteRepository;
     private final ClienteMapper clienteMapper;
     private final AuditoriaService auditoriaService;
+    private final AgendamentoService agendamentoService;
+    private final ComandaService comandaService;
+    private final ComprovanteService comprovanteService;
 
     @Transactional(readOnly = true)
     public Page<ClienteDto> listar(String busca, Pageable pageable) {
@@ -50,7 +55,11 @@ public class ClienteService {
     @Transactional(readOnly = true)
     public FichaClienteDto ficha(UUID uuid) {
         Cliente cliente = buscarPorUuid(uuid);
-        return new FichaClienteDto(clienteMapper.paraDto(cliente), List.of(), List.of(), List.of());
+        return new FichaClienteDto(
+                clienteMapper.paraDto(cliente),
+                agendamentoService.listarPorCliente(uuid),
+                comandaService.listarPorCliente(uuid),
+                comprovanteService.listarPorCliente(uuid));
     }
 
     @Transactional

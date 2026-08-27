@@ -21,6 +21,8 @@ public interface ComandaRepository extends JpaRepository<Comanda, Long> {
 
     List<Comanda> findByAgendamento_UuidPublicoOrderByCriadoEmDesc(UUID agendamentoUuidPublico);
 
+    List<Comanda> findByAgendamento_Cliente_UuidPublicoOrderByCriadoEmDesc(UUID clienteUuidPublico);
+
     List<Comanda> findByStatusAndFechadaEmBetween(StatusComanda status, Instant inicio, Instant fim);
 
     @Query("SELECT COALESCE(SUM(c.valorTotal), 0) FROM Comanda c WHERE c.status = :status")

@@ -464,6 +464,13 @@ public class ComandaService {
         }
     }
 
+    @Transactional(readOnly = true)
+    public List<ComandaDto> listarPorCliente(UUID clienteUuidPublico) {
+        return comandaRepository.findByAgendamento_Cliente_UuidPublicoOrderByCriadoEmDesc(clienteUuidPublico).stream()
+                .map(this::paraDto)
+                .toList();
+    }
+
     private ComandaDto paraDto(Comanda comanda) {
         List<ComandaItemDto> itens = comanda.getItens().stream()
                 .map(item -> new ComandaItemDto(

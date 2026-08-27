@@ -328,14 +328,12 @@ disponível no repositório.*
 
 `git commit` de referência: `0.3.0`.
 
-**Bug conhecido (registrado em 2026-08-26):** o histórico da ficha
-(agendamentos/atendimentos/notas fiscais) nunca foi conectado aos dados
-reais das Fases 4-6 — continua retornando sempre vazio, mesmo para
-clientes com agendamento finalizado, comanda fechada e comprovante
-emitido de verdade. Achado ao montar uma demonstração para o cliente com
-dados reais. Rastreado em
-[issue #36](https://github.com/cpdesenv/sistemabarbearia/issues/36);
-correção pendente, não bloqueia a Fase 8.
+**Bug corrigido (registrado em 2026-08-26, corrigido em 2026-08-26):** o
+histórico da ficha (agendamentos/atendimentos/notas fiscais) não estava
+conectado aos dados reais das Fases 4-6 — `ClienteService.ficha()`
+retornava sempre listas vazias. Corrigido conectando a ficha aos dados
+reais de agendamento, comanda e comprovante do cliente. Rastreado em
+[issue #36](https://github.com/cpdesenv/sistemabarbearia/issues/36).
 
 ### FASE 4 — Agenda e motor de disponibilidade ✅
 

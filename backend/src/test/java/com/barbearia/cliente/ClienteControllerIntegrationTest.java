@@ -1,5 +1,12 @@
 package com.barbearia.cliente;
 
+import java.time.DayOfWeek;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 import java.util.UUID;
 
@@ -190,6 +197,40 @@ class ClienteControllerIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
+    void deveRetornarFichaComHistoricoDeAgendamentoComandaENotaFiscal() throws Exception {
+        String token = autenticar("admin.fichacomhistorico@teste.com", Perfil.ADMIN, "192.0.2.33");
+        UUID clienteUuid = criarCliente(token, "Cliente Com Historico", "(19) 90000-1111");
+        UUID servicoUuid = criarServico(token, "Corte Historico", 45, "50.00");
+        UUID profissionalUuid = criarProfissional(token, "Prof Historico");
+        vincularServico(token, profissionalUuid, servicoUuid);
+        sincronizarGrade(token, profissionalUuid, 1, "09:00", "18:00");
+
+        ZoneId fuso = ZoneId.of("America/Sao_Paulo");
+        LocalDate proximaSegunda = ZonedDateTime.now(fuso).toLocalDate()
+                .with(TemporalAdjusters.next(DayOfWeek.MONDAY));
+        Instant inicio = ZonedDateTime.of(proximaSegunda, LocalTime.of(9, 0), fuso).toInstant();
+
+        UUID agendamentoUuid = criarAgendamento(token, clienteUuid, profissionalUuid, servicoUuid, inicio);
+        confirmar(token, agendamentoUuid);
+        UUID comandaUuid = abrirComanda(token, agendamentoUuid);
+        definirFormaPagamento(token, comandaUuid, "DINHEIRO");
+        mockMvc.perform(post("/api/comandas/" + comandaUuid + "/fechar")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/clientes/" + clienteUuid + "/ficha")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.agendamentos.length()").value(1))
+                .andExpect(jsonPath("$.agendamentos[0].uuid").value(agendamentoUuid.toString()))
+                .andExpect(jsonPath("$.atendimentos.length()").value(1))
+                .andExpect(jsonPath("$.atendimentos[0].uuid").value(comandaUuid.toString()))
+                .andExpect(jsonPath("$.atendimentos[0].status").value("FECHADA"))
+                .andExpect(jsonPath("$.notasFiscais.length()").value(1))
+                .andExpect(jsonPath("$.notasFiscais[0].numero").exists());
+    }
+
+    @Test
     void deveExportarDadosDoClienteComoAdmin() throws Exception {
         String token = autenticar("admin.exportar@teste.com", Perfil.ADMIN, "192.0.2.28");
         UUID uuid = criarCliente(token, "Cliente Exportado", "(19) 93333-6666");
@@ -265,6 +306,109 @@ class ClienteControllerIntegrationTest extends IntegrationTestBase {
                 .andReturn().getResponse().getContentAsString();
 
         return UUID.fromString(objectMapper.readTree(resposta).get("uuid").asText());
+    }
+
+    private UUID criarServico(String token, String nome, int duracaoMinutos, String preco) throws Exception {
+        String corpo = """
+                {
+                  "nome": "%s",
+                  "descricao": "Descricao de teste",
+                  "categoria": "Corte",
+                  "preco": %s,
+                  "duracaoMinutos": %d
+                }
+                """.formatted(nome, preco, duracaoMinutos);
+
+        String resposta = mockMvc.perform(post("/api/servicos")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(corpo))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        return UUID.fromString(objectMapper.readTree(resposta).get("uuid").asText());
+    }
+
+    private UUID criarProfissional(String token, String nome) throws Exception {
+        String corpo = """
+                {
+                  "nome": "%s",
+                  "email": "profissional.ficha@teste.com",
+                  "telefone": "11900000000",
+                  "corAgenda": "#3F51B5",
+                  "comissaoPercentualPadrao": 30.00
+                }
+                """.formatted(nome);
+
+        String resposta = mockMvc.perform(post("/api/profissionais")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(corpo))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        return UUID.fromString(objectMapper.readTree(resposta).get("uuid").asText());
+    }
+
+    private void vincularServico(String token, UUID profissionalUuid, UUID servicoUuid) throws Exception {
+        String corpo = "[{\"servicoUuid\": \"" + servicoUuid + "\", \"comissaoPercentual\": null}]";
+        mockMvc.perform(put("/api/profissionais/" + profissionalUuid + "/servicos")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(corpo))
+                .andExpect(status().isOk());
+    }
+
+    private void sincronizarGrade(String token, UUID profissionalUuid, int diaSemana, String horaInicio,
+            String horaFim) throws Exception {
+        String corpo = "[{\"diaSemana\": " + diaSemana + ", \"horaInicio\": \"" + horaInicio + "\", \"horaFim\": \""
+                + horaFim + "\"}]";
+        mockMvc.perform(put("/api/profissionais/" + profissionalUuid + "/grade-horaria")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(corpo))
+                .andExpect(status().isOk());
+    }
+
+    private UUID criarAgendamento(String token, UUID clienteUuid, UUID profissionalUuid, UUID servicoUuid,
+            Instant inicio) throws Exception {
+        String corpo = """
+                {
+                  "clienteUuid": "%s",
+                  "profissionalUuid": "%s",
+                  "servicoUuids": ["%s"],
+                  "inicio": "%s",
+                  "observacao": null
+                }
+                """.formatted(clienteUuid, profissionalUuid, servicoUuid, inicio.toString());
+
+        String resposta = mockMvc.perform(post("/api/agendamentos")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(corpo))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        return UUID.fromString(objectMapper.readTree(resposta).get("uuid").asText());
+    }
+
+    private void confirmar(String token, UUID agendamentoUuid) throws Exception {
+        mockMvc.perform(post("/api/agendamentos/" + agendamentoUuid + "/confirmar")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk());
+    }
+
+    private UUID abrirComanda(String token, UUID agendamentoUuid) throws Exception {
+        String resposta = mockMvc.perform(post("/api/comandas/abrir-para-agendamento/" + agendamentoUuid)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        return UUID.fromString(objectMapper.readTree(resposta).get("uuid").asText());
+    }
+
+    private void definirFormaPagamento(String token, UUID comandaUuid, String formaPagamento) throws Exception {
+        mockMvc.perform(put("/api/comandas/" + comandaUuid + "/forma-pagamento")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"formaPagamento\": \"" + formaPagamento + "\"}"))
+                .andExpect(status().isOk());
     }
 
     private String autenticar(String email, Perfil perfil, String ipSimulado) throws Exception {

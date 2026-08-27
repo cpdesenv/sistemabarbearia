@@ -182,6 +182,14 @@ public class ComprovanteService {
         return paraDto(buscarPorComanda(comandaUuid));
     }
 
+    @Transactional(readOnly = true)
+    public List<ComprovanteDto> listarPorCliente(UUID clienteUuidPublico) {
+        return comprovanteRepository.findByComanda_Agendamento_Cliente_UuidPublicoOrderByCriadoEmDesc(clienteUuidPublico)
+                .stream()
+                .map(this::paraDto)
+                .toList();
+    }
+
     private Comprovante buscarPorComanda(UUID comandaUuid) {
         return comprovanteRepository.findByComanda_UuidPublico(comandaUuid)
                 .orElseThrow(() -> new NegocioException("Nenhum comprovante encontrado para esta comanda."));
