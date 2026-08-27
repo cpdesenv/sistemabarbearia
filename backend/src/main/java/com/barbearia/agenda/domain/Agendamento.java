@@ -82,6 +82,10 @@ public class Agendamento {
     @Column(name = "google_event_id")
     private String googleEventId;
 
+    /** Calendario onde {@link #googleEventId} foi criado — ver {@code CalendarGateway}. */
+    @Column(name = "google_calendar_id")
+    private String googleCalendarId;
+
     private String observacao;
 
     @Column(name = "motivo_cancelamento")

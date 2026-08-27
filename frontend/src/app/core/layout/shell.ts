@@ -34,6 +34,7 @@ const ITENS_MENU: ItemMenu[] = [
   { rota: '/financeiro/fluxo-caixa', rotulo: 'Fluxo de caixa' },
   { rota: '/clube-cavalinho', rotulo: 'Clube Cavalinho' },
   { rota: '/configuracoes/barbearia', rotulo: 'Configurações', perfis: ['ADMIN'] },
+  { rota: '/configuracoes/integracoes/google-calendar', rotulo: 'Google Calendar', perfis: ['ADMIN'] },
 ];
 
 @Component({

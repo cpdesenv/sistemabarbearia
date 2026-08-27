@@ -1,0 +1,109 @@
+<section class="google-calendar-config">
+  <h1>Integração — Google Calendar</h1>
+
+  @if (carregando()) {
+    <mat-spinner diameter="32" />
+  } @else {
+    @if (mensagemErro()) {
+      <p class="google-calendar-config__erro" role="alert">{{ mensagemErro() }}</p>
+    }
+    @if (mensagemSucesso()) {
+      <p class="google-calendar-config__sucesso" role="status">{{ mensagemSucesso() }}</p>
+    }
+
+    <mat-card>
+      <mat-card-content>
+        <h2>Conexão</h2>
+        @if (status()?.conectado) {
+          <p>Conectado desde {{ status()?.conectadoEm | date: 'dd/MM/yyyy HH:mm' }}.</p>
+          @if (status()?.ultimoErro) {
+            <p class="google-calendar-config__aviso">Último erro registrado: {{ status()?.ultimoErro }}</p>
+          }
+          <button mat-stroked-button color="warn" type="button" (click)="desconectar()">Desconectar</button>
+        } @else {
+          <p>Nenhuma conta Google conectada.</p>
+          <button mat-flat-button color="primary" type="button" [disabled]="conectando()" (click)="conectar()">
+            @if (conectando()) {
+              <mat-spinner diameter="20" />
+            } @else {
+              Conectar Google Calendar
+            }
+          </button>
+        }
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card>
+      <mat-card-content>
+        <h2>Modo de calendário</h2>
+        <form [formGroup]="formularioModo" (ngSubmit)="salvarModo()" class="google-calendar-config__form">
+          <mat-radio-group formControlName="modo" class="google-calendar-config__opcoes">
+            <mat-radio-button value="CALENDARIO_UNICO">Um único calendário para todos os profissionais</mat-radio-button>
+            <mat-radio-button value="POR_PROFISSIONAL">Um calendário por profissional</mat-radio-button>
+          </mat-radio-group>
+
+          @if (formularioModo.controls.modo.value === 'CALENDARIO_UNICO') {
+            <mat-form-field appearance="outline">
+              <mat-label>Id do calendário único (Google Calendar)</mat-label>
+              <input matInput formControlName="calendarioIdUnico" />
+            </mat-form-field>
+          } @else {
+            <p class="google-calendar-config__aviso">
+              Defina o Google Calendar de cada profissional na tela de cadastro de profissionais.
+            </p>
+          }
+
+          <button mat-flat-button color="primary" type="submit" [disabled]="salvandoModo()">
+            @if (salvandoModo()) {
+              <mat-spinner diameter="20" />
+            } @else {
+              Salvar
+            }
+          </button>
+        </form>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card>
+      <mat-card-content>
+        <h2>Agendamentos fora de sincronia</h2>
+        <button mat-stroked-button type="button" [disabled]="ressincronizando()" (click)="ressincronizar()">
+          @if (ressincronizando()) {
+            <mat-spinner diameter="20" />
+          } @else {
+            Ressincronizar agenda
+          }
+        </button>
+
+        @if (foraDeSincronia().length === 0) {
+          <p>Nenhum agendamento fora de sincronia.</p>
+        } @else {
+          <table mat-table [dataSource]="foraDeSincronia()" class="google-calendar-config__tabela">
+            <ng-container matColumnDef="clienteNome">
+              <th mat-header-cell *matHeaderCellDef>Cliente</th>
+              <td mat-cell *matCellDef="let item">{{ item.clienteNome }}</td>
+            </ng-container>
+            <ng-container matColumnDef="inicioAgendamento">
+              <th mat-header-cell *matHeaderCellDef>Agendamento</th>
+              <td mat-cell *matCellDef="let item">{{ item.inicioAgendamento | date: 'dd/MM/yyyy HH:mm' }}</td>
+            </ng-container>
+            <ng-container matColumnDef="tipoOperacao">
+              <th mat-header-cell *matHeaderCellDef>Operação</th>
+              <td mat-cell *matCellDef="let item">{{ item.tipoOperacao }}</td>
+            </ng-container>
+            <ng-container matColumnDef="tentativas">
+              <th mat-header-cell *matHeaderCellDef>Tentativas</th>
+              <td mat-cell *matCellDef="let item">{{ item.tentativas }}</td>
+            </ng-container>
+            <ng-container matColumnDef="ultimoErro">
+              <th mat-header-cell *matHeaderCellDef>Último erro</th>
+              <td mat-cell *matCellDef="let item">{{ item.ultimoErro }}</td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="colunasForaDeSincronia"></tr>
+            <tr mat-row *matRowDef="let row; columns: colunasForaDeSincronia"></tr>
+          </table>
+        }
+      </mat-card-content>
+    </mat-card>
+  }
+</section>

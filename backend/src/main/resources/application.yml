@@ -44,3 +44,17 @@ app:
       access-key: ${MINIO_ROOT_USER:barbearia}
       secret-key: ${MINIO_ROOT_PASSWORD:barbearia123}
       bucket: ${MINIO_BUCKET_COMPROVANTES:comprovantes}
+  calendar:
+    # "mock" (padrao) nao chama o Google de verdade — usado em dev/teste sem
+    # nenhuma credencial. So vira "google" quando o cliente tiver uma conta
+    # Google Cloud configurada (ver docs/prd-sistema-barbearia.md, Fase 8).
+    gateway: ${CALENDAR_GATEWAY:mock}
+    outbox-intervalo-ms: ${CALENDAR_OUTBOX_INTERVALO_MS:30000}
+    frontend-callback-uri: ${CALENDAR_FRONTEND_CALLBACK_URI:http://localhost:4200/configuracoes/integracoes/google-calendar}
+    # Chave AES-256 (base64, 32 bytes) para criptografar o refresh token antes
+    # de salvar no banco. O valor abaixo e so para dev/teste — TROQUE em producao.
+    token-encryption-key: ${CALENDAR_TOKEN_ENCRYPTION_KEY:ZGV2LW5hby11c2UtZW0tcHJvZHVjYW8tdHJvcXVlMDE=}
+    google:
+      client-id: ${GOOGLE_CALENDAR_CLIENT_ID:}
+      client-secret: ${GOOGLE_CALENDAR_CLIENT_SECRET:}
+      redirect-uri: ${GOOGLE_CALENDAR_REDIRECT_URI:http://localhost:8080/api/integracoes/google-calendar/callback}

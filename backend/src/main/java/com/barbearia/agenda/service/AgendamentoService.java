@@ -25,6 +25,8 @@ import com.barbearia.agenda.dto.SalvarAgendamentoRequest;
 import com.barbearia.agenda.exception.ConflitoAgendamentoException;
 import com.barbearia.agenda.repository.AgendamentoRepository;
 import com.barbearia.agenda.repository.AgendamentoSpecifications;
+import com.barbearia.calendar.domain.TipoOperacaoOutbox;
+import com.barbearia.calendar.service.CalendarSyncService;
 import com.barbearia.cliente.domain.Cliente;
 import com.barbearia.cliente.repository.ClienteRepository;
 import com.barbearia.profissional.domain.Profissional;
@@ -48,6 +50,7 @@ public class AgendamentoService {
     private final ClienteRepository clienteRepository;
     private final AvailabilityService availabilityService;
     private final AuditoriaService auditoriaService;
+    private final CalendarSyncService calendarSyncService;
 
     @Transactional(readOnly = true)
     public List<AgendamentoDto> listar(Instant de, Instant ate, UUID profissionalUuid, UUID clienteUuid,
@@ -126,6 +129,13 @@ public class AgendamentoService {
         auditoriaService.registrar(usuarioId, "AGENDAMENTO_REMARCADO", "agendamento", agendamento.getId(),
                 "Agendamento remarcado para " + inicio + " com '" + profissional.getNome() + "'", httpRequest);
 
+        // So precisa atualizar o evento no Google se ele ja existe; se a criacao
+        // ainda esta pendente no outbox, o worker vai buscar o estado atual do
+        // agendamento (ja remarcado) quando processar — nada a enfileirar aqui.
+        if (agendamento.getGoogleEventId() != null) {
+            calendarSyncService.enfileirar(agendamento, TipoOperacaoOutbox.ATUALIZAR);
+        }
+
         return paraDto(agendamento);
     }
 
@@ -137,6 +147,8 @@ public class AgendamentoService {
 
         auditoriaService.registrar(usuarioId, "AGENDAMENTO_CONFIRMADO", "agendamento", agendamento.getId(),
                 "Agendamento confirmado", httpRequest);
+
+        calendarSyncService.enfileirar(agendamento, TipoOperacaoOutbox.CRIAR);
 
         return paraDto(agendamento);
     }
@@ -190,6 +202,12 @@ public class AgendamentoService {
 
         auditoriaService.registrar(usuarioId, "AGENDAMENTO_CANCELADO", "agendamento", agendamento.getId(),
                 "Agendamento cancelado. Motivo: " + requisicao.motivo(), httpRequest);
+
+        if (agendamento.getGoogleEventId() != null) {
+            calendarSyncService.enfileirar(agendamento, TipoOperacaoOutbox.REMOVER);
+        } else {
+            calendarSyncService.cancelarPendenciaSemEvento(agendamento);
+        }
 
         return paraDto(agendamento);
     }

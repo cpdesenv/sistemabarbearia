@@ -26,7 +26,10 @@ public class SecurityConfig {
             "/actuator/info",
             "/swagger-ui/**",
             "/swagger-ui.html",
-            "/v3/api-docs/**"
+            "/v3/api-docs/**",
+            // Chamada pelo navegador de volta do Google (nao envia JWT); autorizada
+            // pelo `state` de uso unico validado em IntegracaoGoogleCalendarService.
+            "/api/integracoes/google-calendar/callback"
     };
 
     @Bean

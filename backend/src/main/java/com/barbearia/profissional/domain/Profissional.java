@@ -47,6 +47,10 @@ public class Profissional {
     @Column(nullable = false)
     private boolean ativo = true;
 
+    /** So usado quando a integracao com o Google Calendar esta no modo POR_PROFISSIONAL. */
+    @Column(name = "google_calendar_id")
+    private String googleCalendarId;
+
     @CreationTimestamp
     @Column(name = "criado_em", nullable = false, updatable = false)
     private Instant criadoEm;
