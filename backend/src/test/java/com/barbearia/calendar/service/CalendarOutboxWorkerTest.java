@@ -41,8 +41,10 @@ class CalendarOutboxWorkerTest {
 
     @BeforeEach
     void montarWorker() {
+        // "self" so e usado por processarPendencias() (nao testado aqui — os testes
+        // chamam processarUm(id) diretamente), entao null e suficiente.
         worker = new CalendarOutboxWorker(outboxRepository, agendamentoRepository, calendarGateway,
-                integracaoService);
+                integracaoService, null);
     }
 
     @Test
