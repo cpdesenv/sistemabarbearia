@@ -101,6 +101,23 @@
             <version>8.5.17</version>
         </dependency>
 
+        <!-- Fase 8: integracao com Google Calendar (OAuth2 + criacao/atualizacao de eventos) -->
+        <dependency>
+            <groupId>com.google.api-client</groupId>
+            <artifactId>google-api-client</artifactId>
+            <version>2.8.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.apis</groupId>
+            <artifactId>google-api-services-calendar</artifactId>
+            <version>v3-rev20260517-2.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.auth</groupId>
+            <artifactId>google-auth-library-oauth2-http</artifactId>
+            <version>1.51.0</version>
+        </dependency>
+
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
@@ -153,6 +170,14 @@
                 <version>1.20.4</version>
                 <type>pom</type>
                 <scope>import</scope>
+            </dependency>
+            <!-- Alinha com a versao que google-auth-library-oauth2-http:1.51.0 espera;
+                 sem isso, o Maven resolve para 1.30.0 (puxado transitivamente pelo
+                 google-api-client), versao mais antiga que a exigida. -->
+            <dependency>
+                <groupId>com.google.auth</groupId>
+                <artifactId>google-auth-library-credentials</artifactId>
+                <version>1.51.0</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

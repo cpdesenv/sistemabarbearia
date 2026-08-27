@@ -20,6 +20,15 @@ export const routes: Routes = [
         data: { perfis: ['ADMIN'] }
       },
       {
+        path: 'configuracoes/integracoes/google-calendar',
+        loadComponent: () =>
+          import('./features/configuracoes/integracoes/google-calendar/google-calendar').then(
+            (m) => m.GoogleCalendarConfig
+          ),
+        canActivate: [roleGuard],
+        data: { perfis: ['ADMIN'] }
+      },
+      {
         path: 'servicos',
         loadComponent: () =>
           import('./features/servicos/servicos-lista/servicos-lista').then((m) => m.ServicosLista)
