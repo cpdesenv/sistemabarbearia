@@ -4,7 +4,40 @@ Todas as mudanças notáveis deste projeto serão documentadas neste arquivo.
 
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
-## [Unreleased]
+## [0.9.0] - Fase 9 — Canal de mensageria (MockWhatsAppGateway)
+
+### Adicionado
+
+- Canal de WhatsApp inteiro funcionando com o `MockWhatsAppGateway`
+  (`@ConditionalOnProperty`, padrão) — sem conta Meta, sem
+  `CloudApiWhatsAppGateway`, sem token real em lugar nenhum do código
+  (fica para a Fase 6-META, sob pedido explícito). `WhatsAppGateway`
+  (`sendMessage`/`sendTemplate`/`sendInteractive`/`sendDocument`) já
+  desenhado para a Cloud API caber sem mudança de contrato.
+- Outbox transacional para o envio (mesmo padrão da Fase 8): mensagem
+  SAÍDA nasce com a linha na mesma transação; `MensagemEnvioOutboxWorker`
+  processa com backoff exponencial. Status simulado ENVIADA→ENTREGUE→LIDA
+  com delay configurável; falha de envio simulável sob demanda (uso
+  único), para testar a retentativa deterministicamente.
+- Recebimento sem outbox: idempotência via *unique constraint* em
+  `mensagem.wa_message_id`, processado em virtual thread (`@Async`) logo
+  após o webhook responder 200.
+- Webhook no formato da Cloud API (`GET` verificação, `POST` validado por
+  `X-Hub-Signature-256`) e simulador (`/api/dev/whatsapp/inbound`,
+  `/api/dev/whatsapp/simular-falha`, `/api/dev/status`) reaproveitando o
+  mesmo parser/pipeline. Todo `WhatsAppDevController` é
+  `@Profile("!prod")` — o bean nem existe em produção.
+- Rate limiting por IP (mesmo padrão do login) no webhook e no endpoint
+  de injeção.
+- Cliente novo por telefone desconhecido nasce como rascunho
+  (`origemCadastro=WHATSAPP`); vinculação automática da conversa por
+  telefone E.164.
+- Frontend: telas Conversas (lista + chat) e Simulador de WhatsApp (só
+  aparece no menu se `/api/dev/status` responder habilitado).
+- `docs/mensageria.md` e 18 novos testes (unitários e de integração),
+  incluindo um teste de regressão que roda o worker de envio numa thread
+  sem transação ambiente, reproduzindo o mesmo bug de self-invocation
+  corrigido no `CalendarOutboxWorker` (ver "Corrigido" abaixo).
 
 ### Corrigido
 
@@ -16,7 +49,9 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
   sincronizar um agendamento com o Google Calendar explodia com
   `LazyInitializationException` ao acessar `agendamento.getCliente()`/
   `getProfissional()`. Corrigido com uma referência `@Lazy` ao próprio
-  bean, o padrão recomendado pelo Spring para esse caso.
+  bean, o padrão recomendado pelo Spring para esse caso. O mesmo bug foi
+  encontrado e corrigido preventivamente no `MensagemEnvioOutboxWorker`
+  (Fase 9) antes de ir para produção.
 
 ## [0.8.0] - Fase 8 — Integração com Google Calendar
 

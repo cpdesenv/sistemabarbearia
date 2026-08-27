@@ -161,7 +161,7 @@ falha, e testes/CI que nunca dependem de credencial real.
 | 6 | Comprovante de serviço (PDF) | ✅ Concluída |
 | 7 | Clube Cavalinho / Assinaturas | ✅ Concluída |
 | 8 | Integração com Google Calendar | ✅ Concluída (mock — ativação real pendente de credencial Google) |
-| 9 | Canal de mensageria (MockWhatsAppGateway) | ⬜ Pendente |
+| 9 | Canal de mensageria (MockWhatsAppGateway) | ✅ Concluída |
 | 6-META | Ativação da WhatsApp Cloud API | ⬜ Adiada (só sob pedido explícito) |
 | 10 | Agente de IA: atendimento e agendamento | ⬜ Pendente |
 | 11 | Cancelamento e remarcação pela IA | ⬜ Pendente |
@@ -557,7 +557,7 @@ revalidar esses 4 itens manualmente quando a conta existir.
 
 `git commit -m "feat: integra agendamentos com Google Calendar via OAuth2 e outbox"`
 
-### FASE 9 — Canal de mensageria com MockWhatsAppGateway (sem conta Meta, sem IA)
+### FASE 9 — Canal de mensageria com MockWhatsAppGateway (sem conta Meta, sem IA) ✅
 
 **Objetivo:** ter o canal de mensagens inteiro funcionando — conversas,
 mensagens, idempotência, processamento assíncrono, painel — usando
@@ -607,20 +607,20 @@ que a implementação real seja depois apenas uma classe nova.
 
 **Critérios de aceite**
 
-- [ ] Conduzo uma conversa inteira pelo simulador do painel, sem nenhuma
+- [x] Conduzo uma conversa inteira pelo simulador do painel, sem nenhuma
   credencial externa.
-- [ ] `grep` no projeto não encontra token, número de telefone da Meta ou
+- [x] `grep` no projeto não encontra token, número de telefone da Meta ou
   URL da Graph API.
-- [ ] O eco responde e a conversa aparece no painel, vinculada ao cliente
+- [x] O eco responde e a conversa aparece no painel, vinculada ao cliente
   correto.
-- [ ] Webhook com assinatura inválida retorna 403 e não processa nada.
-- [ ] Reenvio do mesmo payload (mesmo `waMessageId`) não duplica mensagem no
+- [x] Webhook com assinatura inválida retorna 403 e não processa nada.
+- [x] Reenvio do mesmo payload (mesmo `waMessageId`) não duplica mensagem no
   banco.
-- [ ] Falha simulada de envio cai no outbox e é retentada.
-- [ ] Rate limiting aplicado no webhook e no endpoint de injeção.
-- [ ] O endpoint `/api/dev/**` e a tela do simulador estão desabilitados no
+- [x] Falha simulada de envio cai no outbox e é retentada.
+- [x] Rate limiting aplicado no webhook e no endpoint de injeção.
+- [x] O endpoint `/api/dev/**` e a tela do simulador estão desabilitados no
   perfil `production` — teste automatizado prova isso.
-- [ ] Toda a suíte roda no CI sem segredo nenhum.
+- [x] Toda a suíte roda no CI sem segredo nenhum.
 
 `git commit -m "feat: implementa canal de mensageria com gateway mockado e simulador de conversas"`
 
