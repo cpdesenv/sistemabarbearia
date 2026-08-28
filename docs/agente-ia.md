@@ -1,9 +1,9 @@
-# Agente de IA de atendimento — Fase 10
+# Agente de IA de atendimento — Fases 10 e 11
 
-Este documento explica como o agente de IA (atendimento e agendamento via
-WhatsApp) funciona nesta fase: arquitetura, guardrails, como testar com o
-LLM mockado e o que muda quando uma chave de API da Anthropic de verdade for
-configurada.
+Este documento explica como o agente de IA (atendimento, agendamento,
+cancelamento e remarcação via WhatsApp) funciona: arquitetura, guardrails,
+como testar com o LLM mockado e o que muda quando uma chave de API da
+Anthropic de verdade for configurada.
 
 ## Visão geral
 
@@ -27,10 +27,11 @@ em Java.
     ...)`; sem roteiro programado, cai numa resposta fixa de boas-vindas
     (não é um simulador "inteligente" — só evita erro ao testar a fiação
     manualmente pelo simulador do painel).
-- `AgenteTools` — as 8 tools do PRD (`consultar_servicos`,
+- `AgenteTools` — as 10 tools do PRD (`consultar_servicos`,
   `consultar_profissionais`, `consultar_disponibilidade`,
   `identificar_cliente`, `cadastrar_cliente`, `criar_agendamento`,
-  `consultar_agendamentos_do_cliente`, `escalar_para_humano`).
+  `consultar_agendamentos_do_cliente`, `cancelar_agendamento`,
+  `remarcar_agendamento`, `escalar_para_humano`).
 - `AgenteAtendimentoService` — o orquestrador: dono do loop de tool-calling,
   guardrails de código, tracking de custo e persistência da resposta final
   (reaproveita o outbox de envio da Fase 9, sem nenhuma mudança lá).
@@ -46,21 +47,27 @@ em Java.
 | Limite de turnos por conversa | Código — contador `conversa.turnos_ia`, incrementado a cada resposta final. |
 | Timeout de 30 min sem resposta | Código — `conversa.contexto_expira_em`; ao expirar, o histórico enviado ao LLM é reiniciado e o system prompt ganha uma nota de contexto. |
 | Nunca inventar disponibilidade/preço/serviço | **Prompt** — estruturalmente, o texto final do agente só tem como conter dados reais se vieram de uma tool, mas nada impede o modelo de escrever texto livre; a garantia é comportamental, validada pela suíte de diálogos-roteiro. |
-| Confirmação explícita antes de `criar_agendamento` | **Prompt** — mesma limitação: reforçado no system prompt, testado no roteiro, não uma trava de código. |
+| Confirmação explícita antes de `criar_agendamento`, `cancelar_agendamento` ou `remarcar_agendamento` | **Prompt** — mesma limitação: reforçado no system prompt, testado no roteiro, não uma trava de código. |
 | Resistência a prompt injection | **Estrutural + prompt** — não existe nenhum canal por onde texto do cliente vire instrução de sistema (a mensagem do cliente é sempre um bloco de conteúdo comum no histórico); o prompt reforça isso explicitamente. |
-| Cliente das tools é sempre o dono real da conversa | **Código** — nenhuma tool aceita telefone ou `clienteUuid` como argumento; todas usam `conversa.getCliente()`, resolvido pelo backend a partir do remetente real do webhook (`MensageriaInboundService`), nunca de um dado que o LLM tenha recebido do texto do cliente. Evita que uma tentativa de injection (ou um erro de raciocínio do modelo) faça uma tool operar sobre o cliente errado — ver `AgenteTools` e o teste `criarAgendamentoIgnoraClienteUuidDeTerceiroEUsaSempreODonoDaConversa`. |
+| Cliente das tools é sempre o dono real da conversa | **Código** — nenhuma tool aceita telefone ou `clienteUuid` como argumento; todas usam `conversa.getCliente()`, resolvido pelo backend a partir do remetente real do webhook (`MensageriaInboundService`), nunca de um dado que o LLM tenha recebido do texto do cliente. `cancelar_agendamento`/`remarcar_agendamento` aplicam a mesma checagem sobre o `agendamentoUuid` recebido (`AgenteTools.buscarAgendamentoDoCliente`), devolvendo "Agendamento não encontrado" tanto pra um uuid inexistente quanto pra um de outro cliente. Evita que uma tentativa de injection (ou um erro de raciocínio do modelo) faça uma tool operar sobre o cliente ou agendamento errado — ver os testes `criarAgendamentoIgnoraClienteUuidDeTerceiroEUsaSempreODonoDaConversa` e `cancelarAgendamentoDeOutroClienteNaoEncontraNada`. |
+| Política de cancelamento (antecedência mínima) | **Código** — `cancelar_agendamento` compara o horário do agendamento com `barbearia.antecedencia_minima_cancelamento_minutos` (mesma configuração já usada pelo painel, editável em Configurações). Abaixo do mínimo, a tool não cancela: escala a conversa para humano, sem recusar o pedido. |
 
 ## Suíte de diálogos-roteiro
 
-`AgenteAtendimentoServiceIntegrationTest` cobre os 10 cenários exigidos pelo
-PRD (cliente indeciso, muda de ideia, horário indisponível, cliente
-agressivo, mensagem sem sentido, tentativa de injection, cliente
+`AgenteAtendimentoServiceIntegrationTest` cobre os 10 cenários da Fase 10
+exigidos pelo PRD (cliente indeciso, muda de ideia, horário indisponível,
+cliente agressivo, mensagem sem sentido, tentativa de injection, cliente
 recorrente, dois serviços juntos, data ambígua, cliente que desiste), mais 1
-teste de segurança (tool não pode operar sobre o cliente de um terceiro) e 2
-testes dedicados aos guardrails de código (kill switch, teto de custo). Cada
-cenário programa a sequência exata de respostas do `MockAiAgentGateway` —
-as tools chamadas pelo roteiro executam de verdade contra o banco de teste
-(Testcontainers), só a *decisão* de qual tool chamar é que vem do roteiro.
+teste de segurança de agendamento e 2 testes de guardrails de código (kill
+switch, teto de custo) da Fase 10; e, da Fase 11, os 5 cenários de
+cancelamento/remarcação (cancela e libera o slot, remarca pra horário
+realmente livre, pergunta qual agendamento quando há mais de um futuro,
+nenhuma alteração sem confirmação, cancelamento fora da política escala pra
+humano) mais 1 teste de segurança (não cancela agendamento de outro
+cliente). Cada cenário programa a sequência exata de respostas do
+`MockAiAgentGateway` — as tools chamadas pelo roteiro executam de verdade
+contra o banco de teste (Testcontainers), só a *decisão* de qual tool
+chamar é que vem do roteiro.
 
 `ConfiguracaoIaControllerIntegrationTest` cobre o endpoint administrativo
 (`GET`/`PUT /api/configuracoes/ia`, restrito a `ADMIN`).

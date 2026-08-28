@@ -1,5 +1,6 @@
 package com.barbearia.ia.tools;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.LinkedHashMap;
@@ -14,7 +15,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.RequiredArgsConstructor;
 
+import com.barbearia.agenda.domain.OrigemAgendamento;
 import com.barbearia.agenda.dto.AgendamentoDto;
+import com.barbearia.agenda.dto.AgendamentoServicoDto;
+import com.barbearia.agenda.dto.CancelarAgendamentoRequest;
 import com.barbearia.agenda.dto.SalvarAgendamentoRequest;
 import com.barbearia.agenda.dto.SlotDisponivelDto;
 import com.barbearia.agenda.service.AgendamentoService;
@@ -22,6 +26,8 @@ import com.barbearia.agenda.service.AvailabilityService;
 import com.barbearia.assinatura.domain.Assinatura;
 import com.barbearia.assinatura.domain.StatusAssinatura;
 import com.barbearia.assinatura.repository.AssinaturaRepository;
+import com.barbearia.barbearia.domain.Barbearia;
+import com.barbearia.barbearia.repository.BarbeariaRepository;
 import com.barbearia.cliente.domain.Cliente;
 import com.barbearia.cliente.domain.OrigemCadastro;
 import com.barbearia.cliente.repository.ClienteRepository;
@@ -72,6 +78,7 @@ public class AgenteTools {
     private final AssinaturaRepository assinaturaRepository;
     private final ConversaRepository conversaRepository;
     private final AuditoriaService auditoriaService;
+    private final BarbeariaRepository barbeariaRepository;
     private final ObjectMapper objectMapper;
 
     public List<DefinicaoFerramentaIa> definicoes() {
@@ -119,6 +126,30 @@ public class AgenteTools {
                                 + "cliente recorrente que quer repetir o ultimo servico, ou para conferir "
                                 + "agendamentos futuros.",
                         Map.of(), List.of()),
+                new DefinicaoFerramentaIa("cancelar_agendamento",
+                        "Cancela um agendamento futuro do cliente desta conversa. Se o cliente tiver mais de um "
+                                + "agendamento futuro, pergunte qual antes de chamar (use "
+                                + "consultar_agendamentos_do_cliente). So chame depois que o cliente confirmar "
+                                + "explicitamente. Se o horario ja estiver muito proximo (fora da politica de "
+                                + "cancelamento), a tool nao cancela e escala a conversa para atendimento humano — "
+                                + "avise o cliente que alguem vai dar continuidade, sem recusar secamente.",
+                        Map.of(
+                                "agendamentoUuid", tipo("string",
+                                        "Uuid do agendamento a cancelar (retornado por consultar_agendamentos_do_cliente)."),
+                                "motivo", tipo("string", "Motivo do cancelamento, nas palavras do cliente.")),
+                        List.of("agendamentoUuid", "motivo")),
+                new DefinicaoFerramentaIa("remarcar_agendamento",
+                        "Remarca um agendamento futuro do cliente desta conversa para um novo horario, mantendo o "
+                                + "mesmo profissional e servicos. Sempre chame consultar_disponibilidade antes para "
+                                + "confirmar que o novo horario esta realmente livre. Se o cliente tiver mais de um "
+                                + "agendamento futuro, pergunte qual antes de chamar. So chame depois que o cliente "
+                                + "confirmar explicitamente o novo horario.",
+                        Map.of(
+                                "agendamentoUuid", tipo("string",
+                                        "Uuid do agendamento a remarcar (retornado por consultar_agendamentos_do_cliente)."),
+                                "novoInicio", tipo("string",
+                                        "Novo instante de inicio, formato ISO-8601 (ex.: 2026-09-01T14:00:00-03:00).")),
+                        List.of("agendamentoUuid", "novoInicio")),
                 new DefinicaoFerramentaIa("escalar_para_humano",
                         "Encerra o atendimento automatico e transfere a conversa para um atendente humano. Use em "
                                 + "reclamacoes, pedido de desconto, assunto fora do escopo de agendamento, ou apos "
@@ -137,6 +168,8 @@ public class AgenteTools {
                 case "cadastrar_cliente" -> cadastrarCliente(chamada.entrada(), conversa);
                 case "criar_agendamento" -> criarAgendamento(chamada.entrada(), conversa);
                 case "consultar_agendamentos_do_cliente" -> consultarAgendamentosDoCliente(conversa);
+                case "cancelar_agendamento" -> cancelarAgendamento(chamada.entrada(), conversa);
+                case "remarcar_agendamento" -> remarcarAgendamento(chamada.entrada(), conversa);
                 case "escalar_para_humano" -> escalarParaHumano(chamada.entrada(), conversa);
                 default -> throw new NegocioException("Ferramenta desconhecida: " + chamada.nome());
             };
@@ -244,7 +277,7 @@ public class AgenteTools {
 
         SalvarAgendamentoRequest request = new SalvarAgendamentoRequest(clienteUuid, profissionalUuid, servicoUuids,
                 inicio, "Agendado pelo agente de IA via WhatsApp");
-        AgendamentoDto criado = agendamentoService.criar(request, null, null);
+        AgendamentoDto criado = agendamentoService.criar(request, OrigemAgendamento.WHATSAPP, null, null);
         // O cliente ja confirmou explicitamente pelo chat (guardrail do prompt) — equivalente a
         // recepcao confirmar um agendamento no painel, entao ja confirma aqui, o que tambem
         // enfileira a sincronizacao com o Google Calendar (AgendamentoService.confirmar).
@@ -255,8 +288,69 @@ public class AgenteTools {
         return agendamentoService.listarPorCliente(conversa.getCliente().getUuidPublico());
     }
 
-    private Map<String, Object> escalarParaHumano(Map<String, Object> entrada, Conversa conversa) {
+    /**
+     * Mesmo guardrail de posse da criacao de agendamento: {@code agendamentoUuid} vem da tool call
+     * do LLM, entao so' pode operar sobre um agendamento que realmente pertence ao cliente desta
+     * conversa. "Agendamento nao encontrado" tanto para um uuid inexistente quanto para um uuid de
+     * outro cliente — nao da' pra' distinguir os dois casos pra' quem esta' do outro lado do chat.
+     */
+    private Map<String, Object> cancelarAgendamento(Map<String, Object> entrada, Conversa conversa) {
+        AgendamentoDto agendamento = buscarAgendamentoDoCliente((String) entrada.get("agendamentoUuid"), conversa);
         String motivo = (String) entrada.get("motivo");
+
+        int antecedenciaMinimaMinutos = buscarBarbearia().getAntecedenciaMinimaCancelamentoMinutos();
+        long minutosAteInicio = Duration.between(Instant.now(), agendamento.inicio()).toMinutes();
+        if (minutosAteInicio < antecedenciaMinimaMinutos) {
+            return escalar("Cliente pediu cancelamento fora da politica (menos de " + antecedenciaMinimaMinutos
+                    + " min de antecedencia) via WhatsApp. Motivo informado: " + motivo, conversa);
+        }
+
+        agendamentoService.cancelar(agendamento.uuid(),
+                new CancelarAgendamentoRequest("Cancelado pelo agente de IA via WhatsApp: " + motivo), null, null);
+
+        auditoriaService.registrar(null, "AGENDAMENTO_CANCELADO_VIA_IA", "agendamento", null,
+                "Agendamento " + agendamento.uuid() + " cancelado pelo agente de IA via WhatsApp. Motivo: " + motivo,
+                null);
+
+        return Map.of("cancelado", true);
+    }
+
+    private AgendamentoDto remarcarAgendamento(Map<String, Object> entrada, Conversa conversa) {
+        AgendamentoDto atual = buscarAgendamentoDoCliente((String) entrada.get("agendamentoUuid"), conversa);
+        Instant novoInicio = Instant.parse((String) entrada.get("novoInicio"));
+
+        List<UUID> servicoUuids = atual.servicos().stream().map(AgendamentoServicoDto::servicoUuid).toList();
+        SalvarAgendamentoRequest request = new SalvarAgendamentoRequest(atual.clienteUuid(),
+                atual.profissionalUuid(), servicoUuids, novoInicio, atual.observacao());
+        AgendamentoDto atualizado = agendamentoService.alterar(atual.uuid(), request, null, null);
+
+        auditoriaService.registrar(null, "AGENDAMENTO_REMARCADO_VIA_IA", "agendamento", null,
+                "Agendamento " + atual.uuid() + " remarcado para " + novoInicio + " pelo agente de IA via WhatsApp",
+                null);
+
+        return atualizado;
+    }
+
+    private AgendamentoDto buscarAgendamentoDoCliente(String agendamentoUuidBruto, Conversa conversa) {
+        UUID agendamentoUuid = UUID.fromString(agendamentoUuidBruto);
+        AgendamentoDto agendamento = agendamentoService.obter(agendamentoUuid);
+        if (!agendamento.clienteUuid().equals(conversa.getCliente().getUuidPublico())) {
+            throw new RecursoNaoEncontradoException("Agendamento nao encontrado.");
+        }
+        return agendamento;
+    }
+
+    private Barbearia buscarBarbearia() {
+        return barbeariaRepository.findById(Barbearia.ID_SINGLETON)
+                .orElseThrow(() -> new RecursoNaoEncontradoException(
+                        "Configuracao da barbearia nao encontrada. Verifique se as migrations foram executadas."));
+    }
+
+    private Map<String, Object> escalarParaHumano(Map<String, Object> entrada, Conversa conversa) {
+        return escalar((String) entrada.get("motivo"), conversa);
+    }
+
+    private Map<String, Object> escalar(String motivo, Conversa conversa) {
         conversa.setModoAtendimento(ModoAtendimento.HUMANO);
         conversa.setMotivoEscalonamento(motivo);
         conversaRepository.save(conversa);
