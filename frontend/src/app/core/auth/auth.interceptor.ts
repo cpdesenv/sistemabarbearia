@@ -5,7 +5,7 @@ import { catchError, switchMap, throwError } from 'rxjs';
 
 import { AuthService } from './auth.service';
 
-const ROTAS_SEM_TOKEN = ['/api/auth/'];
+const ROTAS_SEM_TOKEN = ['/api/auth/', '/api/autoagendamento'];
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);

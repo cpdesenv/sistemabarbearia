@@ -2,8 +2,8 @@ package com.barbearia.shared.validacao;
 
 /**
  * Normaliza numeros de telefone brasileiros para E.164 (+55DDDNUMERO).
- * A mensageria (WhatsApp, Fases 9+) identifica o cliente por esse formato,
- * entao todo telefone armazenado no sistema passa por aqui.
+ * Formato canonico de telefone usado em todo o sistema (cadastro de
+ * cliente, autoagendamento), entao todo telefone armazenado passa por aqui.
  */
 public final class TelefoneNormalizador {
 

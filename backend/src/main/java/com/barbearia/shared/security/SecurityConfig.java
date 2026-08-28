@@ -14,7 +14,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import com.barbearia.mensageria.webhook.WhatsAppRateLimitingFilter;
+import com.barbearia.autoagendamento.controller.AutoagendamentoRateLimitingFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -32,15 +32,16 @@ public class SecurityConfig {
             // Chamada pelo navegador de volta do Google (nao envia JWT); autorizada
             // pelo `state` de uso unico validado em IntegracaoGoogleCalendarService.
             "/api/integracoes/google-calendar/callback",
-            // Chamado pelo provedor de WhatsApp (ou pelo simulador de payload nos
-            // testes), sem JWT; autorizado pela assinatura HMAC do corpo (ver
-            // AssinaturaWebhookValidador). GET e usado so na verificacao inicial.
-            "/api/webhook/whatsapp"
+            // Pagina publica de autoagendamento (Fase 9) — sem login por definicao do
+            // PRD; protegida por rate limiting (AutoagendamentoRateLimitingFilter) e pelo
+            // kill switch barbearia.portal_autoagendamento_ativo, nao por JWT.
+            "/api/autoagendamento/**"
     };
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter,
-            LoginRateLimitingFilter loginRateLimitingFilter, WhatsAppRateLimitingFilter whatsAppRateLimitingFilter,
+            LoginRateLimitingFilter loginRateLimitingFilter,
+            AutoagendamentoRateLimitingFilter autoagendamentoRateLimitingFilter,
             JsonAuthenticationEntryPoint entryPoint, JsonAccessDeniedHandler accessDeniedHandler) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
@@ -52,7 +53,7 @@ public class SecurityConfig {
                         .authenticationEntryPoint(entryPoint)
                         .accessDeniedHandler(accessDeniedHandler))
                 .addFilterBefore(loginRateLimitingFilter, UsernamePasswordAuthenticationFilter.class)
-                .addFilterBefore(whatsAppRateLimitingFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(autoagendamentoRateLimitingFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

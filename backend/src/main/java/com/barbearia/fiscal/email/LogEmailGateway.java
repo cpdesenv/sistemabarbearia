@@ -15,4 +15,10 @@ public class LogEmailGateway implements EmailGateway {
         log.info("[MOCK EMAIL] Comprovante #{} enviado para {} ({}) — {} bytes anexados.",
                 numeroComprovante, destinatario, clienteNome, anexoPdf.length);
     }
+
+    @Override
+    public void enviarConfirmacaoAgendamento(String destinatario, String clienteNome, String resumoAgendamento) {
+        log.info("[MOCK EMAIL] Confirmacao de agendamento enviada para {} ({}): {}", destinatario, clienteNome,
+                resumoAgendamento);
+    }
 }

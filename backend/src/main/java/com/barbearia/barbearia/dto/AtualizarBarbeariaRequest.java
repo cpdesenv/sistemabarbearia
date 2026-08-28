@@ -56,5 +56,7 @@ public record AtualizarBarbeariaRequest(
         int antecedenciaMinimaCancelamentoMinutos,
 
         @Min(value = 1, message = "A granularidade de slot deve ser de pelo menos 1 minuto.")
-        int granularidadeSlotMinutos) {
+        int granularidadeSlotMinutos,
+
+        boolean portalAutoagendamentoAtivo) {
 }

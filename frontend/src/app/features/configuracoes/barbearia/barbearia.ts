@@ -6,6 +6,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 
 import { BarbeariaService } from './barbearia.service';
 import { AtualizarBarbeariaRequest, Barbearia } from './barbearia.model';
@@ -19,6 +20,7 @@ import { AtualizarBarbeariaRequest, Barbearia } from './barbearia.model';
     MatFormFieldModule,
     MatInputModule,
     MatProgressSpinnerModule,
+    MatSlideToggleModule,
   ],
   templateUrl: './barbearia.html',
   styleUrl: './barbearia.css',
@@ -31,6 +33,7 @@ export class BarbeariaConfig {
   protected readonly salvando = signal(false);
   protected readonly mensagemSucesso = signal<string | null>(null);
   protected readonly mensagemErro = signal<string | null>(null);
+  protected readonly linkCopiado = signal(false);
 
   protected readonly formulario = this.formBuilder.nonNullable.group({
     nome: ['', [Validators.required]],
@@ -49,6 +52,7 @@ export class BarbeariaConfig {
     antecedenciaMaximaAgendamentoDias: [1, [Validators.required, Validators.min(1)]],
     antecedenciaMinimaCancelamentoMinutos: [0, [Validators.required, Validators.min(0)]],
     granularidadeSlotMinutos: [15, [Validators.required, Validators.min(1)]],
+    portalAutoagendamentoAtivo: [true],
   });
 
   constructor() {
@@ -106,6 +110,14 @@ export class BarbeariaConfig {
     });
   }
 
+  protected copiarLinkAutoagendamento(): void {
+    const link = `${window.location.origin}/agendar`;
+    navigator.clipboard.writeText(link).then(() => {
+      this.linkCopiado.set(true);
+      setTimeout(() => this.linkCopiado.set(false), 3000);
+    });
+  }
+
   private preencherFormulario(barbearia: Barbearia): void {
     this.formulario.setValue({
       nome: barbearia.nome,
@@ -124,6 +136,7 @@ export class BarbeariaConfig {
       antecedenciaMaximaAgendamentoDias: barbearia.antecedenciaMaximaAgendamentoDias,
       antecedenciaMinimaCancelamentoMinutos: barbearia.antecedenciaMinimaCancelamentoMinutos,
       granularidadeSlotMinutos: barbearia.granularidadeSlotMinutos,
+      portalAutoagendamentoAtivo: barbearia.portalAutoagendamentoAtivo,
     });
   }
 }
