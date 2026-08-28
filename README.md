@@ -380,14 +380,15 @@ Painel: menu **Clube Cavalinho** (aba "Assinantes" — resumo, nova
 assinatura, cancelamento; aba "Meus planos" — CRUD de planos e escolha dos
 serviços inclusos).
 
-## Agente de IA de atendimento (Fase 10)
+## Agente de IA de atendimento (Fases 10 e 11)
 
-Substitui o eco automático da Fase 9 por uma conversa real de agendamento
-via WhatsApp, com tool-calling (Anthropic Claude). O LLM nunca decide
-disponibilidade, preço ou grava nada sozinho — só chama *tools* Java que
-usam os serviços já existentes (agenda, clientes, disponibilidade). Guia
-completo — arquitetura, guardrails, `MockAiAgentGateway` determinístico e
-como ativar o gateway real — em [`docs/agente-ia.md`](docs/agente-ia.md).
+Substitui o eco automático da Fase 9 por uma conversa real de agendamento,
+cancelamento e remarcação via WhatsApp, com tool-calling (Anthropic Claude).
+O LLM nunca decide disponibilidade, preço ou grava nada sozinho — só chama
+*tools* Java que usam os serviços já existentes (agenda, clientes,
+disponibilidade). Guia completo — arquitetura, guardrails, política de
+cancelamento configurável, `MockAiAgentGateway` determinístico e como
+ativar o gateway real — em [`docs/agente-ia.md`](docs/agente-ia.md).
 
 ```bash
 # Testar via simulador (mesmo endpoint da Fase 9) — com o gateway mock (padrão),

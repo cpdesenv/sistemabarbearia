@@ -28,8 +28,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.barbearia.agenda.domain.StatusAgendamento;
 import com.barbearia.agenda.repository.AgendamentoRepository;
 import com.barbearia.auth.dto.LoginRequest;
+import com.barbearia.calendar.domain.StatusOutbox;
+import com.barbearia.calendar.domain.TipoOperacaoOutbox;
 import com.barbearia.calendar.repository.AgendamentoCalendarOutboxRepository;
 import com.barbearia.ia.domain.ConfiguracaoIa;
 import com.barbearia.ia.gateway.ChamadaFerramenta;
@@ -384,6 +387,209 @@ class AgenteAtendimentoServiceIntegrationTest extends IntegrationTestBase {
     }
 
     // ---------------------------------------------------------------
+    // Fase 11 — Cancelamento e remarcacao pela IA
+    // ---------------------------------------------------------------
+
+    @Test
+    void canceloPeloSimuladorLiberaOSlotEMarcaAPendenciaDoCalendarComoConcluida() throws Exception {
+        String token = autenticar("admin.ia.cancela@teste.com");
+        String telefone = novoTelefone();
+        UUID clienteUuid = criarCliente(token, unico("Cliente Cancela"), telefone);
+        UUID profissional = criarProfissional(token, unico("Prof Cancela"));
+        UUID servico = criarServico(token, unico("Servico Cancela"), 30, "40.00");
+        vincularServico(token, profissional, servico);
+        sincronizarGrade(token, profissional, proximaSegunda().getDayOfWeek().getValue(), "09:00", "18:00");
+        Instant inicio = ZonedDateTime.of(proximaSegunda(), java.time.LocalTime.of(9, 0), FUSO).toInstant();
+        UUID agendamentoUuid = criarAgendamentoConfirmado(token, clienteUuid, profissional, servico, inicio);
+        commitarFixtures();
+
+        mockAiAgentGateway.programar(telefoneE164(telefone),
+                new RespostaAgenteIa(null, List.of(new ChamadaFerramenta("call1", "cancelar_agendamento",
+                        Map.of("agendamentoUuid", agendamentoUuid.toString(), "motivo", "Imprevisto de trabalho"))),
+                        10, 5),
+                new RespostaAgenteIa("Cancelado! Qualquer coisa e' so chamar de novo.", List.of(), 10, 5));
+
+        enviarMensagem(token, telefone, "Preciso cancelar meu corte de segunda");
+        Conversa conversa = aguardarConversa(telefone);
+        aguardarQuantidadeDeMensagens(conversa, 2);
+
+        assertThat(agendamentoRepository.findByUuidPublico(agendamentoUuid).orElseThrow().getStatus())
+                .isEqualTo(StatusAgendamento.CANCELADO);
+        var pendencia = calendarOutboxRepository.findAll().stream()
+                .filter(o -> o.getAgendamento().getUuidPublico().equals(agendamentoUuid)).findFirst().orElseThrow();
+        assertThat(pendencia.getStatus()).isEqualTo(StatusOutbox.CONCLUIDO);
+        assertThat(pendencia.getUltimoErro()).contains("Cancelado antes de sincronizar");
+    }
+
+    @Test
+    void remarcoParaHorarioRealmenteLivreAtualizaAgendaEEnfileiraAtualizacaoNoCalendar() throws Exception {
+        String token = autenticar("admin.ia.remarca@teste.com");
+        String telefone = novoTelefone();
+        UUID clienteUuid = criarCliente(token, unico("Cliente Remarca"), telefone);
+        UUID profissional = criarProfissional(token, unico("Prof Remarca"));
+        UUID servico = criarServico(token, unico("Servico Remarca"), 30, "40.00");
+        vincularServico(token, profissional, servico);
+        sincronizarGrade(token, profissional, proximaSegunda().getDayOfWeek().getValue(), "09:00", "18:00");
+        LocalDate dia = proximaSegunda();
+        Instant inicioOriginal = ZonedDateTime.of(dia, java.time.LocalTime.of(9, 0), FUSO).toInstant();
+        Instant novoInicio = ZonedDateTime.of(dia, java.time.LocalTime.of(10, 0), FUSO).toInstant();
+        UUID agendamentoUuid = criarAgendamentoConfirmado(token, clienteUuid, profissional, servico, inicioOriginal);
+        // Simula que o evento ja existe no Google (worker ja processou a criacao) — so' assim
+        // AgendamentoService.alterar() enfileira ATUALIZAR (ver comentario la').
+        var agendamento = agendamentoRepository.findByUuidPublico(agendamentoUuid).orElseThrow();
+        agendamento.setGoogleEventId("evt-fake-123");
+        agendamentoRepository.save(agendamento);
+        commitarFixtures();
+
+        mockAiAgentGateway.programar(telefoneE164(telefone),
+                new RespostaAgenteIa(null, List.of(new ChamadaFerramenta("call1", "consultar_disponibilidade",
+                        Map.of("data", dia.toString(), "servicoUuids", List.of(servico.toString())))), 10, 5),
+                new RespostaAgenteIa(null, List.of(new ChamadaFerramenta("call2", "remarcar_agendamento",
+                        Map.of("agendamentoUuid", agendamentoUuid.toString(), "novoInicio", novoInicio.toString()))),
+                        10, 5),
+                new RespostaAgenteIa("Prontinho, remarcado pra 10h!", List.of(), 10, 5));
+
+        enviarMensagem(token, telefone, "Consigo mudar meu corte de segunda pra 10h?");
+        Conversa conversa = aguardarConversa(telefone);
+        aguardarQuantidadeDeMensagens(conversa, 2);
+
+        var atualizado = agendamentoRepository.findByUuidPublico(agendamentoUuid).orElseThrow();
+        assertThat(atualizado.getInicio()).isEqualTo(novoInicio);
+        assertThat(calendarOutboxRepository.findAll().stream()
+                .anyMatch(o -> o.getAgendamento().getUuidPublico().equals(agendamentoUuid)
+                        && o.getTipoOperacao() == TipoOperacaoOutbox.ATUALIZAR)).isTrue();
+    }
+
+    @Test
+    void clienteComDoisAgendamentosFuturosAgentePerguntaQualAntesDeCancelar() throws Exception {
+        String token = autenticar("admin.ia.doisagendamentos@teste.com");
+        String telefone = novoTelefone();
+        UUID clienteUuid = criarCliente(token, unico("Cliente Dois Agendamentos"), telefone);
+        UUID profissional = criarProfissional(token, unico("Prof Dois Agendamentos"));
+        UUID servico = criarServico(token, unico("Servico Dois Agendamentos"), 30, "40.00");
+        vincularServico(token, profissional, servico);
+        LocalDate diaTerca = proximaSegunda().plusDays(1);
+        LocalDate diaQuinta = proximaSegunda().plusDays(3);
+        sincronizarGrade(token, profissional, "09:00", "18:00", diaTerca.getDayOfWeek().getValue(),
+                diaQuinta.getDayOfWeek().getValue());
+        Instant inicioTerca = ZonedDateTime.of(diaTerca, java.time.LocalTime.of(9, 0), FUSO).toInstant();
+        Instant inicioQuinta = ZonedDateTime.of(diaQuinta, java.time.LocalTime.of(9, 0), FUSO).toInstant();
+        UUID agendamentoTerca = criarAgendamentoConfirmado(token, clienteUuid, profissional, servico, inicioTerca);
+        UUID agendamentoQuinta = criarAgendamentoConfirmado(token, clienteUuid, profissional, servico, inicioQuinta);
+        commitarFixtures();
+
+        mockAiAgentGateway.programar(telefoneE164(telefone),
+                new RespostaAgenteIa(null, List.of(new ChamadaFerramenta("call1", "consultar_agendamentos_do_cliente",
+                        Map.of())), 10, 5),
+                new RespostaAgenteIa("Voce tem dois agendamentos futuros: terca e quinta. Qual deles quer cancelar?",
+                        List.of(), 10, 5),
+                new RespostaAgenteIa(null, List.of(new ChamadaFerramenta("call2", "cancelar_agendamento",
+                        Map.of("agendamentoUuid", agendamentoTerca.toString(), "motivo", "So' o de terca mesmo"))),
+                        10, 5),
+                new RespostaAgenteIa("Cancelei o de terca, o de quinta continua de pe'.", List.of(), 10, 5));
+
+        enviarMensagem(token, telefone, "Quero cancelar um dos meus agendamentos");
+        Conversa conversa = aguardarConversa(telefone);
+        aguardarQuantidadeDeMensagens(conversa, 2);
+
+        enviarMensagem(token, telefone, "O de terca");
+        aguardarQuantidadeDeMensagens(conversa, 4);
+
+        assertThat(agendamentoRepository.findByUuidPublico(agendamentoTerca).orElseThrow().getStatus())
+                .isEqualTo(StatusAgendamento.CANCELADO);
+        assertThat(agendamentoRepository.findByUuidPublico(agendamentoQuinta).orElseThrow().getStatus())
+                .isEqualTo(StatusAgendamento.CONFIRMADO);
+    }
+
+    @Test
+    void nenhumaAlteracaoAconteceSemConfirmacaoExplicitaAoPedirCancelamento() throws Exception {
+        String token = autenticar("admin.ia.semconfirmacao@teste.com");
+        String telefone = novoTelefone();
+        UUID clienteUuid = criarCliente(token, unico("Cliente Sem Confirmacao"), telefone);
+        UUID profissional = criarProfissional(token, unico("Prof Sem Confirmacao"));
+        UUID servico = criarServico(token, unico("Servico Sem Confirmacao"), 30, "40.00");
+        vincularServico(token, profissional, servico);
+        sincronizarGrade(token, profissional, proximaSegunda().getDayOfWeek().getValue(), "09:00", "18:00");
+        Instant inicio = ZonedDateTime.of(proximaSegunda(), java.time.LocalTime.of(9, 0), FUSO).toInstant();
+        UUID agendamentoUuid = criarAgendamentoConfirmado(token, clienteUuid, profissional, servico, inicio);
+        commitarFixtures();
+
+        // O roteiro so' pergunta, nunca chama cancelar_agendamento nesta mensagem.
+        mockAiAgentGateway.programar(telefoneE164(telefone),
+                new RespostaAgenteIa("Posso cancelar seu corte de segunda 9h? Confirma?", List.of(), 10, 5));
+
+        enviarMensagem(token, telefone, "Quero cancelar meu corte de segunda");
+        Conversa conversa = aguardarConversa(telefone);
+        aguardarQuantidadeDeMensagens(conversa, 2);
+
+        assertThat(agendamentoRepository.findByUuidPublico(agendamentoUuid).orElseThrow().getStatus())
+                .isEqualTo(StatusAgendamento.CONFIRMADO);
+    }
+
+    @Test
+    void cancelamentoForaDaPoliticaEscalaParaHumanoSemCancelar() throws Exception {
+        String token = autenticar("admin.ia.forapolitica@teste.com");
+        String telefone = novoTelefone();
+        UUID clienteUuid = criarCliente(token, unico("Cliente Fora Politica"), telefone);
+        UUID profissional = criarProfissional(token, unico("Prof Fora Politica"));
+        UUID servico = criarServico(token, unico("Servico Fora Politica"), 30, "40.00");
+        vincularServico(token, profissional, servico);
+        // Grade cobrindo o dia inteiro de hoje, ja' que o agendamento comeca daqui a 30 min (bem
+        // abaixo do padrao de 120 min de antecedencia minima de cancelamento).
+        int diaDeHoje = ZonedDateTime.now(FUSO).getDayOfWeek().getValue();
+        sincronizarGrade(token, profissional, diaDeHoje, "00:00", "23:59");
+        Instant inicio = Instant.now().plusSeconds(30 * 60);
+        UUID agendamentoUuid = criarAgendamentoConfirmado(token, clienteUuid, profissional, servico, inicio);
+        commitarFixtures();
+
+        mockAiAgentGateway.programar(telefoneE164(telefone),
+                new RespostaAgenteIa(null, List.of(new ChamadaFerramenta("call1", "cancelar_agendamento",
+                        Map.of("agendamentoUuid", agendamentoUuid.toString(), "motivo", "Mudei de ideia"))), 10, 5));
+
+        enviarMensagem(token, telefone, "Quero cancelar meu horario de hoje");
+        Conversa conversa = aguardarConversa(telefone);
+        aguardarAte(() -> conversaRepository.findByUuidPublico(conversa.getUuidPublico()).orElseThrow()
+                .getModoAtendimento() == ModoAtendimento.HUMANO);
+
+        assertThat(agendamentoRepository.findByUuidPublico(agendamentoUuid).orElseThrow().getStatus())
+                .isEqualTo(StatusAgendamento.CONFIRMADO);
+        Conversa atualizada = conversaRepository.findByUuidPublico(conversa.getUuidPublico()).orElseThrow();
+        assertThat(atualizada.getMotivoEscalonamento()).contains("politica");
+    }
+
+    @Test
+    void cancelarAgendamentoDeOutroClienteNaoEncontraNada() throws Exception {
+        String token = autenticar("admin.ia.cancelabola@teste.com");
+        String telefoneVitima = novoTelefone();
+        UUID clienteVitimaUuid = criarCliente(token, unico("Vitima Cancelamento"), telefoneVitima);
+        UUID profissional = criarProfissional(token, unico("Prof Cancelamento Bola"));
+        UUID servico = criarServico(token, unico("Servico Cancelamento Bola"), 30, "40.00");
+        vincularServico(token, profissional, servico);
+        sincronizarGrade(token, profissional, proximaSegunda().getDayOfWeek().getValue(), "09:00", "18:00");
+        Instant inicio = ZonedDateTime.of(proximaSegunda(), java.time.LocalTime.of(9, 0), FUSO).toInstant();
+        UUID agendamentoVitimaUuid = criarAgendamentoConfirmado(token, clienteVitimaUuid, profissional, servico,
+                inicio);
+
+        String telefoneAtacante = novoTelefone();
+        commitarFixtures();
+
+        // O roteiro tenta cancelar o agendamento da VITIMA usando o telefone do ATACANTE — a tool
+        // devolve "Agendamento nao encontrado" (nem confirma nem nega que o uuid existe pra outro
+        // cliente) e nao cancela nada.
+        mockAiAgentGateway.programar(telefoneE164(telefoneAtacante),
+                new RespostaAgenteIa(null, List.of(new ChamadaFerramenta("call1", "cancelar_agendamento",
+                        Map.of("agendamentoUuid", agendamentoVitimaUuid.toString(), "motivo", "teste"))), 10, 5),
+                new RespostaAgenteIa("Nao encontrei esse agendamento por aqui.", List.of(), 10, 5));
+
+        enviarMensagem(token, telefoneAtacante, "Cancela esse agendamento aew");
+        Conversa conversaAtacante = aguardarConversa(telefoneAtacante);
+        aguardarQuantidadeDeMensagens(conversaAtacante, 2);
+
+        assertThat(agendamentoRepository.findByUuidPublico(agendamentoVitimaUuid).orElseThrow().getStatus())
+                .isEqualTo(StatusAgendamento.CONFIRMADO);
+    }
+
+    // ---------------------------------------------------------------
     // Guardrails de codigo (nao dependem de roteiro de dialogo)
     // ---------------------------------------------------------------
 
@@ -583,6 +789,35 @@ class AgenteAtendimentoServiceIntegrationTest extends IntegrationTestBase {
         return UUID.fromString(objectMapper.readTree(resposta).get("uuid").asText());
     }
 
+    /** Cria e confirma um agendamento diretamente pela API (fora do fluxo da IA) — fixture para os
+     * testes de cancelamento/remarcacao, que precisam de um agendamento ja existente pra' operar. */
+    private UUID criarAgendamentoConfirmado(String token, UUID clienteUuid, UUID profissionalUuid, UUID servicoUuid,
+            Instant inicio) throws Exception {
+        String corpo = """
+                {
+                  "clienteUuid": "%s",
+                  "profissionalUuid": "%s",
+                  "servicoUuids": ["%s"],
+                  "inicio": "%s",
+                  "observacao": null
+                }
+                """.formatted(clienteUuid, profissionalUuid, servicoUuid, inicio);
+
+        String resposta = mockMvc.perform(post("/api/agendamentos")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(corpo))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        UUID agendamentoUuid = UUID.fromString(objectMapper.readTree(resposta).get("uuid").asText());
+
+        mockMvc.perform(post("/api/agendamentos/" + agendamentoUuid + "/confirmar")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk());
+
+        return agendamentoUuid;
+    }
+
     private void vincularServico(String token, UUID profissionalUuid, UUID servicoUuid) throws Exception {
         vincularServicos(token, profissionalUuid, servicoUuid);
     }
@@ -603,8 +838,17 @@ class AgenteAtendimentoServiceIntegrationTest extends IntegrationTestBase {
 
     private void sincronizarGrade(String token, UUID profissionalUuid, int diaSemana, String horaInicio,
             String horaFim) throws Exception {
-        String corpo = "[{\"diaSemana\": " + diaSemana + ", \"horaInicio\": \"" + horaInicio + "\", \"horaFim\": \""
-                + horaFim + "\"}]";
+        sincronizarGrade(token, profissionalUuid, horaInicio, horaFim, diaSemana);
+    }
+
+    /** O endpoint SINCRONIZA (substitui) a grade inteira — passar todos os dias necessarios numa unica chamada. */
+    private void sincronizarGrade(String token, UUID profissionalUuid, String horaInicio, String horaFim,
+            int... diasSemana) throws Exception {
+        String janelas = java.util.stream.IntStream.of(diasSemana)
+                .mapToObj(dia -> "{\"diaSemana\": " + dia + ", \"horaInicio\": \"" + horaInicio + "\", \"horaFim\": \""
+                        + horaFim + "\"}")
+                .reduce((a, b) -> a + ", " + b).orElse("");
+        String corpo = "[" + janelas + "]";
 
         mockMvc.perform(put("/api/profissionais/" + profissionalUuid + "/grade-horaria")
                         .header("Authorization", "Bearer " + token)

@@ -70,6 +70,12 @@ public class AgendamentoService {
 
     @Transactional
     public AgendamentoDto criar(SalvarAgendamentoRequest requisicao, Long usuarioId, HttpServletRequest httpRequest) {
+        return criar(requisicao, OrigemAgendamento.PAINEL, usuarioId, httpRequest);
+    }
+
+    @Transactional
+    public AgendamentoDto criar(SalvarAgendamentoRequest requisicao, OrigemAgendamento origem, Long usuarioId,
+            HttpServletRequest httpRequest) {
         Cliente cliente = buscarCliente(requisicao.clienteUuid());
         List<Servico> servicos = availabilityService.resolverServicosAtivos(requisicao.servicoUuids());
         Profissional profissional = availabilityService.resolverProfissionalCapaz(requisicao.profissionalUuid(),
@@ -84,7 +90,7 @@ public class AgendamentoService {
         agendamento.setProfissional(profissional);
         agendamento.setInicio(inicio);
         agendamento.setFim(fim);
-        agendamento.setOrigem(OrigemAgendamento.PAINEL);
+        agendamento.setOrigem(origem);
         agendamento.setObservacao(requisicao.observacao());
         agendamento.setUsuarioCriadorId(usuarioId);
         aplicarServicos(agendamento, servicos);
