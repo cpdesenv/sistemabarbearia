@@ -7,26 +7,16 @@ export const routes: Routes = [
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
   { path: 'login', loadComponent: () => import('./features/login/login').then((m) => m.Login) },
   {
+    path: 'agendar',
+    loadComponent: () =>
+      import('./features/autoagendamento/autoagendamento').then((m) => m.Autoagendamento)
+  },
+  {
     path: '',
     loadComponent: () => import('./core/layout/shell').then((m) => m.Shell),
     canActivate: [authGuard],
     children: [
       { path: 'dashboard', loadComponent: () => import('./features/dashboard/dashboard').then((m) => m.Dashboard) },
-      {
-        path: 'mensageria/conversas',
-        loadComponent: () =>
-          import('./features/mensageria/conversas-lista/conversas-lista').then((m) => m.ConversasLista)
-      },
-      {
-        path: 'mensageria/conversas/:uuid',
-        loadComponent: () =>
-          import('./features/mensageria/conversa-detalhe/conversa-detalhe').then((m) => m.ConversaDetalhe)
-      },
-      {
-        path: 'mensageria/simulador',
-        loadComponent: () =>
-          import('./features/mensageria/simulador/simulador').then((m) => m.Simulador)
-      },
       {
         path: 'configuracoes/barbearia',
         loadComponent: () =>
@@ -40,13 +30,6 @@ export const routes: Routes = [
           import('./features/configuracoes/integracoes/google-calendar/google-calendar').then(
             (m) => m.GoogleCalendarConfig
           ),
-        canActivate: [roleGuard],
-        data: { perfis: ['ADMIN'] }
-      },
-      {
-        path: 'configuracoes/ia',
-        loadComponent: () =>
-          import('./features/configuracoes/ia/ia').then((m) => m.ConfiguracaoIaConfig),
         canActivate: [roleGuard],
         data: { perfis: ['ADMIN'] }
       },

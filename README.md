@@ -1,9 +1,8 @@
 # Sistema para Barbearia
 
 Sistema de gestão para uma barbearia de pequeno/médio porte: agenda,
-clientes, serviços, profissionais, caixa, comissões, estoque e (nas fases
-seguintes) atendimento automatizado por IA via WhatsApp e portal público de
-autoagendamento.
+clientes, serviços, profissionais, caixa, comissões, estoque e portal
+público de autoagendamento.
 
 > Escopo fechado: atende **uma única barbearia** — não é multi-tenant e não
 > deve ser preparado para virar SaaS. Veja [`docs/limitacoes.md`](docs/limitacoes.md).
@@ -21,8 +20,8 @@ Sistema Barbearia/
 └── docs/       documentação complementar
 ```
 
-Integrações externas (Google Calendar, WhatsApp, IA, emissão fiscal) ficam
-sempre atrás de uma interface (`*Gateway`), com implementação mock disponível
+Integrações externas (Google Calendar, emissão fiscal) ficam sempre atrás
+de uma interface (`*Gateway`), com implementação mock disponível
 para desenvolvimento e testes, e implementação real plugada apenas quando as
 credenciais existirem. Nenhuma fase depende de credencial de terceiro para
 ser validada.
@@ -89,10 +88,6 @@ Destaques a partir da Fase 1:
   uma migration cria o usuário administrador inicial com esse e-mail/senha.
   Se omitidas, nenhum administrador é criado automaticamente (é assim que a
   suíte de testes roda, sem depender de nenhuma credencial).
-- `IA_GATEWAY` / `ANTHROPIC_API_KEY` / `IA_MODELO` (Fase 10): agente de IA de
-  atendimento. `IA_GATEWAY=mock` (padrão) nunca chama a Anthropic; só vira
-  `anthropic` com uma `ANTHROPIC_API_KEY` de verdade configurada — ver
-  [`docs/agente-ia.md`](docs/agente-ia.md).
 
 ## Autenticação (Fase 1)
 
@@ -163,8 +158,8 @@ curl -X POST http://localhost:8080/api/clientes/<uuid>/anonimizar \
 Cadastrar com um telefone já existente devolve `409 CLIENTE_DUPLICADO` com os
 dados do cliente já cadastrado (`clienteExistente`), para o painel oferecer
 abrir o cadastro existente em vez de criar um duplicado — o telefone é único
-no banco porque é a chave que a mensageria (Fases 9+) vai usar para
-identificar o cliente.
+no banco porque é a chave natural usada para identificar o cliente
+(inclusive pelo autoagendamento).
 
 ## Agenda e motor de disponibilidade (Fase 4)
 
@@ -380,34 +375,6 @@ Painel: menu **Clube Cavalinho** (aba "Assinantes" — resumo, nova
 assinatura, cancelamento; aba "Meus planos" — CRUD de planos e escolha dos
 serviços inclusos).
 
-## Agente de IA de atendimento (Fases 10 e 11)
-
-Substitui o eco automático da Fase 9 por uma conversa real de agendamento,
-cancelamento e remarcação via WhatsApp, com tool-calling (Anthropic Claude).
-O LLM nunca decide disponibilidade, preço ou grava nada sozinho — só chama
-*tools* Java que usam os serviços já existentes (agenda, clientes,
-disponibilidade). Guia completo — arquitetura, guardrails, política de
-cancelamento configurável, `MockAiAgentGateway` determinístico e como
-ativar o gateway real — em [`docs/agente-ia.md`](docs/agente-ia.md).
-
-```bash
-# Testar via simulador (mesmo endpoint da Fase 9) — com o gateway mock (padrão),
-# a resposta e a de boas-vindas fixa (nenhum roteiro programado fora dos testes)
-curl -X POST http://localhost:8080/api/dev/whatsapp/inbound \
-  -H "Authorization: Bearer <accessToken>" -H "Content-Type: application/json" \
-  -d '{"telefone":"19999998888","texto":"Oi, quero agendar um corte"}'
-
-# Kill switch / limite de turnos / teto de custo mensal (ADMIN)
-curl http://localhost:8080/api/configuracoes/ia -H "Authorization: Bearer <accessToken>"
-curl -X PUT http://localhost:8080/api/configuracoes/ia \
-  -H "Authorization: Bearer <accessToken>" -H "Content-Type: application/json" \
-  -d '{"ativo":false,"limiteTurnos":25,"tetoCustoMensalCentavos":10000}'
-```
-
-Painel: aba **Conversas** com filtro por status (IA/Humano), custo de LLM
-acumulado por conversa, e botão "Assumir conversa" para encerrar o
-atendimento automático de uma conversa específica.
-
 ## Como executar os testes
 
 Backend (usa Testcontainers — requer Docker disponível para o usuário que
@@ -433,12 +400,10 @@ endpoints de CRUD existirem.
 
 ## Integrações externas e mock ↔ real
 
-| Integração | Mock (padrão em dev/test) | Real | Fase |
-|---|---|---|---|
-| WhatsApp | `MockWhatsAppGateway` | `CloudApiWhatsAppGateway` (adiada) | 6 / 6-META |
-| Google Calendar | `CalendarGateway` mock | OAuth2 + Calendar API v3 | 5 |
-| IA | `MockAiAgentGateway` determinístico | `AiAgentGatewayReal` (Anthropic Claude) | 10 |
-| Fiscal | Recibo em PDF | Provedor de NFS-e | 10 / 11 |
+| Integração | Mock (padrão em dev/test) | Real |
+|---|---|---|
+| Google Calendar | `CalendarGateway` mock | OAuth2 + Calendar API v3 |
+| Fiscal | Recibo em PDF | Provedor de NFS-e |
 
 A troca entre mock e real é sempre por configuração (`application.yml` /
 variável de ambiente), nunca por alteração de código de domínio.
@@ -460,16 +425,13 @@ Postgres, deploy via GitHub Actions + SSH — detalhado na Fase 15.
   `atendimento`...) concentra controller/service/repository/domain/dto —
   reduz o custo de navegação e acoplamento entre camadas transversais.
 - **Padrão outbox** para toda chamada externa que pode falhar (Calendar,
-  WhatsApp, fiscal): a operação principal nunca é derrubada por uma
-  integração fora do ar.
-- **Tool/function calling para o agente de IA** (a partir da Fase 7): o LLM
-  nunca decide disponibilidade, preço ou grava dado sozinho — toda regra de
-  negócio permanece em Java.
+  fiscal): a operação principal nunca é derrubada por uma integração fora
+  do ar.
 - **Refresh token opaco e revogável** (não outro JWT): fica em tabela própria
   com hash SHA-256, é rotacionado a cada uso e pode ser revogado de verdade
   no logout — um JWT de refresh "stateless" não permitiria isso.
-- **Rate limiting em memória** (Bucket4j) no login, sem depender de Redis —
-  que só entra no projeto a partir da Fase 7 (fila/cache do agente de IA).
+- **Rate limiting em memória** (Bucket4j) no login e nas rotas públicas
+  (autoagendamento), sem depender de Redis — não é necessário neste escopo.
 - **Proxy `/api` no Nginx (prod) e no `ng serve` (dev)**: o frontend sempre
   fala com o backend pela mesma origem, então não há necessidade de liberar
   CORS.
@@ -479,8 +441,8 @@ Postgres, deploy via GitHub Actions + SSH — detalhado na Fase 15.
 ## Limitações conhecidas
 
 Ver [`docs/limitacoes.md`](docs/limitacoes.md) — começando por: não é
-multi-barbearia, mensageria roda em mock até a conta Meta existir, e a linha
-Spring Boot 3.5.x já está fora do período de suporte open-source.
+multi-barbearia, sem integração de WhatsApp/IA, e a linha Spring Boot
+3.5.x já está fora do período de suporte open-source.
 
 ## Nota sobre o ambiente em que a Fase 0 foi gerada
 

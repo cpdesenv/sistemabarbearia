@@ -4,6 +4,51 @@ Todas as mudanças notáveis deste projeto serão documentadas neste arquivo.
 
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
+## [Removido] - Reestruturação: remoção do canal de WhatsApp e do agente de IA
+
+**Motivo:** a tarifação da API da Meta tornou a integração de WhatsApp
+inviável para o projeto. Como o agente de IA (antigas Fases 10 e 11) só
+existia para conduzir conversas por esse canal, ele deixou de fazer sentido
+sem ele. Decisão registrada em `docs/limitacoes.md`.
+
+### Removido
+
+- Canal de mensageria inteiro (antiga Fase 9): pacote
+  `com.barbearia.mensageria` (domain, dto, controller, service, repository,
+  gateway, webhook, dev, config), telas do painel (Conversas, Simulador de
+  WhatsApp), migrations `V25`/`V26` (tabelas `conversa`, `mensagem`,
+  `mensagem_envio_outbox`, agora dropadas por `V29`), `docs/mensageria.md`.
+- Agente de IA de atendimento (antigas Fases 10 e 11): pacote
+  `com.barbearia.ia` (gateway `AiAgentGateway`/`AiAgentGatewayReal`/
+  `MockAiAgentGateway`, `AgenteTools`, `AgenteAtendimentoService`,
+  `ConfiguracaoIaService`/`Controller`), tela **Configurações > Agente de
+  IA**, dependência `com.anthropic:anthropic-java`, prompt versionado
+  `resources/prompts/atendimento.md`, migration `V27` (tabelas
+  `configuracao_ia`/`uso_llm` e colunas de `conversa`, agora dropadas por
+  `V29`), `docs/agente-ia.md`.
+- Configuração `whatsapp.*`/`ia.*` e `app.rate-limit.whatsapp` em
+  `application.yml`/`application-prod.yml`/`application-test.yml`; filtro
+  `WhatsAppRateLimitingFilter` e rota pública `/api/webhook/whatsapp` em
+  `SecurityConfig`.
+- Fases que dependiam inteiramente de WhatsApp e nunca chegaram a ser
+  implementadas saem do roadmap do PRD: antiga Fase 6-META (ativação da
+  WhatsApp Cloud API) e antiga Fase 14 (automações de retenção — lembretes,
+  opt-out "PARAR", campanhas de reativação).
+
+### Alterado
+
+- `AutoagendamentoService` (link público de autoagendamento, antiga Fase
+  12, agora Fase 9): removida a dependência de `Conversa`/
+  `MensageriaEnvioService` para notificação — a confirmação de agendamento
+  passa a ser enviada só por e-mail (`EmailGateway`, já existente desde a
+  Fase 6).
+- `docs/prd-sistema-barbearia.md` reestruturado e renumerado
+  sequencialmente, sem as fases removidas (numeração antiga documentada só
+  aqui e no histórico de commits).
+- `docs/limitacoes.md`: seção "Mensageria em modo mock" substituída por
+  "Sem integração de WhatsApp/IA", registrando esta decisão como escopo
+  fechado.
+
 ## [0.11.0] - Fase 11 — Cancelamento e remarcação pela IA
 
 ### Adicionado

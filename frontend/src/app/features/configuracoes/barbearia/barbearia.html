@@ -102,6 +102,25 @@
             </mat-form-field>
           </div>
 
+          <h2>Link de autoagendamento</h2>
+          <mat-slide-toggle formControlName="portalAutoagendamentoAtivo">
+            Link de autoagendamento público ligado
+          </mat-slide-toggle>
+          <p class="barbearia-config__ajuda">
+            Desligar aqui derruba imediatamente a página pública de autoagendamento — o link
+            continua existindo, mas mostra que está indisponível.
+          </p>
+          <button
+            type="button"
+            mat-stroked-button
+            (click)="copiarLinkAutoagendamento()"
+          >
+            Copiar link de autoagendamento
+          </button>
+          @if (linkCopiado()) {
+            <span class="barbearia-config__sucesso" role="status">Link copiado!</span>
+          }
+
           @if (mensagemErro()) {
             <p class="barbearia-config__erro" role="alert">{{ mensagemErro() }}</p>
           }

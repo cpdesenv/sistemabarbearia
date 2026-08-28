@@ -15,14 +15,26 @@
 > histórico de commits — ou seja, a partir do que já foi decidido e
 > implementado, não de um texto original perdido. Cada seção reconstruída
 > está sinalizada como tal.
+>
+> **Nota de reestruturação (2026-08-28):** a tarifação da API da Meta
+> tornou a integração de WhatsApp inviável para o projeto. Como o agente de
+> IA (antigas Fases 10 e 11) só existia para conduzir conversas por esse
+> canal, ele deixou de fazer sentido sem ele. As duas famílias de
+> funcionalidade — canal de mensageria/WhatsApp e agente de IA — foram
+> removidas por completo (código, migrations, telas, dependências e
+> documentação), e as fases deste documento foram renumeradas
+> sequencialmente. Ver `docs/limitacoes.md` § "Sem integração de
+> WhatsApp/IA" e o `CHANGELOG.md` (`## [Removido]`) para o detalhe da
+> decisão e do que foi retirado. Nada do que está documentado abaixo
+> depende de WhatsApp ou de IA.
 
 ---
 
 ## 1. Objetivo do sistema
 
-Automatizar o atendimento e o agendamento de uma barbearia de pequeno/médio
-porte (**Cortes Cavalinho**), hoje feito manualmente por WhatsApp, com
-ênfase em **controle financeiro confiável** desde o início.
+Automatizar o agendamento e a gestão de uma barbearia de pequeno/médio
+porte (**Cortes Cavalinho**), com ênfase em **controle financeiro
+confiável** desde o início.
 
 **Fluxo central:**
 
@@ -31,17 +43,12 @@ porte (**Cortes Cavalinho**), hoje feito manualmente por WhatsApp, com
 2. A dinâmica financeira fica visível: distinguir faturamento de caixa,
    receita recorrente (Clube Cavalinho) de serviços avulsos, e compromissos
    futuros.
-3. Depois, automações (IA, lembretes, recuperação de clientes) entram para
-   **reduzir fricção**, não para definir as regras.
-4. O cliente entra em contato por um dos canais: mensageria (WhatsApp,
-   simulado até a conta Meta ser aprovada) ou portal público de
-   autoagendamento.
-5. Um agente de IA conduz a conversa, mas usa *tools* de Java para tudo que
-   importa (disponibilidade, preço, agendamento) — o LLM nunca decide
-   regra de negócio sozinho.
-6. Registro completo: cliente, agendamento, serviços, profissional,
+3. O cliente agenda sozinho pelo **portal público de autoagendamento**
+   (link direto, sem canal de conversa) ou é atendido diretamente pela
+   equipe (telefone/presencial, fora do sistema).
+4. Registro completo: cliente, agendamento, serviços, profissional,
    histórico.
-7. Dashboard e relatórios que respondem "estou melhorando?" em 10 segundos.
+5. Dashboard e relatórios que respondem "estou melhorando?" em 10 segundos.
 
 ## 2. Escopo estrutural — decisão fechada
 
@@ -63,8 +70,8 @@ Se em algum momento fizer sentido generalizar para várias barbearias,
 [`docs/limitacoes.md`](limitacoes.md) e siga o escopo. Simplicidade agora
 vale mais do que flexibilidade que talvez nunca seja usada. Ver
 `docs/limitacoes.md` para o registro completo de decisões de escopo já
-fechadas (mensageria em mock, fim de vida do Spring Boot 3.5.x, tema visual
-provisório).
+fechadas (sem integração de WhatsApp/IA, fim de vida do Spring Boot 3.5.x,
+tema visual provisório).
 
 ## 3. Stack tecnológica
 
@@ -89,10 +96,8 @@ domínio:
 
 | Integração | Mock (padrão em dev/test) | Real | Fase |
 |---|---|---|---|
-| WhatsApp | `MockWhatsAppGateway` | `CloudApiWhatsAppGateway` (adiada) | 9 / 6-META |
 | Google Calendar | `CalendarGateway` mock | OAuth2 + Calendar API v3 | 8 |
-| IA | `AiAgentGateway` mock determinístico | Anthropic Claude / OpenAI | 10 |
-| Fiscal | Recibo em PDF (`ReciboFiscalGateway`) | Provedor de NFS-e | 6 / 16 |
+| Fiscal | Recibo em PDF (`ReciboFiscalGateway`) | Provedor de NFS-e | 6 / 12 |
 
 ## 4. Arquitetura
 
@@ -121,16 +126,14 @@ Decisões arquiteturais vigentes:
   `financeiro`...) concentra controller/service/repository/domain/dto —
   reduz o custo de navegação e acoplamento entre camadas transversais.
 - **Padrão outbox** para toda chamada externa que pode falhar (Calendar,
-  WhatsApp, fiscal): a operação principal nunca é derrubada por uma
-  integração fora do ar.
-- **Tool/function calling para o agente de IA** (a partir da Fase 10): o
-  LLM nunca decide disponibilidade, preço ou grava dado sozinho — toda
-  regra de negócio permanece em Java.
+  fiscal): a operação principal nunca é derrubada por uma integração fora
+  do ar.
 - **Refresh token opaco e revogável** (não outro JWT): fica em tabela
   própria com hash SHA-256, é rotacionado a cada uso e pode ser revogado de
   verdade no logout.
-- **Rate limiting em memória** (Bucket4j) no login, sem depender de Redis —
-  que só entra no projeto a partir da Fase 10 (fila/cache do agente de IA).
+- **Rate limiting em memória** (Bucket4j) no login e nas rotas públicas
+  (autoagendamento), sem depender de Redis — não é necessário neste
+  escopo.
 - **Proxy `/api`** no Nginx (prod) e no `ng serve` (dev): o frontend sempre
   fala com o backend pela mesma origem, então não há necessidade de liberar
   CORS.
@@ -141,9 +144,9 @@ Decisões arquiteturais vigentes:
   na borda (API/frontend).
 
 Regra de arquitetura para toda integração externa (Google Calendar,
-WhatsApp, IA, fiscal): interface própria, nenhuma regra de negócio dentro
-do adapter, padrão outbox para não travar o fluxo principal em caso de
-falha, e testes/CI que nunca dependem de credencial real.
+fiscal): interface própria, nenhuma regra de negócio dentro do adapter,
+padrão outbox para não travar o fluxo principal em caso de falha, e
+testes/CI que nunca dependem de credencial real.
 
 ## 5. Status de implementação
 
@@ -161,19 +164,22 @@ falha, e testes/CI que nunca dependem de credencial real.
 | 6 | Comprovante de serviço (PDF) | ✅ Concluída |
 | 7 | Clube Cavalinho / Assinaturas | ✅ Concluída |
 | 8 | Integração com Google Calendar | ✅ Concluída (mock — ativação real pendente de credencial Google) |
-| 9 | Canal de mensageria (MockWhatsAppGateway) | ✅ Concluída |
-| 6-META | Ativação da WhatsApp Cloud API | ⬜ Adiada (só sob pedido explícito) |
-| 10 | Agente de IA: atendimento e agendamento | ✅ Concluída (conversa completa validada via roteiro contra `MockAiAgentGateway`; sem teste ponta-a-ponta com API da Anthropic/Google Calendar reais, por falta de credenciais) |
-| 11 | Cancelamento e remarcação pela IA | ✅ Concluída (mesma ressalva da Fase 10: validada via roteiro contra `MockAiAgentGateway`, sem teste ponta-a-ponta com API da Anthropic real) |
-| 12 | Link de autoagendamento | ⬜ Pendente |
-| 13 | Dashboard | ⬜ Pendente |
-| 14 | Automações de retenção | ⬜ Pendente |
-| 15 | Relatórios comparativos | ⬜ Pendente |
-| 16 | NFS-e real | ⬜ Pendente |
-| 17 | Gestão de estoque avançada | ⬜ Pendente |
-| 18 | Produção, observabilidade e LGPD | ⬜ Pendente |
-| CHECKPOINT-VISUAL | Validação de identidade visual com o cliente | ⬜ Pendente (antes da Fase 19) |
-| 19 | Portal público de autoagendamento | ⬜ Pendente |
+| 9 | Link de autoagendamento | ⬜ Em desenvolvimento |
+| 10 | Dashboard | ⬜ Pendente |
+| 11 | Relatórios comparativos | ⬜ Pendente |
+| 12 | NFS-e real | ⬜ Pendente |
+| 13 | Gestão de estoque avançada | ⬜ Pendente |
+| 14 | Produção, observabilidade e LGPD | ⬜ Pendente |
+| CHECKPOINT-VISUAL | Validação de identidade visual com o cliente | ⬜ Pendente (antes da Fase 15) |
+| 15 | Portal público de autoagendamento | ⬜ Pendente |
+
+**Removidas nesta reestruturação (2026-08-28):** as antigas Fase 9 (canal
+de mensageria com `MockWhatsAppGateway`), Fase 6-META (ativação da WhatsApp
+Cloud API, nunca implementada), Fases 10/11 (agente de IA de atendimento e
+de cancelamento/remarcação) e Fase 14 (automações de retenção, nunca
+implementada) foram excluídas do sistema e saem da numeração — as Fases
+9/10/11 antigas chegaram a ser implementadas, entregues e validadas antes
+da remoção. Ver `docs/limitacoes.md` e `CHANGELOG.md` (`## [Removido]`).
 
 Também já entregue, fora da numeração de fases: um primeiro rascunho de
 identidade visual do painel administrativo (paleta extraída da logo CP
@@ -312,8 +318,8 @@ disponível no repositório.*
   dígito verificador.
 - Detecção de duplicidade por telefone: cadastro com telefone já existente
   retorna `409 CLIENTE_DUPLICADO` com os dados do cliente já cadastrado —
-  telefone é único no banco (chave que a mensageria usa para identificar o
-  cliente).
+  telefone é único no banco (chave natural do cliente, também usada pelo
+  autoagendamento — Fase 9 — para identificá-lo).
 - Ficha do cliente (`GET /api/clientes/{uuid}/ficha`): dados + histórico de
   agendamentos/atendimentos/notas fiscais.
 - LGPD: consentimento (com data de registro), exportação de dados pessoais
@@ -455,15 +461,14 @@ burocracia municipal.
   logo, dados da barbearia, dados do cliente, itens (serviços e produtos),
   valores, forma de pagamento, data e número sequencial.
 - Armazenamento em storage de objetos (MinIO/R2/S3).
-- Envio automático pelo canal de mensageria como documento após o
-  fechamento da comanda (via `WhatsAppGateway` — com o mock, o "envio" fica
-  registrado e o PDF baixável pelo painel), e por e-mail se houver.
+- Envio automático por e-mail (se houver) após o fechamento da comanda, e
+  disponível para download/reenvio pelo painel a qualquer momento.
 - Botão de reenviar/baixar no painel.
 
 **Critérios de aceite**
 
-- [x] Fecho a comanda e o comprovante é gerado e anexado à conversa do
-  cliente.
+- [x] Fecho a comanda e o comprovante é gerado e enviado por e-mail ao
+  cliente (quando há e-mail cadastrado).
 - [x] O PDF abre corretamente no celular e no desktop, com todos os dados
   corretos.
 - [x] Numeração sequencial sem buracos nem duplicidade (teste concorrente
@@ -480,8 +485,9 @@ burocracia municipal.
 Cavalinho.
 
 **Racional:** o Clube Cavalinho é um diferencial estratégico e deve estar
-pronto ANTES de automações, para que a IA saiba tratar clientes assinantes
-vs. avulsos.
+pronto antes dos demais canais de atendimento (autoagendamento, painel),
+para que qualquer fluxo de agendamento trate corretamente clientes
+assinantes vs. avulsos.
 
 **Entregáveis**
 
@@ -557,254 +563,10 @@ revalidar esses 4 itens manualmente quando a conta existir.
 
 `git commit -m "feat: integra agendamentos com Google Calendar via OAuth2 e outbox"`
 
-### FASE 9 — Canal de mensageria com MockWhatsAppGateway (sem conta Meta, sem IA) ✅
+### FASE 9 — Link de autoagendamento [NOVO]
 
-**Objetivo:** ter o canal de mensagens inteiro funcionando — conversas,
-mensagens, idempotência, processamento assíncrono, painel — usando
-exclusivamente um gateway simulado.
-
-**Restrição explícita:** não há conta Meta. Nesta fase, implementar apenas
-o `MockWhatsAppGateway`. Não criar `CloudApiWhatsAppGateway`, não escrever
-cliente da Graph API, não adicionar dependência/variável de ambiente de
-token da Meta, e não deixar o sistema em estado que exija credencial para
-funcionar — isso é assunto da Fase 6-META, sob pedido explícito. O que
-precisa existir aqui é a interface `WhatsAppGateway` bem desenhada, para
-que a implementação real seja depois apenas uma classe nova.
-
-**Entregáveis**
-
-- `WhatsAppGateway` (interface) com `sendMessage()`, `sendTemplate()`,
-  `sendInteractive()`, `sendDocument()` — assinaturas pensadas para a Cloud
-  API caber sem mudança de contrato.
-- `MockWhatsAppGateway` como única implementação (`@ConditionalOnProperty`,
-  `whatsapp.gateway=mock` por padrão):
-  - "envia" persistindo a mensagem no banco com status simulado
-    (`ENVIADA` → `ENTREGUE` → `LIDA`, delay configurável);
-  - simula falha de envio quando configurado, para exercitar outbox e
-    retentativas;
-  - registra tudo em log estruturado.
-- Simulador de conversa (a parte mais importante desta fase):
-  - endpoint interno autenticado `POST /api/dev/whatsapp/inbound` que
-    injeta mensagem de entrada como se viesse do provedor;
-  - tela "Simulador de WhatsApp" no painel (só dev/staging): telefone,
-    texto, histórico em formato de chat.
-- Webhook no formato de payload da Cloud API, mesmo sem provedor real:
-  - `GET /api/webhook/whatsapp` (verificação, `hub.challenge`);
-  - `POST /api/webhook/whatsapp` (recebimento);
-  - validação da assinatura `X-Hub-Signature-256` — requisição não assinada
-    é rejeitada com 403; segredo local em dev, testes provam a validação
-    com payloads assinados de exemplo.
-- Idempotência por `waMessageId` — processar a mesma mensagem duas vezes não
-  duplica nada.
-- Processamento assíncrono (virtual threads): webhook responde 200
-  imediatamente e enfileira.
-- Persistência de `Conversa`/`Mensagem`; aba "Conversas" no painel.
-- Fluxo de eco simples ("recebi: X") para validar ida e volta.
-- Vinculação automática da conversa ao cliente por telefone E.164; cliente
-  novo criado como rascunho com origem `WHATSAPP`.
-- `docs/mensageria.md`: como o mock funciona, como simular conversas, e o
-  checklist do que falta para a Fase 6-META.
-
-**Critérios de aceite**
-
-- [x] Conduzo uma conversa inteira pelo simulador do painel, sem nenhuma
-  credencial externa.
-- [x] `grep` no projeto não encontra token, número de telefone da Meta ou
-  URL da Graph API.
-- [x] O eco responde e a conversa aparece no painel, vinculada ao cliente
-  correto.
-- [x] Webhook com assinatura inválida retorna 403 e não processa nada.
-- [x] Reenvio do mesmo payload (mesmo `waMessageId`) não duplica mensagem no
-  banco.
-- [x] Falha simulada de envio cai no outbox e é retentada.
-- [x] Rate limiting aplicado no webhook e no endpoint de injeção.
-- [x] O endpoint `/api/dev/**` e a tela do simulador estão desabilitados no
-  perfil `production` — teste automatizado prova isso.
-- [x] Toda a suíte roda no CI sem segredo nenhum.
-
-`git commit -m "feat: implementa canal de mensageria com gateway mockado e simulador de conversas"`
-
-### FASE 6-META — Ativação da WhatsApp Cloud API (adiada; executar só quando o cliente avisar)
-
-*Sem conteúdo original disponível no repositório (placeholder "idêntico à
-V3" no prompt de origem) e sem implementação ainda — nada a reconstruir a
-partir do README/CHANGELOG. Fica registrada como pendência a especificar em
-detalhe no momento em que a conta Meta Business for aprovada.*
-
-**O que se sabe hoje, pelo restante das fases (9, 14):**
-
-- Implementação real de `WhatsAppGateway`
-  (`CloudApiWhatsAppGateway`), plugada por configuração, sem alterar o
-  contrato já definido na Fase 9.
-- Depende de: conta Meta Business + número de telefone dedicado
-  (não pode estar ativo no app WhatsApp comum), verificação do negócio na
-  Meta, templates de mensagem submetidos para aprovação (ver Seção 9 —
-  Providências).
-- `docs/mensageria.md` (criado na Fase 9) já deve trazer o checklist do que
-  falta fazer nesta fase — usar como ponto de partida quando ela for
-  aberta.
-
-Antes de iniciar esta fase de fato, escrever um plano de entregáveis e
-critérios de aceite específicos, com base no estado real do
-`WhatsAppGateway` naquele momento.
-
-### FASE 10 — Agente de IA: atendimento e agendamento
-
-**Objetivo:** substituir o eco por uma conversa real que agenda de
-verdade. Toda a fase é desenvolvida e validada contra o
-`MockWhatsAppGateway`, pelo simulador do painel.
-
-**Arquitetura obrigatória:** o LLM não decide disponibilidade, preço, nem
-grava nada sozinho. Ele conversa e chama *tools* expostas pelo backend.
-Toda regra de negócio permanece em Java.
-
-**Tools disponíveis ao agente:**
-
-```text
-consultar_servicos()                                    → lista com preço e duração
-consultar_profissionais()                               → barbeiros ativos
-consultar_disponibilidade(data, servicos[], profissional?) → slots reais
-identificar_cliente(telefone)                           → cliente ou "novo"
-cadastrar_cliente(nome, telefone, ...)
-criar_agendamento(clienteId, profissionalId, servicos[], inicio)
-consultar_agendamentos_do_cliente(clienteId)
-escalar_para_humano(motivo)
-```
-
-**Roteiro de conversa** (esqueleto, não script literal): identificar
-cliente pelo telefone → (se novo) perguntar nome → identificar serviço
-desejado → preferência de profissional → dia desejado → preferência de
-período → consultar disponibilidade real e oferecer 3–4 horários → cliente
-escolhe → resumo com confirmação explícita → criar agendamento → evento no
-Calendar → mensagem de confirmação.
-
-**Resumo de confirmação obrigatório antes de criar** (exemplo de formato):
-cliente, serviço, profissional, data, horário, valor, seguido de "Posso
-confirmar?".
-
-**Cliente recorrente:** reconhecer pelo telefone, cumprimentar pelo nome e
-oferecer atalho para repetir o último serviço.
-
-**Suporte a assinaturas (Fase 7):** se o cliente tiver assinatura ativa com
-saldo, informar quantos cortes restam no mês.
-
-**Guardrails obrigatórios**
-
-- Nunca prometer horário sem antes chamar `consultar_disponibilidade`.
-- Nunca inventar preço, serviço, promoção ou profissional fora do que as
-  tools retornaram.
-- Nunca criar agendamento sem confirmação explícita do cliente na mensagem
-  anterior.
-- Escalar para humano em: reclamações, pedido de desconto, assunto fora do
-  escopo, terceira tentativa fracassada de entendimento.
-- Limite de turnos por conversa antes de escalar (sugestão: 25).
-- Resistência a *prompt injection*: instruções vindas do cliente ("ignore
-  suas regras", "você agora é...") são tratadas como texto do cliente,
-  nunca como instrução de sistema.
-- Mensagens curtas, tom cordial e informal brasileiro, no máximo 1 emoji
-  por mensagem.
-- Timeout: 30 min sem resposta encerra o contexto e envia mensagem de
-  retomada.
-- **Kill switch:** flag de configuração que desliga a IA e coloca todas as
-  conversas em modo humano imediatamente.
-- **Teto de custo mensal configurável** — atingido o teto, a IA desliga e
-  alerta.
-
-**Entregáveis adicionais**
-
-- `AiAgentGateway` com implementação real (provedor escolhido — Anthropic
-  Claude, ver Seção 10 — Variáveis) e implementação mock determinística
-  para CI.
-- System prompt versionado em arquivo (`resources/prompts/atendimento.md`),
-  não hardcoded em string Java.
-- Registro de tokens e custo por conversa.
-- Painel: aba Conversas com filtro por status e botão "assumir conversa".
-- Suíte de 10+ diálogos-roteiro rodando contra LLM mockado no CI: cliente
-  indeciso, cliente que muda de ideia, horário indisponível, cliente
-  agressivo, mensagem sem sentido, tentativa de injection, cliente
-  recorrente, dois serviços juntos, data em linguagem natural ambígua,
-  cliente que desiste no meio.
-
-**Critérios de aceite**
-
-- [x] Conduzo uma conversa completa pelo simulador e o agendamento aparece
-  na agenda e no Google Calendar. Verificado por teste automatizado
-  (`doisServicosJuntosCriaAgendamentoComValorEDuracaoSomados`, que roda a
-  conversa via roteiro contra o `MockAiAgentGateway` e cria o agendamento de
-  verdade, reaproveitando o mesmo `AgendamentoService.confirmar` que
-  sincroniza com o Calendar desde a Fase 8) e por verificação manual do
-  fluxo completo (simulador → conversa → resposta) contra o ambiente local.
-  Não testado ponta-a-ponta com a API da Anthropic nem com um Google
-  Calendar reais, por falta de credenciais disponíveis nesta sessão.
-- [x] Peço horário inexistente e o agente oferece alternativas reais em vez
-  de aceitar. Verificado por teste automatizado
-  (`horarioIndisponivelAgenteOfereceAlternativaRealEmVezDeAceitar`).
-- [x] Mensagem agressiva → conversa escalada para humano. Verificado por
-  teste automatizado (`clienteAgressivoEscalaParaHumanoImediatamente`).
-- [x] Tentativa de injection não altera o comportamento do agente.
-  Verificado por teste automatizado
-  (`tentativaDeInjectionNaoAlteraComportamentoDoAgente`).
-- [x] Kill switch desliga a IA imediatamente. Verificado por teste
-  automatizado (`killSwitchDesligaAIaImediatamenteParaConversasExistentes`)
-  e manualmente pela tela **Configurações > Agente de IA** e pela API.
-- [x] Os diálogos de teste passam no CI, sem chave de API real. 13 testes
-  (10 do PRD + 1 de segurança + 2 guardrails de código) rodando contra
-  `MockAiAgentGateway`, gateway padrão `mock`, sem `ANTHROPIC_API_KEY` — CI
-  do PR #41 verde.
-- [x] Vejo o custo acumulado de LLM no painel. Verificado manualmente na
-  tela Conversas (coluna "Custo LLM") e no detalhe da conversa.
-
-`git commit -m "feat: implementa agente de IA de atendimento com tool calling e guardrails"`
-
-### FASE 11 — Cancelamento e remarcação pela IA
-
-**Objetivo:** fechar o ciclo de autoatendimento.
-
-**Entregáveis**
-
-- Tools adicionais: `cancelar_agendamento(id, motivo)`,
-  `remarcar_agendamento(id, novoInicio)`.
-- Reconhecimento de intenção em linguagem natural ("quero cancelar meu
-  horário", "preciso mudar para sexta", "consigo adiar uma hora?").
-- Se o cliente tiver mais de um agendamento futuro, o agente pergunta qual.
-- Confirmação explícita obrigatória antes de qualquer alteração ou
-  cancelamento.
-- Política de cancelamento configurável (ex.: até 2h antes; abaixo disso,
-  escala para humano).
-- Sincronização automática com Google Calendar.
-- Registro em auditoria com origem `WHATSAPP` e o texto que motivou a ação.
-
-**Critérios de aceite**
-
-- [x] Cancelo pelo simulador, o slot é liberado e o evento sai do Calendar.
-  Verificado por teste automatizado
-  (`canceloPeloSimuladorLiberaOSlotEMarcaAPendenciaDoCalendarComoConcluida`):
-  status vai para `CANCELADO` e a pendência do outbox do Calendar é
-  concluída sem sincronizar.
-- [x] Remarco e o agente oferece apenas horários realmente livres.
-  Verificado por teste automatizado
-  (`remarcoParaHorarioRealmenteLivreAtualizaAgendaEEnfileiraAtualizacaoNoCalendar`):
-  `remarcar_agendamento` passa por `AvailabilityService.validarSlotParaAgendamento`
-  (mesma validação de conflito da criação) e enfileira a atualização no
-  Calendar.
-- [x] Cliente com dois agendamentos é questionado sobre qual deles.
-  Verificado por teste automatizado
-  (`clienteComDoisAgendamentosFuturosAgentePerguntaQualAntesDeCancelar`):
-  só o agendamento escolhido é cancelado, o outro permanece confirmado.
-- [x] Nenhuma alteração acontece sem confirmação explícita. Verificado por
-  teste automatizado
-  (`nenhumaAlteracaoAconteceSemConfirmacaoExplicitaAoPedirCancelamento`).
-- [x] Cancelamento fora da política é escalado para humano, não recusado
-  secamente. Verificado por teste automatizado
-  (`cancelamentoForaDaPoliticaEscalaParaHumanoSemCancelar`): agendamento
-  continua confirmado e a conversa escala para atendimento humano.
-
-`git commit -m "feat: permite cancelamento e remarcacao de agendamentos pela conversa"`
-
-### FASE 12 — Link de autoagendamento [NOVO]
-
-**Objetivo:** cliente acessa URL pública e agenda sem passar pela IA.
-Canal valioso de conversão.
+**Objetivo:** cliente acessa URL pública e agenda sozinho, sem depender de
+atendimento humano. Canal valioso de conversão.
 
 **Entregáveis**
 
@@ -812,22 +574,21 @@ Canal valioso de conversão.
   data → horário.
 - Consulta em tempo real do `AvailabilityService` (já existe, Fase 4).
 - Após confirmação, cria agendamento como `CONFIRMADO` e envia confirmação
-  por WhatsApp (se celular fornecido).
-- Botão de compartilhar link no painel e em cada conversa da IA.
-- Analytics: rastrear quantos agendamentos vêm do link vs. WhatsApp vs.
-  painel.
+  por e-mail (se e-mail fornecido).
+- Botão de compartilhar link no painel.
+- Analytics: rastrear quantos agendamentos vêm do link vs. painel.
 
 **Critérios de aceite**
 
 - [ ] Link abre em celular e desktop sem layout quebrado.
 - [ ] Disponibilidade é consultada em tempo real.
 - [ ] Agendamento é criado com status `CONFIRMADO`.
-- [ ] Cliente recebe confirmação por WhatsApp ou e-mail.
+- [ ] Cliente recebe confirmação por e-mail quando informa o e-mail.
 - [ ] Link pode ser desativado globalmente via configuração.
 
 `git commit -m "feat: implementa link de autoagendamento publico"`
 
-### FASE 13 — Dashboard
+### FASE 10 — Dashboard
 
 **Objetivo:** a tela que o dono abre de manhã.
 
@@ -836,7 +597,7 @@ Canal valioso de conversão.
 - Cards: faturamento do dia, faturamento do mês (com % vs. mês anterior),
   atendimentos do dia, ticket médio, taxa de ocupação da agenda.
 - Listas: agendamentos de hoje (com status), próximos agendamentos,
-  conversas aguardando humano, produtos abaixo do estoque mínimo.
+  produtos abaixo do estoque mínimo.
 - Gráficos: faturamento dos últimos 12 meses (linha), serviços mais
   vendidos (barras), atendimentos por profissional (barras), distribuição
   por forma de pagamento (rosca).
@@ -854,42 +615,7 @@ Canal valioso de conversão.
 
 `git commit -m "feat: implementa dashboard administrativo com indicadores e graficos"`
 
-### FASE 14 — Automações de retenção [AMPLIADO]
-
-**Objetivo:** reduzir no-show e trazer o cliente de volta.
-
-**Entregáveis**
-
-- Lembrete automático 24h e 2h antes, com botões "Confirmar" e "Cancelar",
-  modelado como template (nome + parâmetros) desde já, porque fora da
-  janela de 24h da Meta só template funciona.
-- Marcação automática de `NAO_COMPARECEU` X minutos após o horário sem
-  check-in.
-- Campanha de reativação: cliente sem retorno há mais de N dias.
-- CRM básico: histórico de interações, tags (VIP, em risco, novo), notas
-  do atendente.
-- Reativação: mensagem "sentimos sua falta" com cupom de desconto
-  (opcional).
-- Mensagem de aniversário.
-- Painel de automações com liga/desliga por regra e histórico de disparos.
-- Opt-out obrigatório: cliente que responde "PARAR" nunca mais recebe
-  automação, mas continua conseguindo agendar.
-
-**Critérios de aceite**
-
-- [ ] O lembrete é disparado no horário certo (verificável no histórico de
-  disparos e no simulador) e "Confirmar" muda o status no painel.
-- [ ] Respondo "PARAR" e paro de receber automações, mas ainda consigo
-  agendar.
-- [ ] Desligar a automação no painel a interrompe imediatamente.
-- [ ] Nenhuma automação dispara para cliente sem `optInWhatsapp`.
-- [ ] Cliente sem retorno há 30 dias entra em lista de recuperação.
-- [ ] Mensagem de reativação é enviada (com opt-out).
-- [ ] Painel exibe clientes em risco de saída.
-
-`git commit -m "feat: implementa lembretes automaticos, no-show, CRM basico e campanhas com opt-out"`
-
-### FASE 15 — Relatórios comparativos [AMPLIADO]
+### FASE 11 — Relatórios comparativos [AMPLIADO]
 
 **Objetivo:** responder "estou melhorando?" em 10 segundos.
 
@@ -929,7 +655,7 @@ Canal valioso de conversão.
 
 `git commit -m "feat: implementa modulo de relatorios com comparativo mensal, fluxo de caixa e exportacao"`
 
-### FASE 16 — NFS-e real
+### FASE 12 — NFS-e real
 
 **Objetivo:** emissão fiscal válida.
 
@@ -951,7 +677,8 @@ abstrai isso.
 - Retentativa automática em falha transitória; fila de rejeições para
   correção manual no painel.
 - Cancelamento de nota dentro do prazo legal.
-- Envio do PDF/link ao cliente pelo canal de mensageria.
+- Envio do PDF/link ao cliente por e-mail (mesmo canal do comprovante —
+  Fase 6).
 - Ambientes `HOMOLOGACAO` e `PRODUCAO` configuráveis — testar tudo em
   homologação primeiro.
 - `docs/fiscal-setup.md`: o que a barbearia precisa providenciar
@@ -968,7 +695,7 @@ abstrai isso.
 
 `git commit -m "feat: integra emissao de NFS-e com provedor fiscal e ambiente de homologacao"`
 
-### FASE 17 — Gestão de estoque avançada [NOVO]
+### FASE 13 — Gestão de estoque avançada [NOVO]
 
 **Objetivo:** rastreabilidade completa de produtos: entrada, saída,
 alertas, histórico.
@@ -991,35 +718,32 @@ alertas, histórico.
 
 `git commit -m "feat: amplia gestao de estoque com alertas, historico e margem"`
 
-### FASE 18 — Produção, observabilidade e LGPD
+### FASE 14 — Produção, observabilidade e LGPD
 
 **Objetivo:** colocar no ar com segurança e conseguir dormir à noite.
 
 **Entregáveis**
 
 **Segurança:** HTTPS com certificado automático, security headers (HSTS,
-CSP, X-Frame-Options), CORS restrito; rate limiting em webhook, login,
-portal público e endpoints públicos; revisão de dependências (OWASP
+CSP, X-Frame-Options), CORS restrito; rate limiting no login e nas rotas
+públicas (autoagendamento); revisão de dependências (OWASP
 Dependency-Check no CI); rotação documentada de tokens e segredos.
 
 **Observabilidade:** logs estruturados em JSON com `traceId`
-correlacionando mensagem/portal → agente → agendamento → Calendar → nota;
-Actuator + Prometheus + Grafana (ou alternativa gerenciada); alertas
-(falha no webhook, fila outbox travada, erro de emissão fiscal, custo de
-LLM acima do teto, backend fora do ar); métrica explícita de qual gateway
-de mensageria está ativo (mock ou cloud-api), visível no painel.
+correlacionando portal → agendamento → Calendar → nota; Actuator +
+Prometheus + Grafana (ou alternativa gerenciada); alertas (fila outbox
+travada, erro de emissão fiscal, backend fora do ar).
 
 **Continuidade:** backup automatizado do Postgres com retenção definida;
 teste de restore executado e documentado ao menos uma vez; ambiente de
 staging separado; `docs/runbook.md` (deploy, rollback, restaurar backup,
-rotacionar tokens, o que fazer quando a mensageria para de responder).
+rotacionar tokens).
 
 **LGPD (consolidação do que já foi construído):** política de privacidade
-e consentimento registrado no primeiro contato (mensageria e portal);
-endpoint de exportação e de exclusão/anonimização dos dados do cliente
-(já existe desde a Fase 3 — revisar cobertura); política de retenção do
-histórico de conversas; auditoria de acesso a dados pessoais; logs sem
-exposição de dado sensível (revisão final).
+e consentimento registrado no primeiro contato (portal); endpoint de
+exportação e de exclusão/anonimização dos dados do cliente (já existe
+desde a Fase 3 — revisar cobertura); auditoria de acesso a dados pessoais;
+logs sem exposição de dado sensível (revisão final).
 
 **Critérios de aceite**
 
@@ -1031,16 +755,15 @@ exposição de dado sensível (revisão final).
 - [ ] Requisição de exclusão de dados de um cliente é atendida sem quebrar
   registros fiscais.
 - [ ] Varredura de logs não encontra CPF, token ou senha.
-- [ ] O painel mostra claramente que a mensageria está em modo mock.
 
 `git commit -m "feat: prepara ambiente de producao com observabilidade, backup e conformidade LGPD"`
 
-### CHECKPOINT-VISUAL — Validação de identidade visual com o cliente (fora da sequência numerada, antes da Fase 19)
+### CHECKPOINT-VISUAL — Validação de identidade visual com o cliente (fora da sequência numerada, antes da Fase 15)
 
 **Objetivo:** validar formalmente com o cliente (Cortes Cavalinho) o
 rascunho de identidade visual aplicado ao painel administrativo durante a
 Fase 5, antes de propagar esse padrão para telas voltadas ao cliente final
-(portal público da Fase 19, comprovante da Fase 6, NFS-e da Fase 16).
+(portal público da Fase 15, comprovante da Fase 6, NFS-e da Fase 12).
 
 **Contexto:** o rascunho atual (paleta extraída da logo CP Desenv, menu
 lateral e topbar em azul-marinho, tipografia, layout de tabelas) foi
@@ -1062,21 +785,21 @@ apresentável durante o desenvolvimento.
 - [ ] Cliente validou a paleta de cores e o estilo geral do painel (ou
   solicitou ajustes específicos, já aplicados).
 - [ ] `docs/identidade-visual.md` documenta as decisões finais aprovadas.
-- [ ] A Fase 19 pode ser executada usando essa documentação como
+- [ ] A Fase 15 pode ser executada usando essa documentação como
   referência, sem nenhuma decisão de identidade visual pendente.
 
 `git commit -m "docs: registra identidade visual validada com o cliente"`
 
-### FASE 19 — Portal público de autoagendamento
+### FASE 15 — Portal público de autoagendamento
 
-**Objetivo:** dar ao cliente um canal de agendamento que não depende da
-Meta: um link público onde ele escolhe serviço, profissional e horário
-sozinho.
+**Objetivo:** um link público onde o cliente escolhe serviço, profissional
+e horário sozinho, com verificação de identidade e página de "meus
+agendamentos" — estende o link básico da Fase 9.
 
 **Pode ser antecipada** — depende apenas do motor de disponibilidade
-(Fase 4, já pronto) e do cadastro de clientes (Fase 3, já pronto). Pode ser
-executada logo após a Fase 8, se um canal de autoatendimento real antes da
-IA for prioridade.
+(Fase 4, já pronto), do cadastro de clientes (Fase 3, já pronto) e do link
+básico de autoagendamento (Fase 9, que esta fase estende com verificação
+por código e a página "meus agendamentos").
 
 **Entregáveis**
 
@@ -1084,10 +807,10 @@ IA for prioridade.
   pensada para celular primeiro.
 - Fluxo em passos: escolher serviço(s) → profissional (ou "qualquer um") →
   data → horário (slots do mesmo `AvailabilityService`, sem lógica
-  duplicada) → nome e telefone → confirmar.
-- Identificação por telefone + código de verificação enviado pelo canal de
-  mensageria (com o mock, o código aparece no painel/simulador e em log em
-  dev). Sem senha, sem cadastro.
+  duplicada) → nome, telefone e e-mail → confirmar.
+- Identificação por telefone + e-mail, com código de verificação enviado
+  por e-mail (`EmailGateway`, mesmo canal do comprovante — Fase 6). Sem
+  senha, sem cadastro.
 - Cliente recorrente reconhecido pelo telefone; nome já preenchido.
 - Página "meus agendamentos" acessada pelo mesmo código: ver, cancelar e
   remarcar respeitando a política configurada.
@@ -1157,14 +880,8 @@ Notas Fiscais
 
 Relatórios
 
-Conversas
-├── Histórico
-└── Simulador (apenas dev/staging)
-
 Integrações
-├── Mensageria (WhatsApp)
 ├── Google Calendar
-├── Inteligência Artificial
 └── Emissão Fiscal
 
 Configurações
@@ -1172,7 +889,6 @@ Configurações
 ├── Portal de agendamento
 ├── Usuários
 ├── Horários de funcionamento
-├── Automações
 └── Auditoria
 ```
 
@@ -1191,22 +907,16 @@ comparação de opções).*
 
 VPS única com Docker Compose. Traefik + Let's Encrypt para HTTPS
 automático, backup automatizado do Postgres, deploy via GitHub Actions +
-SSH — detalhado na Fase 18.
+SSH — detalhado na Fase 14.
 
 ## 10. O que o cliente precisa providenciar, por fase
 
 - **Fases 0 a 4:** nada além de Docker instalado. É proposital.
 - **Fase 8:** conta Google + projeto no Google Cloud Console com Calendar
   API habilitada e tela de consentimento OAuth configurada.
-- **Fase 10:** chave de API do provedor de LLM, com limite de gasto
-  configurado.
-- **Fase 19:** domínio registrado e conta no provedor de hospedagem
+- **Fase 15:** domínio registrado e conta no provedor de hospedagem
   escolhido; logo da barbearia e dados cadastrais completos.
-- **Só quando o cliente decidir ativar o WhatsApp real (Fase 6-META), sem
-  pressa:** conta Meta Business + número de telefone dedicado (não pode
-  estar ativo no app WhatsApp comum); verificação do negócio na Meta;
-  templates de mensagem submetidos para aprovação (⏳ dias).
-- **Só na Fase 16:** certificado digital A1 e inscrição municipal (⏳ dias a
+- **Só na Fase 12:** certificado digital A1 e inscrição municipal (⏳ dias a
   semanas).
 
 ## 11. Variáveis do projeto
@@ -1220,36 +930,32 @@ SSH — detalhado na Fase 18.
 | Cidade/UF | Campinas/SP | Seed dev (`V12`) |
 | Fuso horário | America/Sao_Paulo | Default da coluna `fuso_horario` (`V6__cria_tabela_barbearia.sql`) |
 | Nº de profissionais (referência) | 3 | Seed dev (`V12`) — número real pode variar em produção |
-| Provedor de LLM | Anthropic Claude | `README.md` (Integrações), ordem de preferência na Fase 10 |
 | Orçamento mensal de infra | *a confirmar com o cliente* | Não há evidência técnica no repositório — valor de referência do prompt original era "até R$ 150/mês" |
 | Volume de atendimentos/mês | *a confirmar com o cliente* | Não há evidência técnica no repositório — valor de referência do prompt original era "600" |
 | Domínio do portal público | *a confirmar* — plausível `agendar.cortescavalinho.com.br`, dado o domínio de e-mail já usado (`cortescavalinho.com.br`) | Seed dev (`V12`, campo `email`); domínio final ainda não registrado |
 
 **Já resolvidos, não reabrir:** Java 21 + Spring Boot 3.5.x, barbearia
-única (sem multi-tenant), mensageria em mock até a Fase 6-META.
+única (sem multi-tenant), sem integração de WhatsApp/IA.
 
 ## 12. Ajustes opcionais de escopo
 
-- **Para um MVP mais rápido:** cortar as Fases 16 (NFS-e) e 17 (estoque
-  avançado), e reduzir a Fase 15 a três indicadores (faturamento,
+- **Para um MVP mais rápido:** cortar as Fases 12 (NFS-e) e 13 (estoque
+  avançado), e reduzir a Fase 11 a três indicadores (faturamento,
   atendimentos, ticket médio). As fases cortadas entram depois sem
   retrabalho, porque a arquitetura já as prevê.
-- **Para ter um canal real de agendamento o quanto antes:** executar a
-  Fase 19 (portal público) imediatamente após a Fase 8 (Google Calendar).
-  Como o WhatsApp está em mock, o portal passa a ser o único canal em que
-  o cliente final agenda de verdade — e não depende de aprovação de
-  ninguém.
-- **Quando a conta Meta sair:** executar a Fase 6-META. Nada do que foi
-  construído nas Fases 9 a 19 precisa mudar; a implementação real entra
-  como uma classe nova por trás da mesma interface, ativada por
-  configuração.
+- **Para ter um canal real de agendamento o quanto antes:** a Fase 9 (link
+  básico de autoagendamento) já é o único canal de autoatendimento do
+  sistema — não depende de aprovação de ninguém. A Fase 15 estende esse
+  link com verificação por código e a página "meus agendamentos".
 - **Não fazer:** transformar isto em SaaS multi-barbearia. Se essa
   necessidade aparecer, é um novo projeto de arquitetura, com decisão
-  consciente de negócio — não uma extensão silenciosa deste.
+  consciente de negócio — não uma extensão silenciosa deste. Da mesma
+  forma, não reintroduzir um canal de mensageria ou um agente de IA sem
+  pedido explícito — ver `docs/limitacoes.md`.
 
 ## 13. Limitações conhecidas
 
 Ver [`docs/limitacoes.md`](limitacoes.md) — decisões de escopo já fechadas
-e registradas para não serem reabertas por engano: sem multi-tenant,
-mensageria em modo mock até a Fase 6-META, fim de vida open-source do
-Spring Boot 3.5.x, e tema visual provisório até o CHECKPOINT-VISUAL.
+e registradas para não serem reabertas por engano: sem multi-tenant, sem
+integração de WhatsApp/IA, fim de vida open-source do Spring Boot 3.5.x, e
+tema visual provisório até o CHECKPOINT-VISUAL.
