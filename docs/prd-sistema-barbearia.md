@@ -164,7 +164,7 @@ falha, e testes/CI que nunca dependem de credencial real.
 | 9 | Canal de mensageria (MockWhatsAppGateway) | ✅ Concluída |
 | 6-META | Ativação da WhatsApp Cloud API | ⬜ Adiada (só sob pedido explícito) |
 | 10 | Agente de IA: atendimento e agendamento | ✅ Concluída (conversa completa validada via roteiro contra `MockAiAgentGateway`; sem teste ponta-a-ponta com API da Anthropic/Google Calendar reais, por falta de credenciais) |
-| 11 | Cancelamento e remarcação pela IA | ⬜ Pendente |
+| 11 | Cancelamento e remarcação pela IA | ✅ Concluída (mesma ressalva da Fase 10: validada via roteiro contra `MockAiAgentGateway`, sem teste ponta-a-ponta com API da Anthropic real) |
 | 12 | Link de autoagendamento | ⬜ Pendente |
 | 13 | Dashboard | ⬜ Pendente |
 | 14 | Automações de retenção | ⬜ Pendente |
@@ -776,12 +776,28 @@ saldo, informar quantos cortes restam no mês.
 
 **Critérios de aceite**
 
-- [ ] Cancelo pelo simulador, o slot é liberado e o evento sai do Calendar.
-- [ ] Remarco e o agente oferece apenas horários realmente livres.
-- [ ] Cliente com dois agendamentos é questionado sobre qual deles.
-- [ ] Nenhuma alteração acontece sem confirmação explícita.
-- [ ] Cancelamento fora da política é escalado para humano, não recusado
-  secamente.
+- [x] Cancelo pelo simulador, o slot é liberado e o evento sai do Calendar.
+  Verificado por teste automatizado
+  (`canceloPeloSimuladorLiberaOSlotEMarcaAPendenciaDoCalendarComoConcluida`):
+  status vai para `CANCELADO` e a pendência do outbox do Calendar é
+  concluída sem sincronizar.
+- [x] Remarco e o agente oferece apenas horários realmente livres.
+  Verificado por teste automatizado
+  (`remarcoParaHorarioRealmenteLivreAtualizaAgendaEEnfileiraAtualizacaoNoCalendar`):
+  `remarcar_agendamento` passa por `AvailabilityService.validarSlotParaAgendamento`
+  (mesma validação de conflito da criação) e enfileira a atualização no
+  Calendar.
+- [x] Cliente com dois agendamentos é questionado sobre qual deles.
+  Verificado por teste automatizado
+  (`clienteComDoisAgendamentosFuturosAgentePerguntaQualAntesDeCancelar`):
+  só o agendamento escolhido é cancelado, o outro permanece confirmado.
+- [x] Nenhuma alteração acontece sem confirmação explícita. Verificado por
+  teste automatizado
+  (`nenhumaAlteracaoAconteceSemConfirmacaoExplicitaAoPedirCancelamento`).
+- [x] Cancelamento fora da política é escalado para humano, não recusado
+  secamente. Verificado por teste automatizado
+  (`cancelamentoForaDaPoliticaEscalaParaHumanoSemCancelar`): agendamento
+  continua confirmado e a conversa escala para atendimento humano.
 
 `git commit -m "feat: permite cancelamento e remarcacao de agendamentos pela conversa"`
 

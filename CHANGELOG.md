@@ -4,6 +4,40 @@ Todas as mudanças notáveis deste projeto serão documentadas neste arquivo.
 
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
+## [0.11.0] - Fase 11 — Cancelamento e remarcação pela IA
+
+### Adicionado
+
+- 2 tools novas em `AgenteTools`: `cancelar_agendamento(agendamentoUuid,
+  motivo)` e `remarcar_agendamento(agendamentoUuid, novoInicio)`,
+  reaproveitando `AgendamentoService.cancelar()`/`.alterar()` já
+  existentes — validação de conflito/antecedência e sincronização com o
+  Google Calendar sem nenhuma mudança nesses métodos.
+- Guardrail de posse (mesmo padrão da correção de IDOR da Fase 10):
+  `cancelar_agendamento`/`remarcar_agendamento` só operam sobre um
+  agendamento que pertence ao cliente da conversa — "Agendamento não
+  encontrado" tanto para um uuid inexistente quanto para um de outro
+  cliente.
+- Política de cancelamento configurável: `cancelar_agendamento` usa
+  `Barbearia.antecedenciaMinimaCancelamentoMinutos` (campo já existente,
+  editável em Configurações, sem consumidor até agora). Abaixo do mínimo,
+  não cancela — escala a conversa para atendimento humano.
+- Auditoria com origem WhatsApp e o motivo/texto informado pelo cliente
+  (`AGENDAMENTO_CANCELADO_VIA_IA`/`AGENDAMENTO_REMARCADO_VIA_IA`).
+- System prompt (`atendimento.md`, v2): roteiro de cancelamento/remarcação
+  — perguntar qual agendamento quando há mais de um futuro, resumo de
+  confirmação obrigatório antes de cancelar/remarcar.
+- 6 novos testes de diálogo-roteiro contra o `MockAiAgentGateway` (5
+  cenários do PRD + 1 de segurança).
+
+### Corrigido
+
+- `AgendamentoService.criar()` sempre gravava `origem = PAINEL`, mesmo
+  quando era o agente de IA criando via WhatsApp (Fase 10) — o enum
+  `OrigemAgendamento.WHATSAPP` existia mas nunca era usado. Agora o método
+  aceita a origem explicitamente (`WHATSAPP` no caminho da IA, `PAINEL`
+  sem mudança no painel/REST).
+
 ## [0.10.0] - Fase 10 — Agente de IA: atendimento e agendamento
 
 ### Adicionado
