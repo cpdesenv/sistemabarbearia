@@ -4,6 +4,50 @@ Todas as mudanças notáveis deste projeto serão documentadas neste arquivo.
 
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
+## [0.10.0] - Fase 10 — Agente de IA: atendimento e agendamento
+
+### Adicionado
+
+- Agente de IA de atendimento via tool-calling (Anthropic Claude),
+  substituindo o eco da Fase 9. `AiAgentGateway`: `AiAgentGatewayReal`
+  (loop manual de tool-calling via `com.anthropic:anthropic-java` — não o
+  Tool Runner beta, que não permite injetar os beans do domínio nas tools)
+  e `MockAiAgentGateway` (determinístico, padrão em dev/teste, roteiro
+  programável).
+- `AgenteTools`: as 8 tools do PRD (`consultar_servicos`,
+  `consultar_profissionais`, `consultar_disponibilidade`,
+  `identificar_cliente`, `cadastrar_cliente`, `criar_agendamento`,
+  `consultar_agendamentos_do_cliente`, `escalar_para_humano`) — cada uma
+  um método Java comum chamando serviços já existentes; o LLM nunca decide
+  preço, disponibilidade ou grava nada sozinho.
+- `AgenteAtendimentoService`: orquestrador do loop de tool-calling e dos
+  guardrails de código — kill switch (`configuracao_ia.ativo`), teto de
+  custo mensal, limite de turnos por conversa, timeout de contexto de 30
+  min. Tracking de tokens/custo por chamada em `uso_llm`.
+- System prompt versionado em `resources/prompts/atendimento.md` (não
+  hardcoded em string Java).
+- Painel: tela Conversas com filtro por status (IA/Humano), custo de LLM
+  por conversa e botão "Assumir conversa"; nova tela **Configurações >
+  Agente de IA** (`/configuracoes/ia`, só ADMIN) para o kill switch,
+  limite de turnos e teto de custo mensal.
+- `docs/agente-ia.md` e suíte de 13 testes de diálogo-roteiro contra o
+  `MockAiAgentGateway` (10 cenários do PRD + 1 de segurança + 2 guardrails
+  de código), sem nenhuma chave de API real.
+
+### Segurança
+
+- Corrigido um IDOR (broken object-level authorization) encontrado em
+  `/security-review` antes do PR: `identificar_cliente`,
+  `cadastrar_cliente`, `criar_agendamento` e
+  `consultar_agendamentos_do_cliente` aceitavam telefone/`clienteUuid`
+  vindos da chamada de tool do LLM (em última instância, do texto livre do
+  cliente), sem checar contra o dono real da conversa — permitindo que um
+  cliente malicioso se passasse por outro (vazando nome/assinatura/
+  agendamentos de terceiros, ou criando agendamento em nome de outra
+  pessoa). Corrigido: nenhuma tool aceita mais telefone/`clienteUuid` como
+  parâmetro — todas usam sempre `conversa.getCliente()`, resolvido pelo
+  backend a partir do remetente real do webhook.
+
 ## [0.9.0] - Fase 9 — Canal de mensageria (MockWhatsAppGateway)
 
 ### Adicionado

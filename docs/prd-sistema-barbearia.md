@@ -148,7 +148,7 @@ falha, e testes/CI que nunca dependem de credencial real.
 ## 5. Status de implementação
 
 *Derivado do `CHANGELOG.md` e do histórico de commits — leitura em
-2026-08-27.*
+2026-08-28.*
 
 | Fase | Descrição | Status |
 |---|---|---|
@@ -163,7 +163,7 @@ falha, e testes/CI que nunca dependem de credencial real.
 | 8 | Integração com Google Calendar | ✅ Concluída (mock — ativação real pendente de credencial Google) |
 | 9 | Canal de mensageria (MockWhatsAppGateway) | ✅ Concluída |
 | 6-META | Ativação da WhatsApp Cloud API | ⬜ Adiada (só sob pedido explícito) |
-| 10 | Agente de IA: atendimento e agendamento | ⬜ Pendente |
+| 10 | Agente de IA: atendimento e agendamento | ✅ Concluída (conversa completa validada via roteiro contra `MockAiAgentGateway`; sem teste ponta-a-ponta com API da Anthropic/Google Calendar reais, por falta de credenciais) |
 | 11 | Cancelamento e remarcação pela IA | ⬜ Pendente |
 | 12 | Link de autoagendamento | ⬜ Pendente |
 | 13 | Dashboard | ⬜ Pendente |
@@ -727,15 +727,32 @@ saldo, informar quantos cortes restam no mês.
 
 **Critérios de aceite**
 
-- [ ] Conduzo uma conversa completa pelo simulador e o agendamento aparece
-  na agenda e no Google Calendar.
-- [ ] Peço horário inexistente e o agente oferece alternativas reais em vez
-  de aceitar.
-- [ ] Mensagem agressiva → conversa escalada para humano.
-- [ ] Tentativa de injection não altera o comportamento do agente.
-- [ ] Kill switch desliga a IA imediatamente.
-- [ ] Os diálogos de teste passam no CI, sem chave de API real.
-- [ ] Vejo o custo acumulado de LLM no painel.
+- [x] Conduzo uma conversa completa pelo simulador e o agendamento aparece
+  na agenda e no Google Calendar. Verificado por teste automatizado
+  (`doisServicosJuntosCriaAgendamentoComValorEDuracaoSomados`, que roda a
+  conversa via roteiro contra o `MockAiAgentGateway` e cria o agendamento de
+  verdade, reaproveitando o mesmo `AgendamentoService.confirmar` que
+  sincroniza com o Calendar desde a Fase 8) e por verificação manual do
+  fluxo completo (simulador → conversa → resposta) contra o ambiente local.
+  Não testado ponta-a-ponta com a API da Anthropic nem com um Google
+  Calendar reais, por falta de credenciais disponíveis nesta sessão.
+- [x] Peço horário inexistente e o agente oferece alternativas reais em vez
+  de aceitar. Verificado por teste automatizado
+  (`horarioIndisponivelAgenteOfereceAlternativaRealEmVezDeAceitar`).
+- [x] Mensagem agressiva → conversa escalada para humano. Verificado por
+  teste automatizado (`clienteAgressivoEscalaParaHumanoImediatamente`).
+- [x] Tentativa de injection não altera o comportamento do agente.
+  Verificado por teste automatizado
+  (`tentativaDeInjectionNaoAlteraComportamentoDoAgente`).
+- [x] Kill switch desliga a IA imediatamente. Verificado por teste
+  automatizado (`killSwitchDesligaAIaImediatamenteParaConversasExistentes`)
+  e manualmente pela tela **Configurações > Agente de IA** e pela API.
+- [x] Os diálogos de teste passam no CI, sem chave de API real. 13 testes
+  (10 do PRD + 1 de segurança + 2 guardrails de código) rodando contra
+  `MockAiAgentGateway`, gateway padrão `mock`, sem `ANTHROPIC_API_KEY` — CI
+  do PR #41 verde.
+- [x] Vejo o custo acumulado de LLM no painel. Verificado manualmente na
+  tela Conversas (coluna "Custo LLM") e no detalhe da conversa.
 
 `git commit -m "feat: implementa agente de IA de atendimento com tool calling e guardrails"`
 
