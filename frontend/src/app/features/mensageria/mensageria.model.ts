@@ -1,9 +1,15 @@
+export type ModoAtendimento = 'IA' | 'HUMANO';
+
 export interface Conversa {
   uuid: string;
   clienteUuid: string;
   clienteNome: string;
   telefoneE164: string;
   ultimaMensagemEm: string | null;
+  modoAtendimento: ModoAtendimento;
+  motivoEscalonamento: string | null;
+  turnosIa: number;
+  custoLlmAcumuladoCentavos: number;
 }
 
 export interface PaginaConversas {

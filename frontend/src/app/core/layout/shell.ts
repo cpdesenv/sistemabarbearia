@@ -40,6 +40,7 @@ const ITENS_MENU: ItemMenu[] = [
   { rota: '/mensageria/simulador', rotulo: 'Simulador de WhatsApp', soDev: true },
   { rota: '/configuracoes/barbearia', rotulo: 'Configurações', perfis: ['ADMIN'] },
   { rota: '/configuracoes/integracoes/google-calendar', rotulo: 'Google Calendar', perfis: ['ADMIN'] },
+  { rota: '/configuracoes/ia', rotulo: 'Agente de IA', perfis: ['ADMIN'] },
 ];
 
 @Component({

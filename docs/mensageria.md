@@ -51,7 +51,9 @@ por `whatsapp.gateway=cloudapi`, sem tocar em quem chama.
    - cria o cliente como rascunho se o telefone for novo
      (`origemCadastro=WHATSAPP`);
    - cria/reaproveita a conversa daquele telefone;
-   - responde automaticamente com um eco (`"recebi: <texto>"`);
+   - responde através do agente de IA de atendimento (ver
+     [`docs/agente-ia.md`](agente-ia.md), Fase 10) — o eco simples da Fase 9
+     foi substituído por uma conversa real com tool-calling;
    - tudo aparece na tela **Conversas**, em formato de chat.
 
 Também é possível simular via `curl`, sem passar pela tela:

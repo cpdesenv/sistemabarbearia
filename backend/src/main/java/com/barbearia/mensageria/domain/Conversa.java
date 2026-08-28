@@ -8,6 +8,8 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -49,6 +51,20 @@ public class Conversa {
 
     @Column(name = "ultima_mensagem_em")
     private Instant ultimaMensagemEm;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "modo_atendimento", nullable = false)
+    private ModoAtendimento modoAtendimento = ModoAtendimento.IA;
+
+    @Column(name = "turnos_ia", nullable = false)
+    private int turnosIa = 0;
+
+    /** Se ultrapassado sem nova mensagem, o proximo turno da IA reinicia o contexto (timeout de 30 min do PRD). */
+    @Column(name = "contexto_expira_em")
+    private Instant contextoExpiraEm;
+
+    @Column(name = "motivo_escalonamento", columnDefinition = "TEXT")
+    private String motivoEscalonamento;
 
     @CreationTimestamp
     @Column(name = "criado_em", nullable = false, updatable = false)

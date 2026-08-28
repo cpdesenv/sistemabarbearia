@@ -18,7 +18,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.List;
+
 import com.barbearia.auth.dto.LoginRequest;
+import com.barbearia.ia.gateway.MockAiAgentGateway;
+import com.barbearia.ia.gateway.RespostaAgenteIa;
 import com.barbearia.mensageria.domain.StatusEnvioOutbox;
 import com.barbearia.mensageria.domain.StatusMensagem;
 import com.barbearia.mensageria.repository.ConversaRepository;
@@ -57,6 +61,8 @@ class WhatsAppDevControllerIntegrationTest extends IntegrationTestBase {
     private MensagemEnvioOutboxRepository outboxRepository;
     @Autowired
     private MensagemEnvioOutboxWorker envioOutboxWorker;
+    @Autowired
+    private MockAiAgentGateway mockAiAgentGateway;
 
     @Test
     void statusDeveExigirAutenticacao() throws Exception {
@@ -76,6 +82,9 @@ class WhatsAppDevControllerIntegrationTest extends IntegrationTestBase {
     void injetarMensagemDeveConduzirUmaConversaCompletaSemCredencialExterna() throws Exception {
         String token = autenticar("admin.devinbound@teste.com", ipUnico());
         String telefone = "5519" + numeroUnico();
+        String telefoneE164 = "+55" + telefone.substring(2);
+
+        mockAiAgentGateway.programar(telefoneE164, new RespostaAgenteIa("Oi! Tudo bem?", List.of(), 10, 5));
 
         mockMvc.perform(post("/api/dev/whatsapp/inbound")
                         .header("Authorization", "Bearer " + token)
@@ -83,7 +92,6 @@ class WhatsAppDevControllerIntegrationTest extends IntegrationTestBase {
                         .content("{\"telefone\": \"" + telefone + "\", \"texto\": \"Ola do simulador\"}"))
                 .andExpect(status().isAccepted());
 
-        String telefoneE164 = "+55" + telefone.substring(2);
         aguardarAte(() -> conversaRepository.findByTelefoneE164(telefoneE164).isPresent());
         var conversa = conversaRepository.findByTelefoneE164(telefoneE164).orElseThrow();
 
@@ -96,7 +104,7 @@ class WhatsAppDevControllerIntegrationTest extends IntegrationTestBase {
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[1].conteudo").value("recebi: Ola do simulador"))
+                .andExpect(jsonPath("$[1].conteudo").value("Oi! Tudo bem?"))
                 .andExpect(jsonPath("$[1].status").value("ENVIADA"));
     }
 
