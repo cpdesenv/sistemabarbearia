@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import com.barbearia.cliente.domain.Cliente;
 import com.barbearia.cliente.domain.OrigemCadastro;
 import com.barbearia.cliente.repository.ClienteRepository;
+import com.barbearia.ia.service.AgenteAtendimentoService;
 import com.barbearia.mensageria.domain.Conversa;
 import com.barbearia.mensageria.domain.DirecaoMensagem;
 import com.barbearia.mensageria.domain.Mensagem;
@@ -40,7 +41,7 @@ public class MensageriaInboundService {
     private final ConversaRepository conversaRepository;
     private final MensagemRepository mensagemRepository;
     private final ClienteRepository clienteRepository;
-    private final MensageriaEnvioService envioService;
+    private final AgenteAtendimentoService agenteAtendimentoService;
 
     @Async
     @Transactional
@@ -76,7 +77,7 @@ public class MensageriaInboundService {
         conversa.setUltimaMensagemEm(Instant.now());
         conversaRepository.save(conversa);
 
-        envioService.enfileirarEnvio(conversa, "recebi: " + mensagemPayload.text().body());
+        agenteAtendimentoService.responder(conversa);
     }
 
     private Conversa resolverOuCriarConversa(String telefoneE164) {

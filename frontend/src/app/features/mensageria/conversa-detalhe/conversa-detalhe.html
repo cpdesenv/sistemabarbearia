@@ -1,5 +1,25 @@
 <section class="conversa-detalhe">
-  <h1>Conversa</h1>
+  <div class="conversa-detalhe__cabecalho">
+    <h1>Conversa</h1>
+
+    @if (conversa(); as c) {
+      <div class="conversa-detalhe__status">
+        <span>
+          Atendimento: <strong>{{ c.modoAtendimento === 'IA' ? 'IA' : 'Humano' }}</strong>
+          @if (c.motivoEscalonamento) {
+            ({{ c.motivoEscalonamento }})
+          }
+        </span>
+        <span>Custo LLM acumulado: {{ (c.custoLlmAcumuladoCentavos / 100) | currency: 'BRL' }}</span>
+
+        @if (c.modoAtendimento === 'IA') {
+          <button mat-flat-button color="primary" type="button" (click)="assumirConversa()">
+            Assumir conversa
+          </button>
+        }
+      </div>
+    }
+  </div>
 
   @if (carregando()) {
     <mat-spinner diameter="32" />

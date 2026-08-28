@@ -29,9 +29,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.List;
+
 import com.barbearia.auth.dto.LoginRequest;
 import com.barbearia.cliente.domain.OrigemCadastro;
 import com.barbearia.cliente.repository.ClienteRepository;
+import com.barbearia.ia.gateway.MockAiAgentGateway;
+import com.barbearia.ia.gateway.RespostaAgenteIa;
 import com.barbearia.mensageria.repository.ConversaRepository;
 import com.barbearia.mensageria.repository.MensagemEnvioOutboxRepository;
 import com.barbearia.mensageria.repository.MensagemRepository;
@@ -67,6 +71,8 @@ class WhatsAppWebhookIntegrationTest extends IntegrationTestBase {
     private MensagemEnvioOutboxWorker envioOutboxWorker;
     @Autowired
     private MensagemEnvioOutboxRepository outboxRepository;
+    @Autowired
+    private MockAiAgentGateway mockAiAgentGateway;
 
     @Value("${whatsapp.webhook-secret}")
     private String segredoWebhook;
@@ -106,10 +112,14 @@ class WhatsAppWebhookIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
-    void mensagemValidaDeveCriarClienteConversaEEcoAutomatico() throws Exception {
+    void mensagemValidaDeveCriarClienteConversaEAgenteDeIaResponde() throws Exception {
         String telefoneBruto = "5519" + numeroUnico();
+        String telefoneE164 = "+55" + telefoneBruto.substring(2);
         String waMessageId = "wamid." + UUID.randomUUID();
         String corpo = montarPayload(waMessageId, telefoneBruto, "Oi, tudo bem?");
+
+        mockAiAgentGateway.programar(telefoneE164,
+                new RespostaAgenteIa("Oi! Em que posso ajudar? 😊", List.of(), 10, 5));
 
         mockMvc.perform(post("/api/webhook/whatsapp")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -120,7 +130,6 @@ class WhatsAppWebhookIntegrationTest extends IntegrationTestBase {
         // Processamento e assincrono (virtual thread) — espera a mensagem de entrada aparecer.
         aguardarAte(() -> mensagemRepository.existsByWaMessageId(waMessageId));
 
-        String telefoneE164 = "+55" + telefoneBruto.substring(2);
         var conversa = conversaRepository.findByTelefoneE164(telefoneE164).orElseThrow();
         assertThat(conversa.getCliente().getOrigemCadastro()).isEqualTo(OrigemCadastro.WHATSAPP);
         assertThat(clienteRepository.findByTelefone(telefoneE164)).isPresent();
@@ -142,7 +151,7 @@ class WhatsAppWebhookIntegrationTest extends IntegrationTestBase {
                 .andExpect(jsonPath("$[0].direcao").value("ENTRADA"))
                 .andExpect(jsonPath("$[0].conteudo").value("Oi, tudo bem?"))
                 .andExpect(jsonPath("$[1].direcao").value("SAIDA"))
-                .andExpect(jsonPath("$[1].conteudo").value("recebi: Oi, tudo bem?"))
+                .andExpect(jsonPath("$[1].conteudo").value("Oi! Em que posso ajudar? 😊"))
                 .andExpect(jsonPath("$[1].status").value("ENVIADA"))
                 .andReturn().getResponse().getContentAsString();
 
@@ -162,8 +171,11 @@ class WhatsAppWebhookIntegrationTest extends IntegrationTestBase {
     @Test
     void processarPendenciasDeveFuncionarSemTransacaoAmbienteComoOSchedulerReal() throws Exception {
         String telefoneBruto = "5519" + numeroUnico();
+        String telefoneE164 = "+55" + telefoneBruto.substring(2);
         String waMessageId = "wamid." + UUID.randomUUID();
         String corpo = montarPayload(waMessageId, telefoneBruto, "Mensagem via scheduler");
+
+        mockAiAgentGateway.programar(telefoneE164, new RespostaAgenteIa("Resposta via scheduler", List.of(), 10, 5));
 
         mockMvc.perform(post("/api/webhook/whatsapp")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -175,12 +187,11 @@ class WhatsAppWebhookIntegrationTest extends IntegrationTestBase {
 
         CompletableFuture.runAsync(envioOutboxWorker::processarPendencias).get(5, TimeUnit.SECONDS);
 
-        String telefoneE164 = "+55" + telefoneBruto.substring(2);
         var conversa = conversaRepository.findByTelefoneE164(telefoneE164).orElseThrow();
-        var eco = mensagemRepository.findByConversaOrderByCriadoEmAsc(conversa).stream()
-                .filter(m -> m.getConteudo().startsWith("recebi:"))
+        var respostaDaIa = mensagemRepository.findByConversaOrderByCriadoEmAsc(conversa).stream()
+                .filter(m -> "Resposta via scheduler".equals(m.getConteudo()))
                 .findFirst().orElseThrow();
-        assertThat(eco.getStatus().name()).isEqualTo("ENVIADA");
+        assertThat(respostaDaIa.getStatus().name()).isEqualTo("ENVIADA");
     }
 
     @Test

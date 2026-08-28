@@ -3,6 +3,18 @@
   max-width: 640px;
 }
 
+.conversa-detalhe__cabecalho {
+  margin-bottom: 16px;
+}
+
+.conversa-detalhe__status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  font-size: 0.9rem;
+}
+
 .conversa-detalhe__chat {
   display: flex;
   flex-direction: column;

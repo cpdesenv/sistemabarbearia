@@ -44,6 +44,13 @@ export const routes: Routes = [
         data: { perfis: ['ADMIN'] }
       },
       {
+        path: 'configuracoes/ia',
+        loadComponent: () =>
+          import('./features/configuracoes/ia/ia').then((m) => m.ConfiguracaoIaConfig),
+        canActivate: [roleGuard],
+        data: { perfis: ['ADMIN'] }
+      },
+      {
         path: 'servicos',
         loadComponent: () =>
           import('./features/servicos/servicos-lista/servicos-lista').then((m) => m.ServicosLista)

@@ -89,6 +89,10 @@ Destaques a partir da Fase 1:
   uma migration cria o usuário administrador inicial com esse e-mail/senha.
   Se omitidas, nenhum administrador é criado automaticamente (é assim que a
   suíte de testes roda, sem depender de nenhuma credencial).
+- `IA_GATEWAY` / `ANTHROPIC_API_KEY` / `IA_MODELO` (Fase 10): agente de IA de
+  atendimento. `IA_GATEWAY=mock` (padrão) nunca chama a Anthropic; só vira
+  `anthropic` com uma `ANTHROPIC_API_KEY` de verdade configurada — ver
+  [`docs/agente-ia.md`](docs/agente-ia.md).
 
 ## Autenticação (Fase 1)
 
@@ -376,6 +380,33 @@ Painel: menu **Clube Cavalinho** (aba "Assinantes" — resumo, nova
 assinatura, cancelamento; aba "Meus planos" — CRUD de planos e escolha dos
 serviços inclusos).
 
+## Agente de IA de atendimento (Fase 10)
+
+Substitui o eco automático da Fase 9 por uma conversa real de agendamento
+via WhatsApp, com tool-calling (Anthropic Claude). O LLM nunca decide
+disponibilidade, preço ou grava nada sozinho — só chama *tools* Java que
+usam os serviços já existentes (agenda, clientes, disponibilidade). Guia
+completo — arquitetura, guardrails, `MockAiAgentGateway` determinístico e
+como ativar o gateway real — em [`docs/agente-ia.md`](docs/agente-ia.md).
+
+```bash
+# Testar via simulador (mesmo endpoint da Fase 9) — com o gateway mock (padrão),
+# a resposta e a de boas-vindas fixa (nenhum roteiro programado fora dos testes)
+curl -X POST http://localhost:8080/api/dev/whatsapp/inbound \
+  -H "Authorization: Bearer <accessToken>" -H "Content-Type: application/json" \
+  -d '{"telefone":"19999998888","texto":"Oi, quero agendar um corte"}'
+
+# Kill switch / limite de turnos / teto de custo mensal (ADMIN)
+curl http://localhost:8080/api/configuracoes/ia -H "Authorization: Bearer <accessToken>"
+curl -X PUT http://localhost:8080/api/configuracoes/ia \
+  -H "Authorization: Bearer <accessToken>" -H "Content-Type: application/json" \
+  -d '{"ativo":false,"limiteTurnos":25,"tetoCustoMensalCentavos":10000}'
+```
+
+Painel: aba **Conversas** com filtro por status (IA/Humano), custo de LLM
+acumulado por conversa, e botão "Assumir conversa" para encerrar o
+atendimento automático de uma conversa específica.
+
 ## Como executar os testes
 
 Backend (usa Testcontainers — requer Docker disponível para o usuário que
@@ -405,7 +436,7 @@ endpoints de CRUD existirem.
 |---|---|---|---|
 | WhatsApp | `MockWhatsAppGateway` | `CloudApiWhatsAppGateway` (adiada) | 6 / 6-META |
 | Google Calendar | `CalendarGateway` mock | OAuth2 + Calendar API v3 | 5 |
-| IA | `AiAgentGateway` mock determinístico | Anthropic Claude / OpenAI | 7 |
+| IA | `MockAiAgentGateway` determinístico | `AiAgentGatewayReal` (Anthropic Claude) | 10 |
 | Fiscal | Recibo em PDF | Provedor de NFS-e | 10 / 11 |
 
 A troca entre mock e real é sempre por configuração (`application.yml` /
