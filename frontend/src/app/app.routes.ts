@@ -7,6 +7,11 @@ export const routes: Routes = [
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
   { path: 'login', loadComponent: () => import('./features/login/login').then((m) => m.Login) },
   {
+    path: 'agendar',
+    loadComponent: () =>
+      import('./features/portal/portal-agendamento/portal-agendamento').then((m) => m.PortalAgendamento),
+  },
+  {
     path: '',
     loadComponent: () => import('./core/layout/shell').then((m) => m.Shell),
     canActivate: [authGuard],

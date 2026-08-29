@@ -15,6 +15,15 @@
   gap: 0 16px;
 }
 
+.barbearia-config__link-portal {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 4px 0 16px;
+  font-size: 0.9rem;
+}
+
 .barbearia-config__erro {
   color: var(--mat-sys-error, #b3261e);
   margin: 0 0 8px;

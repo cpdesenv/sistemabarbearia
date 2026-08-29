@@ -38,6 +38,9 @@ app:
     login:
       tentativas: 5
       janela-minutos: 1
+    portal:
+      tentativas: 20
+      janela-minutos: 1
   storage:
     minio:
       endpoint: ${MINIO_ENDPOINT:http://localhost:9000}

@@ -1,0 +1,53 @@
+.portal-agendamento {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.portal-agendamento__secao {
+  width: 100%;
+}
+
+.portal-agendamento__lista {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.portal-agendamento__opcoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.portal-agendamento__form {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.portal-agendamento__total {
+  font-weight: 600;
+  font-size: 1.1rem;
+  margin: 8px 0;
+}
+
+.portal-agendamento__erro {
+  color: var(--mat-sys-error, #b3261e);
+  margin: 0 0 8px;
+  font-size: 0.875rem;
+}
+
+.portal-agendamento__sucesso p {
+  margin: 4px 0;
+}
+
+.portal-agendamento__aviso {
+  margin-top: 16px;
+  font-size: 0.85rem;
+  opacity: 0.8;
+}

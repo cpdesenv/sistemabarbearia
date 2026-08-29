@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 
 import com.barbearia.agenda.service.AgendamentoService;
 import com.barbearia.cliente.domain.Cliente;
+import com.barbearia.cliente.domain.OrigemCadastro;
 import com.barbearia.cliente.dto.AnonimizarClienteRequest;
 import com.barbearia.cliente.dto.ClienteDto;
 import com.barbearia.cliente.dto.ClienteMapper;
@@ -64,6 +65,21 @@ public class ClienteService {
 
     @Transactional
     public ClienteDto criar(SalvarClienteRequest requisicao, Long usuarioId, HttpServletRequest httpRequest) {
+        return criar(requisicao, OrigemCadastro.PAINEL, usuarioId, httpRequest);
+    }
+
+    /**
+     * {@code noRollbackFor}: o portal (Fase 9) chama este metodo esperando
+     * capturar {@link ClienteDuplicadoException} e continuar na mesma
+     * transacao (reaproveitando o cliente existente) — sem isso, a excecao
+     * marcaria a transacao inteira como rollback-only antes do catch do
+     * chamador rodar, e o commit final falharia com
+     * {@code UnexpectedRollbackException} mesmo sem nenhum erro de negocio
+     * real.
+     */
+    @Transactional(noRollbackFor = ClienteDuplicadoException.class)
+    public ClienteDto criar(SalvarClienteRequest requisicao, OrigemCadastro origem, Long usuarioId,
+            HttpServletRequest httpRequest) {
         String telefone = normalizarTelefone(requisicao.telefone());
         clienteRepository.findByTelefone(telefone).ifPresent(existente -> {
             throw new ClienteDuplicadoException(existente);
@@ -74,6 +90,7 @@ public class ClienteService {
         cliente.setTelefone(telefone);
         cliente.setWhatsapp(normalizarTelefoneOpcional(requisicao.whatsapp()));
         cliente.setCpf(normalizarEValidarCpf(requisicao.cpf()));
+        cliente.setOrigemCadastro(origem);
         aplicarConsentimento(cliente, requisicao.consentimentoLgpd());
 
         cliente = clienteRepository.save(cliente);

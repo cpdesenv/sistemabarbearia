@@ -14,6 +14,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import com.barbearia.portal.security.PortalRateLimitingFilter;
+
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -29,12 +31,16 @@ public class SecurityConfig {
             "/v3/api-docs/**",
             // Chamada pelo navegador de volta do Google (nao envia JWT); autorizada
             // pelo `state` de uso unico validado em IntegracaoGoogleCalendarService.
-            "/api/integracoes/google-calendar/callback"
+            "/api/integracoes/google-calendar/callback",
+            // Portal publico de autoagendamento (Fase 9) — sem JWT, protegido por
+            // rate limiting por IP (ver PortalRateLimitingFilter) e pelo flag
+            // Barbearia.portalAgendamentoAtivo (checado em PortalService).
+            "/api/portal/**"
     };
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter,
-            LoginRateLimitingFilter loginRateLimitingFilter,
+            LoginRateLimitingFilter loginRateLimitingFilter, PortalRateLimitingFilter portalRateLimitingFilter,
             JsonAuthenticationEntryPoint entryPoint, JsonAccessDeniedHandler accessDeniedHandler) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
@@ -46,6 +52,7 @@ public class SecurityConfig {
                         .authenticationEntryPoint(entryPoint)
                         .accessDeniedHandler(accessDeniedHandler))
                 .addFilterBefore(loginRateLimitingFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(portalRateLimitingFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

@@ -1,0 +1,147 @@
+<section class="portal-agendamento">
+  @if (carregando()) {
+    <mat-spinner diameter="32" />
+  } @else if (portalIndisponivel()) {
+    <mat-card>
+      <mat-card-content>
+        <p>O agendamento pelo site não está disponível no momento. Entre em contato diretamente com a barbearia.</p>
+      </mat-card-content>
+    </mat-card>
+  } @else if (agendamentoConfirmado(); as agendamento) {
+    <mat-card class="portal-agendamento__sucesso">
+      <mat-card-content>
+        <h1>Agendamento confirmado!</h1>
+        <p><strong>Cliente:</strong> {{ agendamento.clienteNome }}</p>
+        <p><strong>Profissional:</strong> {{ agendamento.profissionalNome }}</p>
+        <p><strong>Serviços:</strong> {{ resumoServicosConfirmados() }}</p>
+        <p><strong>Data e horário:</strong> {{ agendamento.inicio | date: "EEEE, dd/MM/yyyy 'às' HH:mm" }}</p>
+        <p><strong>Valor:</strong> {{ agendamento.valorTotal | currency: 'BRL' }}</p>
+        <p class="portal-agendamento__aviso">Guarde essas informações. Em caso de dúvida, entre em contato com a barbearia.</p>
+      </mat-card-content>
+    </mat-card>
+  } @else {
+    <h1>Agende seu horário</h1>
+
+    <mat-card class="portal-agendamento__secao">
+      <mat-card-content>
+        <h2>1. Escolha o(s) serviço(s)</h2>
+        <div class="portal-agendamento__lista">
+          @for (servico of servicos(); track servico.uuid) {
+            <mat-checkbox
+              [checked]="servicosSelecionados().has(servico.uuid)"
+              (change)="alternarServico(servico.uuid)"
+            >
+              {{ servico.nome }} ({{ servico.duracaoMinutos }} min — {{ servico.preco | currency: 'BRL' }})
+            </mat-checkbox>
+          }
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    @if (etapaProfissionalVisivel()) {
+      <mat-card class="portal-agendamento__secao">
+        <mat-card-content>
+          <h2>2. Escolha o profissional</h2>
+          @if (carregandoProfissionais()) {
+            <mat-spinner diameter="24" />
+          } @else {
+            <div class="portal-agendamento__opcoes">
+              @for (profissional of profissionais(); track profissional.uuid) {
+                <button
+                  mat-stroked-button
+                  type="button"
+                  [color]="profissionalSelecionado() === profissional.uuid ? 'primary' : undefined"
+                  (click)="selecionarProfissional(profissional.uuid)"
+                >
+                  {{ profissional.nome }}
+                </button>
+              }
+              @if (profissionais().length === 0) {
+                <p>Nenhum profissional disponível para os serviços selecionados.</p>
+              }
+            </div>
+          }
+        </mat-card-content>
+      </mat-card>
+    }
+
+    @if (etapaDataVisivel()) {
+      <mat-card class="portal-agendamento__secao">
+        <mat-card-content>
+          <h2>3. Escolha a data e o horário</h2>
+          <mat-form-field appearance="outline">
+            <mat-label>Data</mat-label>
+            <input
+              matInput
+              type="date"
+              [value]="dataSelecionada()"
+              (change)="consultarDisponibilidade($any($event.target).value)"
+            />
+          </mat-form-field>
+
+          @if (carregandoSlots()) {
+            <mat-spinner diameter="24" />
+          } @else if (dataSelecionada()) {
+            <div class="portal-agendamento__opcoes">
+              @for (slot of slots(); track slot.inicio) {
+                <button
+                  mat-stroked-button
+                  type="button"
+                  [color]="slotSelecionado()?.inicio === slot.inicio ? 'primary' : undefined"
+                  (click)="selecionarSlot(slot)"
+                >
+                  {{ slot.inicio | date: 'HH:mm' }}
+                </button>
+              }
+              @if (slots().length === 0) {
+                <p>Nenhum horário disponível nesta data.</p>
+              }
+            </div>
+          }
+        </mat-card-content>
+      </mat-card>
+    }
+
+    @if (etapaContatoVisivel()) {
+      <mat-card class="portal-agendamento__secao">
+        <mat-card-content>
+          <h2>4. Seus dados</h2>
+          <form [formGroup]="formulario" (ngSubmit)="confirmar()" class="portal-agendamento__form">
+            <mat-form-field appearance="outline">
+              <mat-label>Nome</mat-label>
+              <input matInput formControlName="nome" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Telefone (com DDD)</mat-label>
+              <input matInput formControlName="telefone" placeholder="(19) 99999-9999" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>E-mail (opcional)</mat-label>
+              <input matInput type="email" formControlName="email" />
+            </mat-form-field>
+
+            <mat-checkbox formControlName="consentimentoLgpd">
+              Concordo com o uso dos meus dados para realizar este agendamento.
+            </mat-checkbox>
+
+            <p class="portal-agendamento__total">Total: {{ valorTotalSelecionado() | currency: 'BRL' }}</p>
+
+            @if (mensagemErro()) {
+              <p class="portal-agendamento__erro" role="alert">{{ mensagemErro() }}</p>
+            }
+
+            <button mat-flat-button color="primary" type="submit" [disabled]="enviando()">
+              @if (enviando()) {
+                <mat-spinner diameter="20" />
+              } @else {
+                Confirmar agendamento
+              }
+            </button>
+          </form>
+        </mat-card-content>
+      </mat-card>
+    }
+  }
+</section>
