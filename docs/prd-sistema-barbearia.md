@@ -158,7 +158,7 @@ pendentes.*
 | 6 | Comprovante de serviço (PDF) | ✅ Concluída |
 | 7 | Clube Cavalinho / Assinaturas | ✅ Concluída |
 | 8 | Integração com Google Calendar | ✅ Concluída (mock — ativação real pendente de credencial Google) |
-| 9 | Link de autoagendamento | ⬜ Pendente |
+| 9 | Link de autoagendamento | ✅ Concluída (analytics de origem adiado para a Fase 10; renderização visual em navegador não verificada nesta sessão) |
 | 10 | Dashboard | ⬜ Pendente |
 | 11 | Relatórios comparativos | ⬜ Pendente |
 | 12 | NFS-e real | ⬜ Pendente |
@@ -579,7 +579,7 @@ aceite, testes) foi removido deste documento — ver o histórico do
 construído, e a entrada `[0.12.0]` para o que foi removido e por quê. Os
 números 9, 6-META, 10 e 11 não são reaproveitados por nenhuma fase nova.*
 
-### FASE 9 — Link de autoagendamento [NOVO]
+### FASE 9 — Link de autoagendamento [NOVO] ✅
 
 **Objetivo:** cliente acessa URL pública e agenda diretamente. Canal
 valioso de conversão.
@@ -592,15 +592,44 @@ valioso de conversão.
 - Após confirmação, cria agendamento como `CONFIRMADO` e envia confirmação
   por e-mail (se e-mail fornecido).
 - Botão de compartilhar link no painel.
-- Analytics: rastrear quantos agendamentos vêm do link vs. painel.
+- Analytics: rastrear quantos agendamentos vêm do link vs. painel — **adiado
+  para a Fase 10 (Dashboard)**: o dado já existe (`Agendamento.origem`),
+  falta só a visualização, por decisão registrada com o cliente.
 
 **Critérios de aceite**
 
-- [ ] Link abre em celular e desktop sem layout quebrado.
-- [ ] Disponibilidade é consultada em tempo real.
-- [ ] Agendamento é criado com status `CONFIRMADO`.
-- [ ] Cliente recebe confirmação por e-mail.
-- [ ] Link pode ser desativado globalmente via configuração.
+- [~] Link abre em celular e desktop sem layout quebrado. Build Angular
+  compila limpo com CSS responsivo (mobile-first, mesmo padrão do resto do
+  projeto) e a rota `/agendar` responde 200 — **não verificado visualmente
+  em navegador** nesta sessão (extensão do Chrome não conectou).
+- [x] Disponibilidade é consultada em tempo real. Verificado por teste
+  automatizado e manualmente via curl contra dados de seed reais,
+  reaproveitando o `AvailabilityService` da Fase 4 sem nenhuma lógica
+  duplicada.
+- [x] Agendamento é criado com status `CONFIRMADO`. Verificado por teste
+  automatizado e manualmente.
+- [x] Cliente recebe confirmação por e-mail. Verificado manualmente pelo
+  log do `LogEmailGateway` (mock), mesmo padrão da Fase 6.
+- [x] Link pode ser desativado globalmente via configuração. Verificado
+  manualmente: toggle `portalAgendamentoAtivo` em Configurações >
+  Barbearia liga/desliga o portal (`/api/portal/status` e demais rotas
+  respondem 404 quando desligado).
+
+**Achado de segurança corrigido durante a implementação:** o
+`/security-review` identificou que o endpoint público, ao reaproveitar um
+cliente já cadastrado pelo telefone, devolvia o nome real armazenado na
+resposta — um oráculo de PII que permitiria a qualquer visitante anônimo
+descobrir se um telefone pertence a um cliente e qual seu nome verdadeiro.
+Corrigido antes do PR: a resposta pública devolve o nome digitado pelo
+solicitante, nunca o do cadastro, e omite `clienteUuid`/`clienteTelefone`
+internos — ver `CHANGELOG.md`.
+
+**Limitação residual, já prevista neste documento:** como esta fase é
+"mais simples... sem código de verificação por telefone" (ver acima),
+ainda é possível criar um agendamento vinculado a um cliente real só
+sabendo o telefone dele, sem confirmar posse — só não é mais possível
+descobrir quem é essa pessoa pela resposta. Resolver isso de verdade
+(SMS/e-mail de verificação) é escopo da Fase 15.
 
 `git commit -m "feat: implementa link de autoagendamento publico"`
 

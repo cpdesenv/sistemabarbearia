@@ -4,6 +4,60 @@ Todas as mudanças notáveis deste projeto serão documentadas neste arquivo.
 
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
+## [0.13.0] - Fase 9 — Link de autoagendamento
+
+### Adicionado
+
+- Novo pacote backend `com.barbearia.portal` (controller/service/dto):
+  página pública `/agendar` (sem login) onde o cliente escolhe serviço(s),
+  profissional, data e horário, com disponibilidade em tempo real
+  reaproveitando integralmente o `AvailabilityService` (Fase 4) e o
+  `AgendamentoService` — nenhuma lógica de disponibilidade/conflito
+  duplicada.
+- Agendamento criado pelo portal nasce direto como `CONFIRMADO` (cria +
+  confirma, mesma sincronização com Google Calendar já existente) e envia
+  confirmação por e-mail (`EmailGateway.enviarConfirmacaoAgendamento`,
+  best-effort, mesmo padrão do comprovante da Fase 6).
+- Cliente identificado por telefone: reaproveita cadastro existente ou
+  cria novo com `origemCadastro=PORTAL`; consentimento LGPD obrigatório
+  para cliente novo (`ClienteService.criar` ganha overload com
+  `OrigemCadastro` explícito).
+- Endpoint de escrita público (`POST /api/portal/agendamentos`) protegido
+  por rate limiting por IP (`PortalRateLimitingFilter`, mesmo padrão do
+  login).
+- Novo campo `Barbearia.portalAgendamentoAtivo` (migration `V29`) liga/
+  desliga o portal globalmente — editável em Configurações > Barbearia,
+  com link público e botão de copiar.
+
+### Corrigido (achado do `/security-review`, antes do PR)
+
+- O endpoint público, ao reaproveitar um cliente já cadastrado pelo
+  telefone informado, devolvia o nome real armazenado na resposta — um
+  oráculo de PII que permitiria a qualquer visitante anônimo confirmar se
+  um telefone pertence a um cliente e descobrir seu nome verdadeiro. A
+  resposta pública agora devolve apenas o nome digitado pelo próprio
+  solicitante (`PortalAgendamentoConfirmadoDto`), nunca o do cadastro, e
+  não expõe mais `clienteUuid`/`clienteTelefone` internos — o vínculo real
+  com o cliente existente continua correto para quem consulta autenticado.
+- `ClienteService.criar(..., OrigemCadastro, ...)` ganhou
+  `@Transactional(noRollbackFor = ClienteDuplicadoException.class)`:
+  capturar essa exceção no portal (para reaproveitar o cliente existente
+  na mesma transação) marcava a transação inteira como rollback-only antes
+  do catch rodar, fazendo o commit final falhar com
+  `UnexpectedRollbackException` mesmo sem erro de negócio real. A busca
+  prévia por telefone em `PortalService` evita esse caminho no caso comum;
+  o `noRollbackFor` fica como rede de segurança para a corrida rara de
+  duas requisições simultâneas com o mesmo telefone novo.
+
+### Pendente (registrado, não bloqueia a fase)
+
+- Entregável de analytics (agendamentos por origem PORTAL vs. PAINEL)
+  adiado para a Fase 10 (Dashboard) — o dado já existe em
+  `Agendamento.origem`, falta só a visualização.
+- Renderização visual da página `/agendar` em navegador não verificada
+  nesta sessão (extensão do Chrome não conectou) — só o build Angular e a
+  resposta HTTP da rota foram confirmados.
+
 ## [0.12.0] - Remoção do atendimento por IA e do canal de WhatsApp
 
 O cliente (Cortes Cavalinho) decidiu não utilizar o atendimento automatizado
