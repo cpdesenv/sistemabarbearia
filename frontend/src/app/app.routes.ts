@@ -13,21 +13,6 @@ export const routes: Routes = [
     children: [
       { path: 'dashboard', loadComponent: () => import('./features/dashboard/dashboard').then((m) => m.Dashboard) },
       {
-        path: 'mensageria/conversas',
-        loadComponent: () =>
-          import('./features/mensageria/conversas-lista/conversas-lista').then((m) => m.ConversasLista)
-      },
-      {
-        path: 'mensageria/conversas/:uuid',
-        loadComponent: () =>
-          import('./features/mensageria/conversa-detalhe/conversa-detalhe').then((m) => m.ConversaDetalhe)
-      },
-      {
-        path: 'mensageria/simulador',
-        loadComponent: () =>
-          import('./features/mensageria/simulador/simulador').then((m) => m.Simulador)
-      },
-      {
         path: 'configuracoes/barbearia',
         loadComponent: () =>
           import('./features/configuracoes/barbearia/barbearia').then((m) => m.BarbeariaConfig),
@@ -40,13 +25,6 @@ export const routes: Routes = [
           import('./features/configuracoes/integracoes/google-calendar/google-calendar').then(
             (m) => m.GoogleCalendarConfig
           ),
-        canActivate: [roleGuard],
-        data: { perfis: ['ADMIN'] }
-      },
-      {
-        path: 'configuracoes/ia',
-        loadComponent: () =>
-          import('./features/configuracoes/ia/ia').then((m) => m.ConfiguracaoIaConfig),
         canActivate: [roleGuard],
         data: { perfis: ['ADMIN'] }
       },

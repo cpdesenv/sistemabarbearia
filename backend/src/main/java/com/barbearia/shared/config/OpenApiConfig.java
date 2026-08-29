@@ -13,7 +13,7 @@ public class OpenApiConfig {
         return new OpenAPI()
                 .info(new Info()
                         .title("Sistema para Barbearia — API")
-                        .description("API do sistema de gestao da barbearia (agenda, clientes, caixa, estoque, mensageria).")
+                        .description("API do sistema de gestao da barbearia (agenda, clientes, caixa, estoque).")
                         .version("0.1.0"));
     }
 }

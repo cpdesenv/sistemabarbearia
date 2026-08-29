@@ -4,6 +4,61 @@ Todas as mudanças notáveis deste projeto serão documentadas neste arquivo.
 
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
+## [0.12.0] - Remoção do atendimento por IA e do canal de WhatsApp
+
+O cliente (Cortes Cavalinho) decidiu não utilizar o atendimento automatizado
+por IA nem o canal de mensageria via WhatsApp. As Fases 9 (canal de
+mensageria), 6-META (ativação da WhatsApp Cloud API), 10 (agente de IA) e 11
+(cancelamento/remarcação pela IA) — todas já entregues e descritas nas
+entradas abaixo — foram removidas do produto. A Fase 14 (Automações de
+retenção), inteiramente baseada em envio de mensagens e ainda não
+implementada, saiu do roadmap pelo mesmo motivo. As fases pendentes
+seguintes foram renumeradas para fechar os buracos (ver seção "Status de
+implementação" do PRD).
+
+### Removido
+
+- Pacotes de backend `com.barbearia.ia` e `com.barbearia.mensageria` por
+  inteiro: agente de IA (`AgenteAtendimentoService`, `AgenteTools`,
+  `AiAgentGateway`/`AiAgentGatewayReal`/`MockAiAgentGateway`,
+  `ConfiguracaoIa`, `UsoLlm`), canal de mensageria (`Conversa`, `Mensagem`,
+  outbox de envio, webhook `/api/webhook/whatsapp`, simulador
+  `/api/dev/whatsapp/**`, `WhatsAppRateLimitingFilter`) e os respectivos
+  testes de integração.
+- Dependência `com.anthropic:anthropic-java` (`backend/pom.xml`).
+- Telas de painel `Conversas`, `Simulador de WhatsApp` e `Configurações >
+  Agente de IA` (pastas `frontend/src/app/features/mensageria` e
+  `features/configuracoes/ia`), rotas e itens de menu correspondentes.
+- Variáveis de ambiente `WHATSAPP_GATEWAY`, `WHATSAPP_WEBHOOK_SECRET`,
+  `IA_GATEWAY`, `ANTHROPIC_API_KEY`, `IA_MODELO` (e as demais `IA_*` de
+  custo/timeout) do `application.yml`, `docker-compose.yml` e
+  `.env.example`.
+- `docs/agente-ia.md` e `docs/mensageria.md`.
+- Migration `V28__remove_ia_e_whatsapp.sql`: `DROP TABLE` de `uso_llm`,
+  `configuracao_ia`, `mensagem_envio_outbox`, `mensagem` e `conversa`
+  (schema criado pelas migrations V25–V27, agora órfão).
+
+### Mantido (avaliado e decidido não remover)
+
+- `Cliente.whatsapp`/`Cliente.optInWhatsapp` e o valor `WHATSAPP` nos enums
+  `OrigemCadastro`/`OrigemAgendamento`: são metadados de contato/origem já
+  desacoplados do módulo removido (não disparam nenhum envio), mantidos
+  como estão.
+- Rota `/api/integracoes/google-calendar/callback` e o restante da
+  integração com Google Calendar (Fase 8), sem nenhuma relação com IA ou
+  WhatsApp.
+
+### Verificado
+
+- Suíte de testes de backend: 148 testes, sem falhas.
+- Suíte de testes de frontend: 16 testes, sem falhas.
+- `docker compose down -v` + subida completa: 28 migrations aplicadas sem
+  erro; smoke test manual de login, cadastro de cliente (com detecção de
+  duplicidade), serviços, caixa, assinaturas e Google Calendar, todos
+  funcionando normalmente.
+- `/security-review` sobre o diff: nenhum achado — mudança majoritariamente
+  de remoção, sem novo endpoint, lógica de autenticação ou input introduzido.
+
 ## [0.11.0] - Fase 11 — Cancelamento e remarcação pela IA
 
 ### Adicionado
