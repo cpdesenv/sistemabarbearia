@@ -134,7 +134,13 @@ class PortalControllerIntegrationTest extends IntegrationTestBase {
                 .andExpect(jsonPath("$.clienteUuid").doesNotExist())
                 .andReturn();
 
-        assertThat(clienteRepository.findAll()).hasSize(1);
+        // Conta so' pelo telefone deste teste, nunca a tabela inteira: a suite
+        // roda tudo contra o mesmo container Postgres (IntegrationTestBase,
+        // "singleton container pattern"), e alguns testes de concorrencia
+        // (ex.: AssinaturaSaldoConcorrenciaTest) commitam de verdade fora do
+        // rollback transacional deste teste, entao a contagem global de
+        // clientes varia conforme a ordem de execucao das classes.
+        assertThat(clienteRepository.findByTelefone("+5519977775555")).isPresent();
         assertThat(clienteRepository.findByUuidPublico(clienteUuid).get().getNome()).isEqualTo("Cliente Ja Cadastrado");
 
         // O agendamento de verdade continua vinculado ao cliente ja cadastrado
