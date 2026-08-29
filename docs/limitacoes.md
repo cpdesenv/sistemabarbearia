@@ -15,12 +15,16 @@ Se em algum momento surgir a necessidade de atender mais de uma barbearia,
 isso é uma decisão de negócio consciente que exige um novo projeto de
 arquitetura — não uma extensão silenciosa deste sistema.
 
-## Mensageria em modo mock
+## IA e WhatsApp fora do escopo
 
-Até que a conta Meta Business seja aprovada e a Fase 6-META seja executada
-(sob pedido explícito), todo o canal de WhatsApp roda contra o
-`MockWhatsAppGateway`. Não há credencial real da Meta em nenhum ambiente,
-incluindo produção, até essa fase acontecer.
+O canal de mensageria via WhatsApp e o agente de atendimento por IA (antigas
+Fases 9, 6-META, 10 e 11) foram construídos, validados e depois **removidos
+por decisão do cliente**, que optou por não utilizar essas funcionalidades.
+Não se trata mais de "mock até a conta Meta existir" — o código, as tabelas
+e a documentação desses módulos foram desativados. Ver `CHANGELOG.md` (entrada
+da remoção) para o que foi retirado e por quê. Se o cliente decidir revisitar
+atendimento via WhatsApp/IA no futuro, isso é uma decisão de produto nova, a
+ser especificada do zero — não uma reativação do que existia.
 
 ## Spring Boot 3.5.x — fim de vida open-source
 
