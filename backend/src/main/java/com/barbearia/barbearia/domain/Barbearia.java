@@ -59,6 +59,9 @@ public class Barbearia {
     @Column(name = "granularidade_slot_minutos", nullable = false)
     private int granularidadeSlotMinutos = 15;
 
+    @Column(name = "portal_agendamento_ativo", nullable = false)
+    private boolean portalAgendamentoAtivo = true;
+
     @CreationTimestamp
     @Column(name = "criado_em", nullable = false, updatable = false)
     private Instant criadoEm;

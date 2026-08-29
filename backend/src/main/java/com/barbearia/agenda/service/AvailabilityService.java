@@ -220,7 +220,8 @@ public class AvailabilityService {
         return profissional;
     }
 
-    private List<Profissional> resolverProfissionaisCapazes(UUID profissionalUuidOpcional, List<Servico> servicos) {
+    /** Lista profissionais ativos capazes de realizar todos os servicos informados (ou um so, se especificado). */
+    public List<Profissional> resolverProfissionaisCapazes(UUID profissionalUuidOpcional, List<Servico> servicos) {
         if (profissionalUuidOpcional != null) {
             return List.of(resolverProfissionalCapaz(profissionalUuidOpcional, servicos));
         }

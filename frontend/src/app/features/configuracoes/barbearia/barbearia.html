@@ -102,6 +102,19 @@
             </mat-form-field>
           </div>
 
+          <h2>Portal de agendamento (Fase 9)</h2>
+          <div class="barbearia-config__grade">
+            <mat-checkbox formControlName="portalAgendamentoAtivo">
+              Portal de agendamento ativo
+            </mat-checkbox>
+          </div>
+          <div class="barbearia-config__link-portal">
+            <span>{{ linkPortal }}</span>
+            <button mat-stroked-button type="button" (click)="copiarLinkPortal()">
+              {{ linkCopiado() ? 'Copiado!' : 'Copiar link' }}
+            </button>
+          </div>
+
           @if (mensagemErro()) {
             <p class="barbearia-config__erro" role="alert">{{ mensagemErro() }}</p>
           }

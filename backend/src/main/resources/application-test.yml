@@ -11,6 +11,13 @@ app:
     login:
       tentativas: 3
       janela-minutos: 1
+    portal:
+      # Alto o bastante para nao interferir em testes funcionais (o balde e'
+      # compartilhado entre todos os metodos de uma mesma classe de teste,
+      # via o mesmo IP simulado) — o rate limiting em si e' testado
+      # isoladamente com um valor baixo.
+      tentativas: 1000
+      janela-minutos: 1
 
 logging:
   level:

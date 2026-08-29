@@ -1,5 +1,8 @@
 package com.barbearia.fiscal.email;
 
+import java.math.BigDecimal;
+import java.time.Instant;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -14,5 +17,13 @@ public class LogEmailGateway implements EmailGateway {
             byte[] anexoPdf) {
         log.info("[MOCK EMAIL] Comprovante #{} enviado para {} ({}) — {} bytes anexados.",
                 numeroComprovante, destinatario, clienteNome, anexoPdf.length);
+    }
+
+    @Override
+    public void enviarConfirmacaoAgendamento(String destinatario, String clienteNome, String resumoServicos,
+            String profissionalNome, Instant inicio, BigDecimal valorTotal) {
+        log.info(
+                "[MOCK EMAIL] Confirmacao de agendamento enviada para {} ({}) — {} com {} em {}, valor R$ {}.",
+                destinatario, clienteNome, resumoServicos, profissionalNome, inicio, valorTotal);
     }
 }

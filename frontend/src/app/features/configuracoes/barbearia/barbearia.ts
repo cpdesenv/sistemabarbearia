@@ -3,6 +3,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -16,6 +17,7 @@ import { AtualizarBarbeariaRequest, Barbearia } from './barbearia.model';
     ReactiveFormsModule,
     MatButtonModule,
     MatCardModule,
+    MatCheckboxModule,
     MatFormFieldModule,
     MatInputModule,
     MatProgressSpinnerModule,
@@ -49,7 +51,11 @@ export class BarbeariaConfig {
     antecedenciaMaximaAgendamentoDias: [1, [Validators.required, Validators.min(1)]],
     antecedenciaMinimaCancelamentoMinutos: [0, [Validators.required, Validators.min(0)]],
     granularidadeSlotMinutos: [15, [Validators.required, Validators.min(1)]],
+    portalAgendamentoAtivo: [true],
   });
+
+  protected readonly linkPortal = `${window.location.origin}/agendar`;
+  protected readonly linkCopiado = signal(false);
 
   constructor() {
     this.barbeariaService.obter().subscribe({
@@ -124,6 +130,14 @@ export class BarbeariaConfig {
       antecedenciaMaximaAgendamentoDias: barbearia.antecedenciaMaximaAgendamentoDias,
       antecedenciaMinimaCancelamentoMinutos: barbearia.antecedenciaMinimaCancelamentoMinutos,
       granularidadeSlotMinutos: barbearia.granularidadeSlotMinutos,
+      portalAgendamentoAtivo: barbearia.portalAgendamentoAtivo,
+    });
+  }
+
+  protected copiarLinkPortal(): void {
+    navigator.clipboard.writeText(this.linkPortal).then(() => {
+      this.linkCopiado.set(true);
+      setTimeout(() => this.linkCopiado.set(false), 2000);
     });
   }
 }

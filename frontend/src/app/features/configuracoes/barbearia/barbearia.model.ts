@@ -15,6 +15,7 @@ export interface Barbearia {
   antecedenciaMaximaAgendamentoDias: number;
   antecedenciaMinimaCancelamentoMinutos: number;
   granularidadeSlotMinutos: number;
+  portalAgendamentoAtivo: boolean;
   atualizadoEm: string;
 }
 
