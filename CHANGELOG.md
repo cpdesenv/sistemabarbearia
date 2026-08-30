@@ -4,6 +4,36 @@ Todas as mudanças notáveis deste projeto serão documentadas neste arquivo.
 
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
+## [0.14.0] - Fase 10 — Dashboard
+
+### Adicionado
+
+- Novo endpoint de leitura `GET /api/dashboard/resumo` (pacote backend
+  `com.barbearia.dashboard`), agregando dados já existentes em agenda,
+  financeiro, produtos, clientes e assinaturas — sem migration nova, só
+  consultas.
+- Cards: faturamento do dia e do mês (com % vs. mês anterior),
+  atendimentos do dia, ticket médio do dia, taxa de ocupação da agenda de
+  hoje.
+- Indicadores de saúde do negócio (clientes novos, cancelamentos, faltas
+  e agendamentos fora de sincronia com o Google Calendar no mês) e do
+  Clube Cavalinho (receita recorrente, taxa de churn do mês).
+- Gráficos em SVG puro, sem dependência nova: faturamento dos últimos 12
+  meses (linha), serviços mais vendidos e atendimentos por profissional
+  (barras), distribuição por forma de pagamento (rosca) e agendamentos
+  por origem — este último entrega o analytics de Portal vs. Painel que
+  havia ficado pendente da Fase 9.
+- Tela **Dashboard** reescrita no painel, com atualização por botão
+  manual (sem polling automático).
+
+### Simplificações deliberadas (v1)
+
+- `taxaOcupacaoHoje` não desconta `Bloqueio` da capacidade — só considera
+  a grade semanal.
+- `taxaChurnMes` usa como base as assinaturas ATIVA/INADIMPLENTE atuais
+  mais as canceladas no mês, na falta de um snapshot histórico de quantas
+  assinaturas estavam em curso no início do mês.
+
 ## [0.13.0] - Fase 9 — Link de autoagendamento
 
 ### Adicionado

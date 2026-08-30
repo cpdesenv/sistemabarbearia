@@ -159,7 +159,7 @@ pendentes.*
 | 7 | Clube Cavalinho / Assinaturas | ✅ Concluída |
 | 8 | Integração com Google Calendar | ✅ Concluída (mock — ativação real pendente de credencial Google) |
 | 9 | Link de autoagendamento | ✅ Concluída (analytics de origem adiado para a Fase 10; renderização visual em navegador não verificada nesta sessão) |
-| 10 | Dashboard | ⬜ Pendente |
+| 10 | Dashboard | ✅ Concluída |
 | 11 | Relatórios comparativos | ⬜ Pendente |
 | 12 | NFS-e real | ⬜ Pendente |
 | 13 | Gestão de estoque avançada | ⬜ Pendente |
