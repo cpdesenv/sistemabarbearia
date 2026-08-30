@@ -1,0 +1,55 @@
+.relatorios__filtro {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.relatorios__carregando {
+  display: flex;
+  justify-content: center;
+  padding: 48px 0;
+}
+
+.relatorios__grade {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.relatorios__grade--comparativo {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.relatorios__grade--graficos {
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+}
+
+.relatorios__rotulo {
+  margin: 0 0 4px;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.relatorios__valor {
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.relatorios__variacao {
+  margin: 4px 0 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.relatorios__variacao--positiva {
+  color: var(--success-text);
+}
+
+.relatorios__variacao--negativa {
+  color: var(--error-text);
+}

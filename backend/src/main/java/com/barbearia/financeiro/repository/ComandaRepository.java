@@ -15,6 +15,7 @@ import com.barbearia.dashboard.dto.ItemContagemDto;
 import com.barbearia.financeiro.domain.Comanda;
 import com.barbearia.financeiro.domain.StatusComanda;
 import com.barbearia.financeiro.dto.TotalPorFormaPagamentoDto;
+import com.barbearia.relatorio.dto.AgregacaoServicoDto;
 
 public interface ComandaRepository extends JpaRepository<Comanda, Long> {
 
@@ -69,4 +70,23 @@ public interface ComandaRepository extends JpaRepository<Comanda, Long> {
             """)
     List<ItemContagemDto> somarServicosVendidosEPeriodo(@Param("status") StatusComanda status,
             @Param("inicio") Instant inicio, @Param("fim") Instant fim, Pageable paginacao);
+
+    /**
+     * Fonte de {@code AgregacaoServicoDto}: usada tanto pelo job noturno
+     * (persiste o resultado em {@code RelatorioServicoDiario}) quanto pela
+     * consulta ao vivo do dia corrente, ainda nao agregado — ver
+     * {@code RelatorioFaturamentoService}.
+     */
+    @Query("""
+            SELECT new com.barbearia.relatorio.dto.AgregacaoServicoDto(
+                a.profissional.id, a.profissional.nome, i.servico.id, i.servico.nome,
+                i.comanda.formaPagamento, SUM(i.quantidade), COALESCE(SUM(i.valorLiquido), 0),
+                COALESCE(SUM(i.comissaoValor), 0))
+            FROM ComandaItem i JOIN i.comanda.agendamento a
+            WHERE i.tipo = com.barbearia.financeiro.domain.TipoItemComanda.SERVICO
+              AND i.comanda.status = :status AND i.comanda.fechadaEm BETWEEN :inicio AND :fim
+            GROUP BY a.profissional.id, a.profissional.nome, i.servico.id, i.servico.nome, i.comanda.formaPagamento
+            """)
+    List<AgregacaoServicoDto> agregarServicosPorPeriodo(@Param("status") StatusComanda status,
+            @Param("inicio") Instant inicio, @Param("fim") Instant fim);
 }

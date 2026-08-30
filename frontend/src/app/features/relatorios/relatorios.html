@@ -1,0 +1,145 @@
+<section class="relatorios">
+  <p class="eyebrow">Sistema para Barbearia</p>
+  <h1>Relatórios</h1>
+
+  <form [formGroup]="filtro" (ngSubmit)="buscar()" class="relatorios__filtro">
+    <mat-form-field appearance="outline">
+      <mat-label>Data inicial</mat-label>
+      <input matInput type="date" formControlName="dataInicial" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Data final</mat-label>
+      <input matInput type="date" formControlName="dataFinal" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Profissional</mat-label>
+      <mat-select formControlName="profissionalUuid">
+        <mat-option value="">Todos</mat-option>
+        @for (profissional of profissionais(); track profissional.uuid) {
+          <mat-option [value]="profissional.uuid">{{ profissional.nome }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Serviço</mat-label>
+      <mat-select formControlName="servicoUuid">
+        <mat-option value="">Todos</mat-option>
+        @for (servico of servicos(); track servico.uuid) {
+          <mat-option [value]="servico.uuid">{{ servico.nome }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Forma de pagamento</mat-label>
+      <mat-select formControlName="formaPagamento">
+        <mat-option value="">Todas</mat-option>
+        @for (forma of formasPagamento; track forma) {
+          <mat-option [value]="forma">{{ rotulosFormaPagamento[forma] }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <button mat-flat-button color="primary" type="submit" [disabled]="carregando()">Filtrar</button>
+  </form>
+
+  @if (carregando() && !relatorio()) {
+    <div class="relatorios__carregando">
+      <mat-spinner diameter="32" />
+    </div>
+  } @else {
+    @if (comparativo(); as comp) {
+      <div class="relatorios__grade relatorios__grade--comparativo">
+        <mat-card class="relatorios__card">
+          <mat-card-content>
+            <p class="relatorios__rotulo">Faturamento do mês</p>
+            <p class="relatorios__valor">{{ comp.valorMesAtual | currency: 'BRL' }}</p>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="relatorios__card">
+          <mat-card-content>
+            <p class="relatorios__rotulo">vs. mês anterior</p>
+            <p class="relatorios__valor">{{ comp.valorMesAnterior | currency: 'BRL' }}</p>
+            @if (comp.variacaoPercentualMesAnterior !== null) {
+              <p
+                class="relatorios__variacao"
+                [class.relatorios__variacao--positiva]="comp.variacaoPercentualMesAnterior >= 0"
+                [class.relatorios__variacao--negativa]="comp.variacaoPercentualMesAnterior < 0"
+              >
+                {{ comp.variacaoPercentualMesAnterior >= 0 ? '+' : '' }}{{ comp.variacaoPercentualMesAnterior }}%
+              </p>
+            }
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="relatorios__card">
+          <mat-card-content>
+            <p class="relatorios__rotulo">vs. mesmo mês ano anterior</p>
+            <p class="relatorios__valor">{{ comp.valorMesmoMesAnoAnterior | currency: 'BRL' }}</p>
+            @if (comp.variacaoPercentualAnoAnterior !== null) {
+              <p
+                class="relatorios__variacao"
+                [class.relatorios__variacao--positiva]="comp.variacaoPercentualAnoAnterior >= 0"
+                [class.relatorios__variacao--negativa]="comp.variacaoPercentualAnoAnterior < 0"
+              >
+                {{ comp.variacaoPercentualAnoAnterior >= 0 ? '+' : '' }}{{ comp.variacaoPercentualAnoAnterior }}%
+              </p>
+            }
+          </mat-card-content>
+        </mat-card>
+      </div>
+    }
+
+    @if (relatorio(); as dados) {
+      <div class="relatorios__grade">
+        <mat-card class="relatorios__card">
+          <mat-card-content>
+            <p class="relatorios__rotulo">Faturamento no período</p>
+            <p class="relatorios__valor">{{ dados.valorTotal | currency: 'BRL' }}</p>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="relatorios__card">
+          <mat-card-content>
+            <p class="relatorios__rotulo">Comissões no período</p>
+            <p class="relatorios__valor">{{ dados.comissaoTotal | currency: 'BRL' }}</p>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="relatorios__card">
+          <mat-card-content>
+            <p class="relatorios__rotulo">Atendimentos no período</p>
+            <p class="relatorios__valor">{{ dados.quantidadeAtendimentos }}</p>
+          </mat-card-content>
+        </mat-card>
+      </div>
+
+      <div class="relatorios__grade relatorios__grade--graficos">
+        <mat-card class="relatorios__card">
+          <mat-card-content>
+            <h2>Faturamento por serviço</h2>
+            <app-grafico-barras [itens]="paraGraficoBarras(dados.porServico)" />
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="relatorios__card">
+          <mat-card-content>
+            <h2>Faturamento por profissional</h2>
+            <app-grafico-barras [itens]="paraGraficoBarras(dados.porProfissional)" />
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="relatorios__card">
+          <mat-card-content>
+            <h2>Distribuição por forma de pagamento</h2>
+            <app-grafico-rosca [itens]="dados.porFormaPagamento" />
+          </mat-card-content>
+        </mat-card>
+      </div>
+    }
+  }
+</section>
