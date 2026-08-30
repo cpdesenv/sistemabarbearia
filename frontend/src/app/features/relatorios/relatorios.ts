@@ -16,8 +16,18 @@ import { Profissional } from '../profissionais/profissionais.model';
 import { ProfissionaisService } from '../profissionais/profissionais.service';
 import { Servico } from '../servicos/servicos.model';
 import { ServicosService } from '../servicos/servicos.service';
-import { ComparativoFaturamento, RelatorioAgenda, RelatorioClientes, RelatorioFaturamento } from './relatorios.model';
+import {
+  ComparativoFaturamento,
+  RelatorioAgenda,
+  RelatorioClientes,
+  RelatorioFaturamento,
+  RelatorioHeatmap,
+  RelatorioProduto,
+} from './relatorios.model';
 import { RelatoriosService } from './relatorios.service';
+
+const NOMES_DIA_SEMANA = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
+const HORAS_DO_DIA = Array.from({ length: 24 }, (_, hora) => hora);
 
 /** Formata em fuso local (yyyy-MM-dd) — Date#toISOString converteria para UTC e poderia virar o dia. */
 function formatarDataLocal(data: Date): string {
@@ -73,7 +83,12 @@ export class Relatorios {
   protected readonly comparativo = signal<ComparativoFaturamento | null>(null);
   protected readonly agenda = signal<RelatorioAgenda | null>(null);
   protected readonly clientes = signal<RelatorioClientes | null>(null);
+  protected readonly produtos = signal<RelatorioProduto | null>(null);
+  protected readonly heatmap = signal<RelatorioHeatmap | null>(null);
   protected readonly carregando = signal(true);
+
+  protected readonly nomesDiaSemana = NOMES_DIA_SEMANA;
+  protected readonly horasDoDia = HORAS_DO_DIA;
 
   protected readonly filtro = this.formBuilder.nonNullable.group({
     dataInicial: [primeiroDiaDoMes()],
@@ -123,9 +138,29 @@ export class Relatorios {
     this.relatoriosService
       .clientes(valores.dataInicial, valores.dataFinal)
       .subscribe((clientes) => this.clientes.set(clientes));
+
+    this.relatoriosService
+      .produtos(valores.dataInicial, valores.dataFinal)
+      .subscribe((produtos) => this.produtos.set(produtos));
+
+    this.relatoriosService
+      .heatmapHorarios(valores.dataInicial, valores.dataFinal)
+      .subscribe((heatmap) => this.heatmap.set(heatmap));
   }
 
   protected paraGraficoBarras(linhas: { nome: string; valorTotal: number }[]): { nome: string; quantidade: number }[] {
     return linhas.map((linha) => ({ nome: linha.nome, quantidade: linha.valorTotal }));
+  }
+
+  /** Quantidade de finalizados numa celula do heatmap (0 se nao houver dado para o dia x hora). */
+  protected quantidadeCelula(diaSemana: number, hora: number): number {
+    const celula = this.heatmap()?.celulas.find((c) => c.diaSemana === diaSemana && c.hora === hora);
+    return celula?.quantidadeFinalizados ?? 0;
+  }
+
+  /** Intensidade de 0 a 1 relativa ao maior valor do heatmap atual, para escala de cor no template. */
+  protected intensidadeCelula(quantidade: number): number {
+    const maximo = Math.max(1, ...(this.heatmap()?.celulas.map((c) => c.quantidadeFinalizados) ?? [0]));
+    return quantidade / maximo;
   }
 }

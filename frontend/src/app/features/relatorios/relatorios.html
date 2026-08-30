@@ -205,5 +205,82 @@
         </mat-card>
       }
     </div>
+
+    @if (produtos(); as dadosProdutos) {
+      <div class="relatorios__grade">
+        <mat-card class="relatorios__card relatorios__card--larga">
+          <mat-card-content>
+            <h2>Produtos mais vendidos e margem</h2>
+            <dl class="relatorios__lista-indicadores">
+              <div>
+                <dt>Receita</dt>
+                <dd>{{ dadosProdutos.valorTotal | currency: 'BRL' }}</dd>
+              </div>
+              <div>
+                <dt>Custo</dt>
+                <dd>{{ dadosProdutos.custoTotal | currency: 'BRL' }}</dd>
+              </div>
+              <div>
+                <dt>Margem</dt>
+                <dd>{{ dadosProdutos.margemTotal | currency: 'BRL' }} ({{ dadosProdutos.margemPercentual }}%)</dd>
+              </div>
+            </dl>
+
+            @if (dadosProdutos.porProduto.length > 0) {
+              <ul class="relatorios__lista-profissionais">
+                @for (linha of dadosProdutos.porProduto; track linha.nome) {
+                  <li>
+                    <strong>{{ linha.nome }}</strong>
+                    <span>
+                      {{ linha.quantidadeVendida }} vendidos · {{ linha.valorTotal | currency: 'BRL' }} receita ·
+                      {{ linha.margemTotal | currency: 'BRL' }} margem ({{ linha.margemPercentual }}%)
+                    </span>
+                  </li>
+                }
+              </ul>
+            } @else {
+              <p class="relatorios__vazio">Nenhum produto vendido no período.</p>
+            }
+          </mat-card-content>
+        </mat-card>
+      </div>
+    }
+
+    @if (heatmap(); as dadosHeatmap) {
+      <div class="relatorios__grade">
+        <mat-card class="relatorios__card relatorios__card--larga">
+          <mat-card-content>
+            <h2>Horários de maior movimento</h2>
+            <div class="relatorios__heatmap-scroll">
+              <table class="relatorios__heatmap">
+                <thead>
+                  <tr>
+                    <th></th>
+                    @for (hora of horasDoDia; track hora) {
+                      <th>{{ hora }}h</th>
+                    }
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (diaSemana of [1, 2, 3, 4, 5, 6, 7]; track diaSemana) {
+                    <tr>
+                      <th>{{ nomesDiaSemana[diaSemana - 1] }}</th>
+                      @for (hora of horasDoDia; track hora) {
+                        <td
+                          [style.--intensidade]="intensidadeCelula(quantidadeCelula(diaSemana, hora))"
+                          [title]="quantidadeCelula(diaSemana, hora) + ' finalizados'"
+                        >
+                          {{ quantidadeCelula(diaSemana, hora) || '' }}
+                        </td>
+                      }
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    }
   }
 </section>

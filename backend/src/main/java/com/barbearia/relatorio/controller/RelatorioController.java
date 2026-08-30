@@ -24,11 +24,15 @@ import com.barbearia.relatorio.dto.ComparativoFaturamentoDto;
 import com.barbearia.relatorio.dto.RelatorioAgendaDto;
 import com.barbearia.relatorio.dto.RelatorioClientesDto;
 import com.barbearia.relatorio.dto.RelatorioFaturamentoDto;
+import com.barbearia.relatorio.dto.RelatorioHeatmapDto;
+import com.barbearia.relatorio.dto.RelatorioProdutoDto;
 import com.barbearia.relatorio.dto.ReprocessarRelatorioRequest;
 import com.barbearia.relatorio.service.RelatorioAgendaService;
 import com.barbearia.relatorio.service.RelatorioAgregacaoService;
 import com.barbearia.relatorio.service.RelatorioClienteService;
 import com.barbearia.relatorio.service.RelatorioFaturamentoService;
+import com.barbearia.relatorio.service.RelatorioHeatmapService;
+import com.barbearia.relatorio.service.RelatorioProdutoService;
 
 @RestController
 @RequestMapping("/api/relatorios")
@@ -39,6 +43,8 @@ public class RelatorioController {
     private final RelatorioFaturamentoService relatorioFaturamentoService;
     private final RelatorioAgendaService relatorioAgendaService;
     private final RelatorioClienteService relatorioClienteService;
+    private final RelatorioProdutoService relatorioProdutoService;
+    private final RelatorioHeatmapService relatorioHeatmapService;
     private final RelatorioAgregacaoService relatorioAgregacaoService;
 
     @GetMapping("/faturamento")
@@ -74,6 +80,20 @@ public class RelatorioController {
             @RequestParam LocalDate dataInicial,
             @RequestParam LocalDate dataFinal) {
         return relatorioClienteService.consultar(dataInicial, dataFinal);
+    }
+
+    @GetMapping("/produtos")
+    public RelatorioProdutoDto produtos(
+            @RequestParam LocalDate dataInicial,
+            @RequestParam LocalDate dataFinal) {
+        return relatorioProdutoService.consultar(dataInicial, dataFinal);
+    }
+
+    @GetMapping("/heatmap-horarios")
+    public RelatorioHeatmapDto heatmapHorarios(
+            @RequestParam LocalDate dataInicial,
+            @RequestParam LocalDate dataFinal) {
+        return relatorioHeatmapService.consultar(dataInicial, dataFinal);
     }
 
     @PostMapping("/reprocessar")

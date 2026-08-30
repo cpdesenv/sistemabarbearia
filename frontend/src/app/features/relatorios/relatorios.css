@@ -103,3 +103,48 @@
   color: var(--muted);
   font-size: 0.85rem;
 }
+
+.relatorios__vazio {
+  margin: 16px 0 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.relatorios__heatmap-scroll {
+  overflow-x: auto;
+  margin-top: 16px;
+}
+
+.relatorios__heatmap {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.relatorios__heatmap th,
+.relatorios__heatmap td {
+  padding: 4px 6px;
+  text-align: center;
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.relatorios__heatmap thead th {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.relatorios__heatmap tbody th {
+  color: var(--muted);
+  font-weight: 500;
+  text-align: right;
+  padding-right: 12px;
+}
+
+.relatorios__heatmap td {
+  --intensidade: 0;
+  min-width: 28px;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  background: color-mix(in srgb, var(--accent) calc(var(--intensidade) * 100%), var(--card));
+  border: 1px solid var(--line);
+}

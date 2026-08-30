@@ -15,6 +15,7 @@ import com.barbearia.dashboard.dto.ItemContagemDto;
 import com.barbearia.financeiro.domain.Comanda;
 import com.barbearia.financeiro.domain.StatusComanda;
 import com.barbearia.financeiro.dto.TotalPorFormaPagamentoDto;
+import com.barbearia.relatorio.dto.AgregacaoProdutoDto;
 import com.barbearia.relatorio.dto.AgregacaoServicoDto;
 
 public interface ComandaRepository extends JpaRepository<Comanda, Long> {
@@ -101,4 +102,23 @@ public interface ComandaRepository extends JpaRepository<Comanda, Long> {
             + "WHERE c.status = :status AND a.cliente.id = :clienteId AND c.fechadaEm < :antes")
     boolean existeAtendimentoAnteriorDoCliente(@Param("status") StatusComanda status,
             @Param("clienteId") Long clienteId, @Param("antes") Instant antes);
+
+    /**
+     * Fonte de {@code AgregacaoProdutoDto}: usada tanto pelo job noturno
+     * (persiste o resultado em {@code RelatorioProdutoDiario}) quanto pela
+     * consulta ao vivo do dia corrente, ainda nao agregado — ver
+     * {@code RelatorioProdutoService}. custo_total usa o preco de custo
+     * ATUAL do produto (ver comentario da migration V33).
+     */
+    @Query("""
+            SELECT new com.barbearia.relatorio.dto.AgregacaoProdutoDto(
+                i.produto.id, i.produto.nome, SUM(i.quantidade), COALESCE(SUM(i.valorLiquido), 0),
+                COALESCE(SUM(i.quantidade * i.produto.precoCusto), 0))
+            FROM ComandaItem i
+            WHERE i.tipo = com.barbearia.financeiro.domain.TipoItemComanda.PRODUTO
+              AND i.comanda.status = :status AND i.comanda.fechadaEm BETWEEN :inicio AND :fim
+            GROUP BY i.produto.id, i.produto.nome
+            """)
+    List<AgregacaoProdutoDto> agregarProdutosPorPeriodo(@Param("status") StatusComanda status,
+            @Param("inicio") Instant inicio, @Param("fim") Instant fim);
 }

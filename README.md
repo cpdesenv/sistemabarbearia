@@ -403,14 +403,18 @@ login), com atualização por botão manual — sem polling automático.
 ## Relatórios (Fase 11)
 
 Fato pré-agregado por dia (`relatorio_servico_diario`,
-`relatorio_agenda_diario`, `relatorio_cliente_diario`), povoado por job
+`relatorio_agenda_diario`, `relatorio_cliente_diario`,
+`relatorio_produto_diario`, `relatorio_horario_diario`), povoado por job
 noturno (`RelatorioAgregacaoScheduler`) que agrega o dia anterior — nunca
 soma direto sobre `comanda`/`agendamento` em tempo real, para manter a
 resposta rápida mesmo com histórico grande. O dia corrente (ainda não
-agregado) é somado ao vivo por cima do histórico nos três serviços de
+agregado) é somado ao vivo por cima do histórico em todos os serviços de
 leitura. `POST /api/relatorios/reprocessar` (ADMIN/GERENTE) refaz a
 agregação de um intervalo de datas — usar após backfill de dados antigos
-ou correção de um estorno tardio num dia já agregado.
+ou correção de um estorno tardio num dia já agregado. A margem de produtos
+usa o preço de custo **atual** do produto (não um snapshot por venda) —
+se o custo mudar depois, relatórios de períodos já agregados só refletem
+o novo valor após um reprocessamento.
 
 ```bash
 # Faturamento no periodo, com filtros opcionais de profissional/servico/forma de pagamento
@@ -429,6 +433,14 @@ curl "http://localhost:8080/api/relatorios/agenda?dataInicial=2026-08-01&dataFin
 curl "http://localhost:8080/api/relatorios/clientes?dataInicial=2026-08-01&dataFinal=2026-08-31" \
   -H "Authorization: Bearer <accessToken>"
 
+# Produtos mais vendidos, receita, custo e margem no periodo
+curl "http://localhost:8080/api/relatorios/produtos?dataInicial=2026-08-01&dataFinal=2026-08-31" \
+  -H "Authorization: Bearer <accessToken>"
+
+# Heatmap de horarios de maior movimento (dia da semana x hora) no periodo
+curl "http://localhost:8080/api/relatorios/heatmap-horarios?dataInicial=2026-08-01&dataFinal=2026-08-31" \
+  -H "Authorization: Bearer <accessToken>"
+
 # Reprocessar agregacao de um intervalo (ADMIN/GERENTE) - backfill ou correcao
 curl -X POST http://localhost:8080/api/relatorios/reprocessar \
   -H "Authorization: Bearer <accessToken>" -H "Content-Type: application/json" \
@@ -437,13 +449,16 @@ curl -X POST http://localhost:8080/api/relatorios/reprocessar \
 
 Painel: tela **Relatórios** (rota `/relatorios`), com filtro de período e
 profissional; comparativo mensal do faturamento, indicadores de clientes
-no período e indicadores de agenda (geral e por profissional).
+no período, indicadores de agenda (geral e por profissional), produtos
+mais vendidos com margem e heatmap de horários de maior movimento.
 
 **Ainda pendente nesta fase** (próximas etapas): comissões a pagar,
-produtos mais vendidos e margem, heatmap de horários de maior movimento,
-fluxo de caixa mensal, previsão de compromissos, análise de assinaturas,
-filtro por serviço/forma de pagamento nos relatórios de agenda/clientes, e
-exportação para Excel/PDF.
+fluxo de caixa mensal comparativo, previsão de compromissos, análise de
+assinaturas (LTV), filtro por serviço/forma de pagamento nos relatórios de
+agenda/clientes, e exportação para Excel/PDF. Fluxo de caixa "atual"
+(caixa em mãos + a receber − a pagar) e estoque abaixo do mínimo já
+existem desde a Fase 5, fora da tela de Relatórios (ver seções de
+Financeiro e Estoque).
 
 ## Como executar os testes
 
