@@ -1,5 +1,6 @@
 package com.barbearia.profissional.repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -12,4 +13,6 @@ public interface ProfissionalRepository extends JpaRepository<Profissional, Long
         JpaSpecificationExecutor<Profissional> {
 
     Optional<Profissional> findByUuidPublico(UUID uuidPublico);
+
+    List<Profissional> findByAtivoTrue();
 }

@@ -1,0 +1,53 @@
+:host {
+  --chart-blue: #2a78d6;
+  display: block;
+}
+
+.grafico-vazio {
+  color: var(--muted);
+  margin: 0;
+}
+
+.grafico-linha {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.grafico-linha__base {
+  stroke: var(--line);
+  stroke-width: 1;
+}
+
+.grafico-linha__traco {
+  fill: none;
+  stroke: var(--chart-blue);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.grafico-linha__ponto {
+  fill: var(--chart-blue);
+  stroke: var(--card);
+  stroke-width: 2;
+}
+
+.grafico-linha__ponto-final {
+  fill: var(--chart-blue);
+  stroke: var(--card);
+  stroke-width: 2;
+}
+
+.grafico-linha__rotulo-mes {
+  fill: var(--muted);
+  font-size: 9px;
+  text-anchor: middle;
+}
+
+.grafico-linha__valor-final {
+  fill: var(--ink);
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}

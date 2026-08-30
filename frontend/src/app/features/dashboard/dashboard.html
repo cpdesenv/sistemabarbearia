@@ -1,42 +1,163 @@
 <section class="dashboard">
-  <p class="eyebrow">Sistema para Barbearia</p>
-  <h1>Dashboard</h1>
-
-  <div class="dashboard__grade">
-    <mat-card class="dashboard__card">
-      <mat-card-content>
-        <div class="dashboard__card-titulo">
-          <h2>Produtos a repor</h2>
-          @if (produtosParaRepor().length > 0) {
-            <span class="badge badge--erro">{{ produtosParaRepor().length }}</span>
-          }
-        </div>
-        @if (produtosParaRepor().length === 0) {
-          <p class="dashboard__vazio">Nenhum produto abaixo do estoque mínimo.</p>
-        } @else {
-          <ul class="dashboard__lista-estoque">
-            @for (produto of produtosParaRepor(); track produto.uuid) {
-              <li>
-                <strong>{{ produto.nome }}</strong>
-                <span>saldo {{ produto.estoqueAtual }} {{ produto.unidade }} (mínimo {{ produto.estoqueMinimo }})</span>
-              </li>
-            }
-          </ul>
-          <a routerLink="/produtos/estoque">Ver estoque e movimentações</a>
-        }
-      </mat-card-content>
-    </mat-card>
-
-    <mat-card class="dashboard__card dashboard__card--em-breve">
-      <mat-card-content>
-        <h2>Indicadores e gráficos</h2>
-        <p class="dashboard__vazio">
-          Faturamento do dia e do mês, atendimentos, ticket médio e ocupação da agenda chegam aqui assim que o
-          módulo de relatórios estiver pronto.
-        </p>
-      </mat-card-content>
-    </mat-card>
+  <div class="dashboard__cabecalho">
+    <div>
+      <p class="eyebrow">Sistema para Barbearia</p>
+      <h1>Dashboard</h1>
+    </div>
+    <button mat-stroked-button type="button" [disabled]="carregando()" (click)="carregarResumo()">
+      {{ carregando() ? 'Atualizando…' : 'Atualizar' }}
+    </button>
   </div>
+
+  @if (carregando() && !resumo()) {
+    <div class="dashboard__carregando">
+      <mat-spinner diameter="32" />
+    </div>
+  } @else if (resumo(); as dados) {
+    <div class="dashboard__grade dashboard__grade--cards">
+      <mat-card class="dashboard__card">
+        <mat-card-content>
+          <p class="dashboard__rotulo">Faturamento hoje</p>
+          <p class="dashboard__valor">{{ dados.cards.faturamentoDia | currency: 'BRL' }}</p>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="dashboard__card">
+        <mat-card-content>
+          <p class="dashboard__rotulo">Faturamento do mês</p>
+          <p class="dashboard__valor">{{ dados.cards.faturamentoMes | currency: 'BRL' }}</p>
+          @if (dados.cards.percentualFaturamentoVsMesAnterior !== null) {
+            <p
+              class="dashboard__variacao"
+              [class.dashboard__variacao--positiva]="dados.cards.percentualFaturamentoVsMesAnterior >= 0"
+              [class.dashboard__variacao--negativa]="dados.cards.percentualFaturamentoVsMesAnterior < 0"
+            >
+              {{ dados.cards.percentualFaturamentoVsMesAnterior >= 0 ? '+' : '' }}{{
+                dados.cards.percentualFaturamentoVsMesAnterior
+              }}% vs. mês anterior
+            </p>
+          }
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="dashboard__card">
+        <mat-card-content>
+          <p class="dashboard__rotulo">Atendimentos hoje</p>
+          <p class="dashboard__valor">{{ dados.cards.atendimentosDia }}</p>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="dashboard__card">
+        <mat-card-content>
+          <p class="dashboard__rotulo">Ticket médio hoje</p>
+          <p class="dashboard__valor">{{ dados.cards.ticketMedioDia | currency: 'BRL' }}</p>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="dashboard__card">
+        <mat-card-content>
+          <p class="dashboard__rotulo">Ocupação da agenda hoje</p>
+          <p class="dashboard__valor">{{ dados.cards.taxaOcupacaoHoje }}%</p>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <div class="dashboard__grade">
+      <mat-card class="dashboard__card">
+        <mat-card-content>
+          <div class="dashboard__card-titulo">
+            <h2>Produtos a repor</h2>
+            @if (produtosParaRepor().length > 0) {
+              <span class="badge badge--erro">{{ produtosParaRepor().length }}</span>
+            }
+          </div>
+          @if (produtosParaRepor().length === 0) {
+            <p class="dashboard__vazio">Nenhum produto abaixo do estoque mínimo.</p>
+          } @else {
+            <ul class="dashboard__lista-estoque">
+              @for (produto of produtosParaRepor(); track produto.uuid) {
+                <li>
+                  <strong>{{ produto.nome }}</strong>
+                  <span>saldo {{ produto.estoqueAtual }} {{ produto.unidade }} (mínimo {{ produto.estoqueMinimo }})</span>
+                </li>
+              }
+            </ul>
+            <a routerLink="/produtos/estoque">Ver estoque e movimentações</a>
+          }
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="dashboard__card">
+        <mat-card-content>
+          <h2>Saúde do negócio (mês)</h2>
+          <dl class="dashboard__lista-indicadores">
+            <div>
+              <dt>Clientes novos</dt>
+              <dd>{{ dados.indicadoresSaude.clientesNovosMes }}</dd>
+            </div>
+            <div>
+              <dt>Cancelamentos</dt>
+              <dd>{{ dados.indicadoresSaude.cancelamentosMes }}</dd>
+            </div>
+            <div>
+              <dt>Faltas</dt>
+              <dd>{{ dados.indicadoresSaude.faltasMes }}</dd>
+            </div>
+            <div>
+              <dt>Fora de sincronia com o Calendar</dt>
+              <dd>{{ dados.indicadoresSaude.agendamentosForaDeSincronia }}</dd>
+            </div>
+          </dl>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="dashboard__card">
+        <mat-card-content>
+          <h2>Clube Cavalinho</h2>
+          <dl class="dashboard__lista-indicadores">
+            <div>
+              <dt>Receita recorrente</dt>
+              <dd>{{ dados.indicadoresAssinatura.receitaRecorrente | currency: 'BRL' }}</dd>
+            </div>
+            <div>
+              <dt>Taxa de churn (mês)</dt>
+              <dd>{{ dados.indicadoresAssinatura.taxaChurnMes }}%</dd>
+            </div>
+          </dl>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <div class="dashboard__grade dashboard__grade--graficos">
+      <mat-card class="dashboard__card">
+        <mat-card-content>
+          <h2>Faturamento dos últimos 12 meses</h2>
+          <app-grafico-linha [pontos]="dados.graficos.faturamentoUltimos12Meses" />
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="dashboard__card">
+        <mat-card-content>
+          <h2>Distribuição por forma de pagamento</h2>
+          <app-grafico-rosca [itens]="dados.graficos.distribuicaoFormaPagamento" />
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="dashboard__card">
+        <mat-card-content>
+          <h2>Serviços mais vendidos (mês)</h2>
+          <app-grafico-barras [itens]="dados.graficos.servicosMaisVendidos" />
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="dashboard__card">
+        <mat-card-content>
+          <h2>Atendimentos por profissional (mês)</h2>
+          <app-grafico-barras [itens]="dados.graficos.atendimentosPorProfissional" />
+        </mat-card-content>
+      </mat-card>
+    </div>
+  }
 
   <h2 class="dashboard__atalhos-titulo">Atalhos</h2>
   <nav class="dashboard__atalhos" aria-label="Atalhos do dashboard">

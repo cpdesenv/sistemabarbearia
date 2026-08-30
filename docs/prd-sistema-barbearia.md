@@ -653,10 +653,10 @@ descobrir quem é essa pessoa pela resposta. Resolver isso de verdade
 
 **Critérios de aceite**
 
-- [ ] Abro o dashboard e entendo o dia em menos de 10 segundos.
-- [ ] Os números batem com o caixa do dia e a agenda.
-- [ ] Dashboard carrega em menos de 1,5 s.
-- [ ] Layout funciona bem em celular.
+- [x] Abro o dashboard e entendo o dia em menos de 10 segundos.
+- [x] Os números batem com o caixa do dia e a agenda.
+- [x] Dashboard carrega em menos de 1,5 s.
+- [x] Layout funciona bem em celular.
 
 `git commit -m "feat: implementa dashboard administrativo com indicadores e graficos"`
 
