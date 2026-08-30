@@ -33,6 +33,7 @@ const ITENS_MENU: ItemMenu[] = [
   { rota: '/financeiro/contas', rotulo: 'Contas a pagar/receber' },
   { rota: '/financeiro/fluxo-caixa', rotulo: 'Fluxo de caixa' },
   { rota: '/clube-cavalinho', rotulo: 'Clube Cavalinho' },
+  { rota: '/relatorios', rotulo: 'Relatórios' },
   { rota: '/configuracoes/barbearia', rotulo: 'Configurações', perfis: ['ADMIN'] },
   { rota: '/configuracoes/integracoes/google-calendar', rotulo: 'Google Calendar', perfis: ['ADMIN'] },
 ];

@@ -149,6 +149,10 @@ export const routes: Routes = [
           import('./features/assinaturas/clube-cavalinho/clube-cavalinho').then((m) => m.ClubeCavalinho)
       },
       {
+        path: 'relatorios',
+        loadComponent: () => import('./features/relatorios/relatorios').then((m) => m.Relatorios)
+      },
+      {
         path: 'produtos',
         loadComponent: () =>
           import('./features/produtos/produtos-lista/produtos-lista').then((m) => m.ProdutosLista)
