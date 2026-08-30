@@ -9,6 +9,7 @@ import java.time.YearMonth;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -52,6 +53,9 @@ import com.barbearia.shared.exception.RecursoNaoEncontradoException;
  * e {@code taxaChurnMes} usa como base as assinaturas ATIVA/INADIMPLENTE
  * atuais mais as canceladas no mes, na falta de um snapshot historico de
  * quantas assinaturas estavam em curso no inicio do mes.
+ *
+ * <p>{@code agendamentosPorOrigem} entrega o analytics de origem (Portal vs.
+ * Painel) que havia ficado pendente da Fase 9 (ver CHANGELOG).
  */
 @Service
 @RequiredArgsConstructor
@@ -59,6 +63,12 @@ public class DashboardService {
 
     private static final int MESES_HISTORICO_FATURAMENTO = 12;
     private static final int TOP_SERVICOS_MAIS_VENDIDOS = 5;
+
+    private static final Map<String, String> RUTULOS_ORIGEM_AGENDAMENTO = Map.of(
+            "WHATSAPP", "WhatsApp",
+            "PORTAL", "Portal",
+            "PAINEL", "Painel",
+            "MANUAL", "Manual");
 
     private final BarbeariaRepository barbeariaRepository;
     private final ComandaRepository comandaRepository;
@@ -194,8 +204,14 @@ public class DashboardService {
         List<TotalPorFormaPagamentoDto> distribuicaoFormaPagamento = comandaRepository
                 .somarPorFormaPagamentoEPeriodo(StatusComanda.FECHADA, inicioMes, fimMes);
 
+        List<ItemContagemDto> agendamentosPorOrigem = agendamentoRepository
+                .contarPorOrigemEPeriodo(inicioMes, fimMes).stream()
+                .map(item -> new ItemContagemDto(
+                        RUTULOS_ORIGEM_AGENDAMENTO.getOrDefault(item.nome(), item.nome()), item.quantidade()))
+                .toList();
+
         return new DashboardGraficosDto(faturamentoUltimos12Meses, servicosMaisVendidos, atendimentosPorProfissional,
-                distribuicaoFormaPagamento);
+                distribuicaoFormaPagamento, agendamentosPorOrigem);
     }
 
     private Barbearia obterBarbearia() {

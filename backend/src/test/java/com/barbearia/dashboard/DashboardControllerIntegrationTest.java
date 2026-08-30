@@ -91,6 +91,9 @@ class DashboardControllerIntegrationTest extends IntegrationTestBase {
         assertThat(corpo.get("graficos").get("distribuicaoFormaPagamento")).anySatisfy(item ->
                 assertThat(item.get("formaPagamento").asText()).isEqualTo("PIX"));
 
+        assertThat(corpo.get("graficos").get("agendamentosPorOrigem")).anySatisfy(item ->
+                assertThat(item.get("nome").asText()).isEqualTo("Painel"));
+
         assertThat(corpo.get("indicadoresSaude").get("clientesNovosMes").asLong()).isGreaterThanOrEqualTo(1);
     }
 

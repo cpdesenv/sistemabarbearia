@@ -8,5 +8,6 @@ public record DashboardGraficosDto(
         List<PontoMensalDto> faturamentoUltimos12Meses,
         List<ItemContagemDto> servicosMaisVendidos,
         List<ItemContagemDto> atendimentosPorProfissional,
-        List<TotalPorFormaPagamentoDto> distribuicaoFormaPagamento) {
+        List<TotalPorFormaPagamentoDto> distribuicaoFormaPagamento,
+        List<ItemContagemDto> agendamentosPorOrigem) {
 }

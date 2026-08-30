@@ -36,6 +36,7 @@ export interface DashboardGraficos {
   servicosMaisVendidos: ItemContagem[];
   atendimentosPorProfissional: ItemContagem[];
   distribuicaoFormaPagamento: TotalPorFormaPagamento[];
+  agendamentosPorOrigem: ItemContagem[];
 }
 
 export interface DashboardResumo {
