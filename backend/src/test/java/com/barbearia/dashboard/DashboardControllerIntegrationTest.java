@@ -94,20 +94,30 @@ class DashboardControllerIntegrationTest extends IntegrationTestBase {
         assertThat(corpo.get("indicadoresSaude").get("clientesNovosMes").asLong()).isGreaterThanOrEqualTo(1);
     }
 
+    /**
+     * O container Postgres e' compartilhado por toda a suite (ver
+     * IntegrationTestBase) e outros testes de assinatura podem deixar
+     * fixtures permanentes (ex.: transacoes REQUIRES_NEW de
+     * AssinaturaRenovacaoScheduler nao participam do rollback do
+     * @Transactional do metodo de teste que as disparou) - por isso as
+     * asserções abaixo comparam o "antes" com o "depois" da propria
+     * chamada, em vez de valor absoluto (mesma classe de problema corrigida
+     * em f148a72, "contagem global de clientes no teste do portal").
+     */
     @Test
     void resumoDeveRefletirReceitaRecorrenteETaxaDeChurnDeAssinaturas() throws Exception {
         String token = autenticar("admin.dashboard2@teste.com", "198.51.105.2");
+
+        double receitaAntes = indicadoresAssinatura(token).get("receitaRecorrente").asDouble();
 
         UUID clienteUuid = criarCliente(token, "Cliente Assinante Dashboard", "(19) 99000-5002");
         UUID servicoUuid = criarServico(token, "Corte Clube Dashboard", 30, "60.00");
         UUID planoUuid = criarPlano(token, "Plano Dashboard", "80.00", 1, List.of(servicoUuid));
         UUID assinaturaUuid = assinar(token, clienteUuid, planoUuid);
 
-        mockMvc.perform(get("/api/dashboard/resumo")
-                        .header("Authorization", "Bearer " + token))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.indicadoresAssinatura.receitaRecorrente").value(80.00))
-                .andExpect(jsonPath("$.indicadoresAssinatura.taxaChurnMes").value(0.00));
+        JsonNode indicadoresAposAssinar = indicadoresAssinatura(token);
+        assertThat(indicadoresAposAssinar.get("receitaRecorrente").asDouble()).isEqualTo(receitaAntes + 80.00);
+        double churnAposAssinar = indicadoresAposAssinar.get("taxaChurnMes").asDouble();
 
         mockMvc.perform(post("/api/assinaturas/" + assinaturaUuid + "/cancelar")
                         .header("Authorization", "Bearer " + token)
@@ -115,11 +125,17 @@ class DashboardControllerIntegrationTest extends IntegrationTestBase {
                         .content("{\"motivo\": \"Teste dashboard\", \"dataEfeito\": \"" + LocalDate.now(FUSO) + "\"}"))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(get("/api/dashboard/resumo")
+        JsonNode indicadoresAposCancelar = indicadoresAssinatura(token);
+        assertThat(indicadoresAposCancelar.get("receitaRecorrente").asDouble()).isEqualTo(receitaAntes);
+        assertThat(indicadoresAposCancelar.get("taxaChurnMes").asDouble()).isGreaterThan(churnAposAssinar);
+    }
+
+    private JsonNode indicadoresAssinatura(String token) throws Exception {
+        String resposta = mockMvc.perform(get("/api/dashboard/resumo")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.indicadoresAssinatura.receitaRecorrente").value(0.00))
-                .andExpect(jsonPath("$.indicadoresAssinatura.taxaChurnMes").value(100.00));
+                .andReturn().getResponse().getContentAsString();
+        return objectMapper.readTree(resposta).get("indicadoresAssinatura");
     }
 
     private UUID abrirComanda(String token, UUID agendamentoUuid) throws Exception {
