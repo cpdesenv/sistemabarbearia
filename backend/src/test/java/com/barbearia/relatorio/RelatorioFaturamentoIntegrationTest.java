@@ -59,7 +59,7 @@ class RelatorioFaturamentoIntegrationTest extends IntegrationTestBase {
         String token = autenticar("admin.relatorio1@teste.com", "198.51.106.1");
 
         UUID clienteUuid = criarCliente(token, "Cliente Relatorio", "(19) 99000-6001");
-        UUID servicoUuid = criarServico(token, "Corte Relatorio", 30, "100.00");
+        UUID servicoUuid = criarServico(token, "Corte Relatorio", 5, "100.00");
         UUID profissionalUuid = criarProfissional(token, "Prof Relatorio");
         vincularServico(token, profissionalUuid, servicoUuid);
         sincronizarGradeDiaInteiroHoje(token, profissionalUuid);
@@ -102,7 +102,7 @@ class RelatorioFaturamentoIntegrationTest extends IntegrationTestBase {
         String token = autenticar("admin.relatorio2@teste.com", "198.51.106.2");
 
         UUID clienteUuid = criarCliente(token, "Cliente Comparativo", "(19) 99000-6002");
-        UUID servicoUuid = criarServico(token, "Corte Comparativo", 30, "50.00");
+        UUID servicoUuid = criarServico(token, "Corte Comparativo", 5, "50.00");
         UUID profissionalUuid = criarProfissional(token, "Prof Comparativo");
         vincularServico(token, profissionalUuid, servicoUuid);
         sincronizarGradeDiaInteiroHoje(token, profissionalUuid);
@@ -154,13 +154,26 @@ class RelatorioFaturamentoIntegrationTest extends IntegrationTestBase {
 
     private UUID criarEFecharComanda(String token, UUID clienteUuid, UUID profissionalUuid, UUID servicoUuid,
             String formaPagamento) throws Exception {
-        Instant inicio = ZonedDateTime.now(FUSO).plusMinutes(5).truncatedTo(ChronoUnit.MINUTES).toInstant();
+        Instant inicio = horarioSeguroHoje(5);
         UUID agendamentoUuid = criarAgendamento(token, clienteUuid, profissionalUuid, servicoUuid, inicio);
         confirmar(token, agendamentoUuid);
         UUID comandaUuid = abrirComanda(token, agendamentoUuid);
         definirFormaPagamento(token, comandaUuid, formaPagamento);
         fecharComanda(token, comandaUuid);
         return comandaUuid;
+    }
+
+    /**
+     * "Agora + 5 min" cruza a virada do dia se a suite rodar perto da meia-noite
+     * local (falha real observada, nao teorica). Usa o mais tardar entre
+     * "agora + 5 min" e o ultimo horario que ainda cabe o servico hoje.
+     */
+    private Instant horarioSeguroHoje(int duracaoServicoMinutos) {
+        ZonedDateTime agora = ZonedDateTime.now(FUSO);
+        ZonedDateTime desejado = agora.plusMinutes(5).truncatedTo(ChronoUnit.MINUTES);
+        ZonedDateTime ultimoSlotHoje = agora.toLocalDate().atTime(23, 59).atZone(FUSO)
+                .minusMinutes(duracaoServicoMinutos).truncatedTo(ChronoUnit.MINUTES);
+        return (desejado.isAfter(ultimoSlotHoje) ? ultimoSlotHoje : desejado).toInstant();
     }
 
     private UUID abrirComanda(String token, UUID agendamentoUuid) throws Exception {

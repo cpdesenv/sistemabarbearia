@@ -21,9 +21,13 @@ import lombok.RequiredArgsConstructor;
 
 import com.barbearia.financeiro.domain.FormaPagamento;
 import com.barbearia.relatorio.dto.ComparativoFaturamentoDto;
+import com.barbearia.relatorio.dto.RelatorioAgendaDto;
+import com.barbearia.relatorio.dto.RelatorioClientesDto;
 import com.barbearia.relatorio.dto.RelatorioFaturamentoDto;
 import com.barbearia.relatorio.dto.ReprocessarRelatorioRequest;
+import com.barbearia.relatorio.service.RelatorioAgendaService;
 import com.barbearia.relatorio.service.RelatorioAgregacaoService;
+import com.barbearia.relatorio.service.RelatorioClienteService;
 import com.barbearia.relatorio.service.RelatorioFaturamentoService;
 
 @RestController
@@ -33,6 +37,8 @@ import com.barbearia.relatorio.service.RelatorioFaturamentoService;
 public class RelatorioController {
 
     private final RelatorioFaturamentoService relatorioFaturamentoService;
+    private final RelatorioAgendaService relatorioAgendaService;
+    private final RelatorioClienteService relatorioClienteService;
     private final RelatorioAgregacaoService relatorioAgregacaoService;
 
     @GetMapping("/faturamento")
@@ -53,6 +59,21 @@ public class RelatorioController {
             @RequestParam(required = false) UUID servicoUuid,
             @RequestParam(required = false) FormaPagamento formaPagamento) {
         return relatorioFaturamentoService.comparativo(mes, profissionalUuid, servicoUuid, formaPagamento);
+    }
+
+    @GetMapping("/agenda")
+    public RelatorioAgendaDto agenda(
+            @RequestParam LocalDate dataInicial,
+            @RequestParam LocalDate dataFinal,
+            @RequestParam(required = false) UUID profissionalUuid) {
+        return relatorioAgendaService.consultar(dataInicial, dataFinal, profissionalUuid);
+    }
+
+    @GetMapping("/clientes")
+    public RelatorioClientesDto clientes(
+            @RequestParam LocalDate dataInicial,
+            @RequestParam LocalDate dataFinal) {
+        return relatorioClienteService.consultar(dataInicial, dataFinal);
     }
 
     @PostMapping("/reprocessar")

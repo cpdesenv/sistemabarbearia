@@ -400,6 +400,51 @@ ao mês corrente, exceto o histórico de 12 meses).
 Painel: tela **Dashboard** (rota `/dashboard`, primeira tela após o
 login), com atualização por botão manual — sem polling automático.
 
+## Relatórios (Fase 11)
+
+Fato pré-agregado por dia (`relatorio_servico_diario`,
+`relatorio_agenda_diario`, `relatorio_cliente_diario`), povoado por job
+noturno (`RelatorioAgregacaoScheduler`) que agrega o dia anterior — nunca
+soma direto sobre `comanda`/`agendamento` em tempo real, para manter a
+resposta rápida mesmo com histórico grande. O dia corrente (ainda não
+agregado) é somado ao vivo por cima do histórico nos três serviços de
+leitura. `POST /api/relatorios/reprocessar` (ADMIN/GERENTE) refaz a
+agregação de um intervalo de datas — usar após backfill de dados antigos
+ou correção de um estorno tardio num dia já agregado.
+
+```bash
+# Faturamento no periodo, com filtros opcionais de profissional/servico/forma de pagamento
+curl "http://localhost:8080/api/relatorios/faturamento?dataInicial=2026-08-01&dataFinal=2026-08-31" \
+  -H "Authorization: Bearer <accessToken>"
+
+# Comparativo do mes informado vs. mes anterior vs. mesmo mes do ano anterior
+curl "http://localhost:8080/api/relatorios/faturamento/comparativo?mes=2026-08" \
+  -H "Authorization: Bearer <accessToken>"
+
+# Cancelamentos, faltas e taxa de ocupacao no periodo (com filtro opcional de profissional)
+curl "http://localhost:8080/api/relatorios/agenda?dataInicial=2026-08-01&dataFinal=2026-08-31" \
+  -H "Authorization: Bearer <accessToken>"
+
+# Clientes novos vs. recorrentes e taxa de retorno no periodo
+curl "http://localhost:8080/api/relatorios/clientes?dataInicial=2026-08-01&dataFinal=2026-08-31" \
+  -H "Authorization: Bearer <accessToken>"
+
+# Reprocessar agregacao de um intervalo (ADMIN/GERENTE) - backfill ou correcao
+curl -X POST http://localhost:8080/api/relatorios/reprocessar \
+  -H "Authorization: Bearer <accessToken>" -H "Content-Type: application/json" \
+  -d '{"dataInicial":"2026-08-01","dataFinal":"2026-08-31"}'
+```
+
+Painel: tela **Relatórios** (rota `/relatorios`), com filtro de período e
+profissional; comparativo mensal do faturamento, indicadores de clientes
+no período e indicadores de agenda (geral e por profissional).
+
+**Ainda pendente nesta fase** (próximas etapas): comissões a pagar,
+produtos mais vendidos e margem, heatmap de horários de maior movimento,
+fluxo de caixa mensal, previsão de compromissos, análise de assinaturas,
+filtro por serviço/forma de pagamento nos relatórios de agenda/clientes, e
+exportação para Excel/PDF.
+
 ## Como executar os testes
 
 Backend (usa Testcontainers — requer Docker disponível para o usuário que

@@ -2,7 +2,13 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
-import { ComparativoFaturamento, FiltroRelatorioFaturamento, RelatorioFaturamento } from './relatorios.model';
+import {
+  ComparativoFaturamento,
+  FiltroRelatorioFaturamento,
+  RelatorioAgenda,
+  RelatorioClientes,
+  RelatorioFaturamento,
+} from './relatorios.model';
 
 @Injectable({ providedIn: 'root' })
 export class RelatoriosService {
@@ -18,6 +24,19 @@ export class RelatoriosService {
   comparativoFaturamento(mes: string, filtro: FiltroRelatorioFaturamento): Observable<ComparativoFaturamento> {
     const params = this.paramsComuns(filtro).set('mes', mes);
     return this.http.get<ComparativoFaturamento>('/api/relatorios/faturamento/comparativo', { params });
+  }
+
+  agenda(filtro: FiltroRelatorioFaturamento): Observable<RelatorioAgenda> {
+    let params = new HttpParams().set('dataInicial', filtro.dataInicial).set('dataFinal', filtro.dataFinal);
+    if (filtro.profissionalUuid) {
+      params = params.set('profissionalUuid', filtro.profissionalUuid);
+    }
+    return this.http.get<RelatorioAgenda>('/api/relatorios/agenda', { params });
+  }
+
+  clientes(dataInicial: string, dataFinal: string): Observable<RelatorioClientes> {
+    const params = new HttpParams().set('dataInicial', dataInicial).set('dataFinal', dataFinal);
+    return this.http.get<RelatorioClientes>('/api/relatorios/clientes', { params });
   }
 
   private paramsComuns(filtro: FiltroRelatorioFaturamento): HttpParams {

@@ -27,6 +27,16 @@ public interface AgendamentoRepository extends JpaRepository<Agendamento, Long>,
 
     long countByStatusAndInicioBetween(StatusAgendamento status, Instant inicio, Instant fim);
 
+    /**
+     * Todos os agendamentos do periodo (qualquer status, ao contrario de
+     * {@link #findByInicioGreaterThanEqualAndInicioLessThanAndStatusNot}) —
+     * usado por {@code RelatorioAgregacaoService} para contar finalizados,
+     * cancelados e faltas do dia num unico fetch, com o profissional ja
+     * carregado (evita N+1 ao agrupar por profissional em Java).
+     */
+    @Query("SELECT a FROM Agendamento a JOIN FETCH a.profissional WHERE a.inicio >= :inicio AND a.inicio < :fim")
+    List<Agendamento> buscarComProfissionalNoPeriodo(@Param("inicio") Instant inicio, @Param("fim") Instant fim);
+
     /** Nome de {@link ItemContagemDto} traz o nome bruto da origem (enum), traduzido em {@code DashboardService}. */
     @Query("""
             SELECT new com.barbearia.dashboard.dto.ItemContagemDto(CAST(a.origem AS string), COUNT(a))

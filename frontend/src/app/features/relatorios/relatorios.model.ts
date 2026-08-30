@@ -34,3 +34,30 @@ export interface FiltroRelatorioFaturamento {
   servicoUuid?: string;
   formaPagamento?: FormaPagamento | '';
 }
+
+export interface LinhaAgenda {
+  profissionalNome: string;
+  quantidadeFinalizados: number;
+  quantidadeCancelados: number;
+  quantidadeNaoCompareceu: number;
+  taxaOcupacao: number;
+}
+
+export interface RelatorioAgenda {
+  dataInicial: string;
+  dataFinal: string;
+  quantidadeFinalizados: number;
+  quantidadeCancelados: number;
+  quantidadeNaoCompareceu: number;
+  taxaOcupacao: number;
+  porProfissional: LinhaAgenda[];
+}
+
+export interface RelatorioClientes {
+  dataInicial: string;
+  dataFinal: string;
+  clientesNovos: number;
+  clientesRecorrentes: number;
+  atendimentosTotais: number;
+  taxaDeRetorno: number;
+}
