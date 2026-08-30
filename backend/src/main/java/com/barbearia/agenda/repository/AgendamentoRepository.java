@@ -12,6 +12,7 @@ import org.springframework.data.repository.query.Param;
 
 import com.barbearia.agenda.domain.Agendamento;
 import com.barbearia.agenda.domain.StatusAgendamento;
+import com.barbearia.dashboard.dto.ItemContagemDto;
 import com.barbearia.profissional.domain.Profissional;
 
 public interface AgendamentoRepository extends JpaRepository<Agendamento, Long>,
@@ -25,6 +26,16 @@ public interface AgendamentoRepository extends JpaRepository<Agendamento, Long>,
             StatusAgendamento statusExcluido);
 
     long countByStatusAndInicioBetween(StatusAgendamento status, Instant inicio, Instant fim);
+
+    /** Nome de {@link ItemContagemDto} traz o nome bruto da origem (enum), traduzido em {@code DashboardService}. */
+    @Query("""
+            SELECT new com.barbearia.dashboard.dto.ItemContagemDto(CAST(a.origem AS string), COUNT(a))
+            FROM Agendamento a
+            WHERE a.inicio BETWEEN :inicio AND :fim
+            GROUP BY a.origem
+            ORDER BY COUNT(a) DESC
+            """)
+    List<ItemContagemDto> contarPorOrigemEPeriodo(@Param("inicio") Instant inicio, @Param("fim") Instant fim);
 
     /**
      * Agendamentos do profissional que ocupam a agenda (status diferente de

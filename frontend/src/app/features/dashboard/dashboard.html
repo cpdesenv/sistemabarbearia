@@ -156,6 +156,13 @@
           <app-grafico-barras [itens]="dados.graficos.atendimentosPorProfissional" />
         </mat-card-content>
       </mat-card>
+
+      <mat-card class="dashboard__card">
+        <mat-card-content>
+          <h2>Agendamentos por origem (mês)</h2>
+          <app-grafico-barras [itens]="dados.graficos.agendamentosPorOrigem" />
+        </mat-card-content>
+      </mat-card>
     </div>
   }
 
