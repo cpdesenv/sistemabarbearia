@@ -11,6 +11,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.barbearia.agenda.domain.Agendamento;
+import com.barbearia.agenda.domain.StatusAgendamento;
 import com.barbearia.profissional.domain.Profissional;
 
 public interface AgendamentoRepository extends JpaRepository<Agendamento, Long>,
@@ -19,6 +20,11 @@ public interface AgendamentoRepository extends JpaRepository<Agendamento, Long>,
     Optional<Agendamento> findByUuidPublico(UUID uuidPublico);
 
     List<Agendamento> findByCliente_UuidPublicoOrderByInicioDesc(UUID clienteUuidPublico);
+
+    List<Agendamento> findByInicioGreaterThanEqualAndInicioLessThanAndStatusNot(Instant inicio, Instant fim,
+            StatusAgendamento statusExcluido);
+
+    long countByStatusAndInicioBetween(StatusAgendamento status, Instant inicio, Instant fim);
 
     /**
      * Agendamentos do profissional que ocupam a agenda (status diferente de

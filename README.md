@@ -374,6 +374,32 @@ Painel: menu **Clube Cavalinho** (aba "Assinantes" — resumo, nova
 assinatura, cancelamento; aba "Meus planos" — CRUD de planos e escolha dos
 serviços inclusos).
 
+## Dashboard (Fase 10)
+
+Um único endpoint de leitura (`GET /api/dashboard/resumo`) agrega dados já
+existentes em agenda, financeiro, produtos, clientes e assinaturas — não
+introduz novo estado, só consultas. Duas simplificações deliberadas da v1:
+`taxaOcupacaoHoje` não desconta `Bloqueio` da capacidade (só considera a
+grade semanal), e `taxaChurnMes` usa como base as assinaturas
+ATIVA/INADIMPLENTE atuais mais as canceladas no mês, na falta de um
+snapshot histórico de quantas assinaturas estavam em curso no início do
+mês (ver `DashboardService`).
+
+```bash
+curl http://localhost:8080/api/dashboard/resumo -H "Authorization: Bearer <accessToken>"
+```
+
+Retorna `cards` (faturamento do dia/mês, atendimentos do dia, ticket
+médio, ocupação da agenda), `indicadoresSaude` (clientes novos,
+cancelamentos, faltas, agendamentos fora de sincronia com o Calendar),
+`indicadoresAssinatura` (receita recorrente, taxa de churn) e `graficos`
+(faturamento dos últimos 12 meses, serviços mais vendidos, atendimentos
+por profissional e distribuição por forma de pagamento — todos referentes
+ao mês corrente, exceto o histórico de 12 meses).
+
+Painel: tela **Dashboard** (rota `/dashboard`, primeira tela após o
+login), com atualização por botão manual — sem polling automático.
+
 ## Como executar os testes
 
 Backend (usa Testcontainers — requer Docker disponível para o usuário que

@@ -1,0 +1,34 @@
+@if (fatias().length === 0) {
+  <p class="grafico-vazio">Sem dados no período.</p>
+} @else {
+  <div class="grafico-rosca">
+    <svg class="grafico-rosca__svg" viewBox="0 0 120 120" role="img" aria-label="Distribuição por forma de pagamento">
+      <circle class="grafico-rosca__trilho" [attr.cx]="centro" [attr.cy]="centro" [attr.r]="raio" />
+      <g [attr.transform]="'rotate(-90 ' + centro + ' ' + centro + ')'">
+        @for (fatia of fatias(); track fatia.formaPagamento) {
+          <circle
+            class="grafico-rosca__fatia"
+            [attr.cx]="centro"
+            [attr.cy]="centro"
+            [attr.r]="raio"
+            [attr.stroke]="fatia.cor"
+            [attr.stroke-dasharray]="fatia.tracoDasharray"
+            [attr.stroke-dashoffset]="fatia.tracoDashoffset"
+          >
+            <title>{{ fatia.rotulo }}: {{ fatia.valor | currency: 'BRL' }} ({{ fatia.percentual | number: '1.0-0' }}%)</title>
+          </circle>
+        }
+      </g>
+    </svg>
+
+    <ul class="grafico-rosca__legenda">
+      @for (fatia of fatias(); track fatia.formaPagamento) {
+        <li>
+          <span class="grafico-rosca__marcador" [style.background]="fatia.cor"></span>
+          <span class="grafico-rosca__legenda-rotulo">{{ fatia.rotulo }}</span>
+          <span class="grafico-rosca__legenda-valor">{{ fatia.valor | currency: 'BRL' }}</span>
+        </li>
+      }
+    </ul>
+  </div>
+}

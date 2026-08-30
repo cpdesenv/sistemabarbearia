@@ -1,5 +1,6 @@
 package com.barbearia.cliente.repository;
 
+import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -13,4 +14,6 @@ public interface ClienteRepository extends JpaRepository<Cliente, Long>, JpaSpec
     Optional<Cliente> findByUuidPublico(UUID uuidPublico);
 
     Optional<Cliente> findByTelefone(String telefone);
+
+    long countByCriadoEmBetween(Instant inicio, Instant fim);
 }

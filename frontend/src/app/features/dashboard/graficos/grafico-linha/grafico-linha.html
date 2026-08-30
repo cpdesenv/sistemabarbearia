@@ -1,0 +1,36 @@
+@if (pontos().length === 0) {
+  <p class="grafico-vazio">Sem dados no período.</p>
+} @else {
+  <svg
+    class="grafico-linha"
+    [attr.viewBox]="'0 0 ' + largura + ' ' + altura"
+    role="img"
+    [attr.aria-label]="'Faturamento dos últimos ' + pontos().length + ' meses'"
+  >
+    <line
+      class="grafico-linha__base"
+      x1="0"
+      [attr.y1]="linhaBase()"
+      [attr.x2]="largura"
+      [attr.y2]="linhaBase()"
+    />
+
+    <path class="grafico-linha__traco" [attr.d]="linha()" />
+
+    @for (ponto of pontosDesenhados(); track ponto.rotuloMes + ponto.x) {
+      <circle class="grafico-linha__ponto" [attr.cx]="ponto.x" [attr.cy]="ponto.y" r="3">
+        <title>{{ ponto.rotuloMes }}: {{ ponto.valor | currency: 'BRL' }}</title>
+      </circle>
+      <text class="grafico-linha__rotulo-mes" [attr.x]="ponto.x" [attr.y]="altura - 8">
+        {{ ponto.rotuloMes }}
+      </text>
+    }
+
+    @if (ultimoPonto(); as ultimo) {
+      <circle class="grafico-linha__ponto-final" [attr.cx]="ultimo.x" [attr.cy]="ultimo.y" r="5" />
+      <text class="grafico-linha__valor-final" [attr.x]="ultimo.x + 8" [attr.y]="ultimo.y - 8">
+        {{ ultimo.valor | currency: 'BRL' : 'symbol' : '1.0-0' }}
+      </text>
+    }
+  </svg>
+}

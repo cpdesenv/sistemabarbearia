@@ -21,4 +21,6 @@ public interface AgendamentoCalendarOutboxRepository extends JpaRepository<Agend
 
     List<AgendamentoCalendarOutbox> findByStatusOrTentativasGreaterThanOrderByProximaTentativaEmAsc(
             StatusOutbox status, int tentativas);
+
+    long countByStatus(StatusOutbox status);
 }

@@ -1,8 +1,77 @@
+.dashboard__cabecalho {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.dashboard__carregando {
+  display: flex;
+  justify-content: center;
+  padding: 48px 0;
+}
+
 .dashboard__grade {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 16px;
   margin-bottom: 32px;
+}
+
+.dashboard__grade--cards {
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+.dashboard__grade--graficos {
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+}
+
+.dashboard__rotulo {
+  margin: 0 0 4px;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.dashboard__valor {
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.dashboard__variacao {
+  margin: 4px 0 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.dashboard__variacao--positiva {
+  color: var(--success-text);
+}
+
+.dashboard__variacao--negativa {
+  color: var(--error-text);
+}
+
+.dashboard__lista-indicadores {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px var(--space-3);
+  margin: 0;
+}
+
+.dashboard__lista-indicadores dt {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.dashboard__lista-indicadores dd {
+  margin: 0;
+  color: var(--ink);
+  font-weight: 600;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 .dashboard__card-titulo {
@@ -18,10 +87,6 @@
 
 .dashboard__vazio {
   color: var(--muted);
-}
-
-.dashboard__card--em-breve {
-  border-style: dashed !important;
 }
 
 .dashboard__lista-estoque {

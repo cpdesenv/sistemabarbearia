@@ -1,0 +1,15 @@
+@if (itens().length === 0) {
+  <p class="grafico-vazio">Sem dados no período.</p>
+} @else {
+  <div class="grafico-barras">
+    @for (item of itens(); track item.nome) {
+      <div class="grafico-barras__linha">
+        <span class="grafico-barras__rotulo">{{ item.nome }}</span>
+        <div class="grafico-barras__trilho">
+          <div class="grafico-barras__barra" [style.width.%]="percentual(item.quantidade)"></div>
+        </div>
+        <span class="grafico-barras__valor">{{ item.quantidade }}</span>
+      </div>
+    }
+  </div>
+}

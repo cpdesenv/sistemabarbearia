@@ -28,6 +28,8 @@ public interface AssinaturaRepository extends JpaRepository<Assinatura, Long> {
 
     long countByStatus(StatusAssinatura status);
 
+    long countByStatusAndDataCancelamentoBetween(StatusAssinatura status, LocalDate inicio, LocalDate fim);
+
     List<Assinatura> findByStatusInAndDataProximaRenovacaoLessThanEqual(List<StatusAssinatura> status,
             LocalDate data);
 
