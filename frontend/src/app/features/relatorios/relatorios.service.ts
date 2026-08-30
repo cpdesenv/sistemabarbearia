@@ -8,6 +8,8 @@ import {
   RelatorioAgenda,
   RelatorioClientes,
   RelatorioFaturamento,
+  RelatorioHeatmap,
+  RelatorioProduto,
 } from './relatorios.model';
 
 @Injectable({ providedIn: 'root' })
@@ -37,6 +39,16 @@ export class RelatoriosService {
   clientes(dataInicial: string, dataFinal: string): Observable<RelatorioClientes> {
     const params = new HttpParams().set('dataInicial', dataInicial).set('dataFinal', dataFinal);
     return this.http.get<RelatorioClientes>('/api/relatorios/clientes', { params });
+  }
+
+  produtos(dataInicial: string, dataFinal: string): Observable<RelatorioProduto> {
+    const params = new HttpParams().set('dataInicial', dataInicial).set('dataFinal', dataFinal);
+    return this.http.get<RelatorioProduto>('/api/relatorios/produtos', { params });
+  }
+
+  heatmapHorarios(dataInicial: string, dataFinal: string): Observable<RelatorioHeatmap> {
+    const params = new HttpParams().set('dataInicial', dataInicial).set('dataFinal', dataFinal);
+    return this.http.get<RelatorioHeatmap>('/api/relatorios/heatmap-horarios', { params });
   }
 
   private paramsComuns(filtro: FiltroRelatorioFaturamento): HttpParams {

@@ -27,11 +27,17 @@ import com.barbearia.profissional.domain.Profissional;
 import com.barbearia.profissional.repository.ProfissionalRepository;
 import com.barbearia.relatorio.domain.RelatorioAgendaDiario;
 import com.barbearia.relatorio.domain.RelatorioClienteDiario;
+import com.barbearia.relatorio.domain.RelatorioHorarioDiario;
+import com.barbearia.relatorio.domain.RelatorioProdutoDiario;
 import com.barbearia.relatorio.domain.RelatorioServicoDiario;
 import com.barbearia.relatorio.dto.AgregacaoAgendaDto;
 import com.barbearia.relatorio.dto.AgregacaoClienteDto;
+import com.barbearia.relatorio.dto.AgregacaoHorarioDto;
+import com.barbearia.relatorio.dto.AgregacaoProdutoDto;
 import com.barbearia.relatorio.repository.RelatorioAgendaDiarioRepository;
 import com.barbearia.relatorio.repository.RelatorioClienteDiarioRepository;
+import com.barbearia.relatorio.repository.RelatorioHorarioDiarioRepository;
+import com.barbearia.relatorio.repository.RelatorioProdutoDiarioRepository;
 import com.barbearia.relatorio.repository.RelatorioServicoDiarioRepository;
 import com.barbearia.shared.exception.NegocioException;
 import com.barbearia.shared.exception.RecursoNaoEncontradoException;
@@ -44,7 +50,8 @@ import com.barbearia.shared.exception.RecursoNaoEncontradoException;
  * historico apos o deploy desta fase, ou correcao apos um estorno tardio
  * num dia ja agregado).
  *
- * <p>{@link #calcularAgendaDoDia} e {@link #calcularClientesDoDia} sao
+ * <p>{@link #calcularAgendaDoDia}, {@link #calcularClientesDoDia},
+ * {@link #calcularProdutosDoDia} e {@link #calcularHorariosDoDia} sao
  * publicos e reaproveitados pelos servicos de leitura (ex.:
  * {@code RelatorioAgendaService}) para computar o dia corrente ao vivo, sem
  * persistir — o job so' agrega "ontem" (ver
@@ -62,6 +69,8 @@ public class RelatorioAgregacaoService {
     private final RelatorioServicoDiarioRepository relatorioServicoDiarioRepository;
     private final RelatorioAgendaDiarioRepository relatorioAgendaDiarioRepository;
     private final RelatorioClienteDiarioRepository relatorioClienteDiarioRepository;
+    private final RelatorioProdutoDiarioRepository relatorioProdutoDiarioRepository;
+    private final RelatorioHorarioDiarioRepository relatorioHorarioDiarioRepository;
 
     @Transactional
     public void agregarDia(LocalDate data) {
@@ -83,6 +92,16 @@ public class RelatorioAgregacaoService {
         AgregacaoClienteDto clientes = calcularClientesDoDia(data);
         relatorioClienteDiarioRepository.save(new RelatorioClienteDiario(data, clientes.clientesNovos(),
                 clientes.clientesRecorrentes(), clientes.atendimentosTotais()));
+
+        relatorioProdutoDiarioRepository.deleteByData(data);
+        calcularProdutosDoDia(data).stream()
+                .map(agregacao -> new RelatorioProdutoDiario(data, agregacao))
+                .forEach(relatorioProdutoDiarioRepository::save);
+
+        relatorioHorarioDiarioRepository.deleteByData(data);
+        calcularHorariosDoDia(data).stream()
+                .map(agregacao -> new RelatorioHorarioDiario(data, agregacao))
+                .forEach(relatorioHorarioDiarioRepository::save);
     }
 
     @Transactional
@@ -155,6 +174,31 @@ public class RelatorioAgregacaoService {
         int atendimentosTotais = (int) comandaRepository.contarPorStatusEPeriodo(StatusComanda.FECHADA, periodo[0],
                 periodo[1]);
         return new AgregacaoClienteDto(novos, recorrentes, atendimentosTotais);
+    }
+
+    @Transactional(readOnly = true)
+    public List<AgregacaoProdutoDto> calcularProdutosDoDia(LocalDate data) {
+        Instant[] periodo = periodoDoDia(data);
+        return comandaRepository.agregarProdutosPorPeriodo(StatusComanda.FECHADA, periodo[0], periodo[1]);
+    }
+
+    /** So retorna horas com pelo menos um FINALIZADO — ver javadoc de {@code RelatorioHorarioDiario}. */
+    @Transactional(readOnly = true)
+    public List<AgregacaoHorarioDto> calcularHorariosDoDia(LocalDate data) {
+        Instant[] periodo = periodoDoDia(data);
+        ZoneId fuso = obterFusoHorario();
+
+        Map<Integer, Long> quantidadePorHora = new HashMap<>();
+        for (Agendamento agendamento : agendamentoRepository.buscarComProfissionalNoPeriodo(periodo[0], periodo[1])) {
+            if (agendamento.getStatus() == StatusAgendamento.FINALIZADO) {
+                int hora = agendamento.getInicio().atZone(fuso).getHour();
+                quantidadePorHora.merge(hora, 1L, Long::sum);
+            }
+        }
+
+        return quantidadePorHora.entrySet().stream()
+                .map(entrada -> new AgregacaoHorarioDto(entrada.getKey(), entrada.getValue()))
+                .toList();
     }
 
     private Instant[] periodoDoDia(LocalDate data) {

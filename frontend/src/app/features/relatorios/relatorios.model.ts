@@ -61,3 +61,34 @@ export interface RelatorioClientes {
   atendimentosTotais: number;
   taxaDeRetorno: number;
 }
+
+export interface LinhaProduto {
+  nome: string;
+  quantidadeVendida: number;
+  valorTotal: number;
+  custoTotal: number;
+  margemTotal: number;
+  margemPercentual: number;
+}
+
+export interface RelatorioProduto {
+  dataInicial: string;
+  dataFinal: string;
+  valorTotal: number;
+  custoTotal: number;
+  margemTotal: number;
+  margemPercentual: number;
+  porProduto: LinhaProduto[];
+}
+
+export interface CelulaHeatmap {
+  diaSemana: number;
+  hora: number;
+  quantidadeFinalizados: number;
+}
+
+export interface RelatorioHeatmap {
+  dataInicial: string;
+  dataFinal: string;
+  celulas: CelulaHeatmap[];
+}
