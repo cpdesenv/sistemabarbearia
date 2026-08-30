@@ -53,3 +53,53 @@
 .relatorios__variacao--negativa {
   color: var(--error-text);
 }
+
+.relatorios__card--larga {
+  grid-column: span 2;
+}
+
+.relatorios__lista-indicadores {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px 12px;
+  margin: 0;
+}
+
+.relatorios__lista-indicadores dt {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.relatorios__lista-indicadores dd {
+  margin: 0;
+  color: var(--ink);
+  font-weight: 600;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.relatorios__lista-profissionais {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.relatorios__lista-profissionais li {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+}
+
+.relatorios__lista-profissionais li:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.relatorios__lista-profissionais span {
+  color: var(--muted);
+  font-size: 0.85rem;
+}

@@ -89,4 +89,16 @@ public interface ComandaRepository extends JpaRepository<Comanda, Long> {
             """)
     List<AgregacaoServicoDto> agregarServicosPorPeriodo(@Param("status") StatusComanda status,
             @Param("inicio") Instant inicio, @Param("fim") Instant fim);
+
+    /** Clientes distintos atendidos no periodo — base para separar novos de recorrentes em {@code RelatorioAgregacaoService}. */
+    @Query("SELECT DISTINCT a.cliente.id FROM Comanda c JOIN c.agendamento a "
+            + "WHERE c.status = :status AND c.fechadaEm BETWEEN :inicio AND :fim")
+    List<Long> buscarClienteIdsAtendidosPorPeriodo(@Param("status") StatusComanda status,
+            @Param("inicio") Instant inicio, @Param("fim") Instant fim);
+
+    /** Um cliente e' "recorrente" num dia se ja tinha alguma comanda FECHADA antes do inicio daquele dia. */
+    @Query("SELECT COUNT(c) > 0 FROM Comanda c JOIN c.agendamento a "
+            + "WHERE c.status = :status AND a.cliente.id = :clienteId AND c.fechadaEm < :antes")
+    boolean existeAtendimentoAnteriorDoCliente(@Param("status") StatusComanda status,
+            @Param("clienteId") Long clienteId, @Param("antes") Instant antes);
 }

@@ -16,7 +16,7 @@ import { Profissional } from '../profissionais/profissionais.model';
 import { ProfissionaisService } from '../profissionais/profissionais.service';
 import { Servico } from '../servicos/servicos.model';
 import { ServicosService } from '../servicos/servicos.service';
-import { ComparativoFaturamento, RelatorioFaturamento } from './relatorios.model';
+import { ComparativoFaturamento, RelatorioAgenda, RelatorioClientes, RelatorioFaturamento } from './relatorios.model';
 import { RelatoriosService } from './relatorios.service';
 
 /** Formata em fuso local (yyyy-MM-dd) — Date#toISOString converteria para UTC e poderia virar o dia. */
@@ -71,6 +71,8 @@ export class Relatorios {
   protected readonly servicos = signal<Servico[]>([]);
   protected readonly relatorio = signal<RelatorioFaturamento | null>(null);
   protected readonly comparativo = signal<ComparativoFaturamento | null>(null);
+  protected readonly agenda = signal<RelatorioAgenda | null>(null);
+  protected readonly clientes = signal<RelatorioClientes | null>(null);
   protected readonly carregando = signal(true);
 
   protected readonly filtro = this.formBuilder.nonNullable.group({
@@ -113,6 +115,14 @@ export class Relatorios {
     this.relatoriosService
       .comparativoFaturamento(mesAtualIso(), { dataInicial: valores.dataInicial, dataFinal: valores.dataFinal, ...filtroComuns })
       .subscribe((comparativo) => this.comparativo.set(comparativo));
+
+    this.relatoriosService
+      .agenda({ dataInicial: valores.dataInicial, dataFinal: valores.dataFinal, profissionalUuid: filtroComuns.profissionalUuid })
+      .subscribe((agenda) => this.agenda.set(agenda));
+
+    this.relatoriosService
+      .clientes(valores.dataInicial, valores.dataFinal)
+      .subscribe((clientes) => this.clientes.set(clientes));
   }
 
   protected paraGraficoBarras(linhas: { nome: string; valorTotal: number }[]): { nome: string; quantidade: number }[] {

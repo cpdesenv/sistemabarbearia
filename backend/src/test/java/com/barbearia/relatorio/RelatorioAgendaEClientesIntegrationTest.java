@@ -1,12 +1,11 @@
-package com.barbearia.dashboard;
+package com.barbearia.relatorio;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.time.temporal.ChronoUnit;
-import java.util.List;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
@@ -14,7 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -24,17 +22,20 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.barbearia.agenda.domain.Agendamento;
+import com.barbearia.agenda.repository.AgendamentoRepository;
 import com.barbearia.auth.dto.LoginRequest;
+import com.barbearia.financeiro.domain.Comanda;
+import com.barbearia.financeiro.repository.ComandaRepository;
 import com.barbearia.shared.IntegrationTestBase;
 import com.barbearia.usuario.domain.Perfil;
 import com.barbearia.usuario.domain.Usuario;
 import com.barbearia.usuario.repository.UsuarioRepository;
 
 @Transactional
-class DashboardControllerIntegrationTest extends IntegrationTestBase {
+class RelatorioAgendaEClientesIntegrationTest extends IntegrationTestBase {
 
     private static final String SENHA = "SenhaForte123!";
     private static final ZoneId FUSO = ZoneId.of("America/Sao_Paulo");
@@ -47,98 +48,124 @@ class DashboardControllerIntegrationTest extends IntegrationTestBase {
     private UsuarioRepository usuarioRepository;
     @Autowired
     private PasswordEncoder passwordEncoder;
+    @Autowired
+    private AgendamentoRepository agendamentoRepository;
+    @Autowired
+    private ComandaRepository comandaRepository;
 
     @Test
-    void resumoDeveRefletirFaturamentoAtendimentosEOcupacaoDoDia() throws Exception {
-        String token = autenticar("admin.dashboard1@teste.com", "198.51.105.1");
+    void relatoriosDeAgendaEClientesDevemRefletirFinalizadosCanceladosFaltasENovosVsRecorrentes() throws Exception {
+        String token = autenticar("admin.relatorioag@teste.com", "198.51.107.1");
 
-        UUID clienteUuid = criarCliente(token, "Cliente Dashboard", "(19) 99000-5001");
-        UUID servicoUuid = criarServico(token, "Corte Dashboard", 5, "100.00");
-        UUID profissionalUuid = criarProfissional(token, "Prof Dashboard");
+        UUID servicoUuid = criarServico(token, "Corte Agenda", 30, "80.00");
+        UUID profissionalUuid = criarProfissional(token, "Prof Agenda");
         vincularServico(token, profissionalUuid, servicoUuid);
         sincronizarGradeDiaInteiroHoje(token, profissionalUuid);
 
-        Instant inicio = horarioSeguroHoje(5);
-        UUID agendamentoUuid = criarAgendamento(token, clienteUuid, profissionalUuid, servicoUuid, inicio);
+        UUID clienteA = criarCliente(token, "Cliente A Retorno", "(19) 99000-9001");
+        UUID clienteB = criarCliente(token, "Cliente B Retorno", "(19) 99000-9002");
+
+        LocalDate diaAntigo = LocalDate.now(FUSO).minusDays(10);
+        LocalDate diaTeste = LocalDate.now(FUSO).minusDays(5);
+
+        // Dia antigo: cliente B tem seu primeiro atendimento (estabelece historico).
+        UUID comandaAntigaUuid = agendarConfirmarEFechar(token, clienteB, profissionalUuid, servicoUuid, 0);
+        backdatarAgendamentoEComanda(comandaAntigaUuid, diaAntigo);
+
+        // Dia de teste: cliente A (novo) e cliente B (recorrente) sao atendidos.
+        UUID comandaNovoUuid = agendarConfirmarEFechar(token, clienteA, profissionalUuid, servicoUuid, 1);
+        backdatarAgendamentoEComanda(comandaNovoUuid, diaTeste);
+
+        UUID comandaRecorrenteUuid = agendarConfirmarEFechar(token, clienteB, profissionalUuid, servicoUuid, 2);
+        backdatarAgendamentoEComanda(comandaRecorrenteUuid, diaTeste);
+
+        // Dia de teste: um cancelamento e uma falta do mesmo profissional.
+        UUID agendamentoCanceladoUuid = criarAgendamento(token, clienteA, profissionalUuid, servicoUuid, 3);
+        backdatarAgendamento(agendamentoCanceladoUuid, diaTeste);
+        cancelar(token, agendamentoCanceladoUuid);
+
+        UUID agendamentoFaltaUuid = criarAgendamento(token, clienteB, profissionalUuid, servicoUuid, 4);
+        backdatarAgendamento(agendamentoFaltaUuid, diaTeste);
+        marcarNaoComparecimento(token, agendamentoFaltaUuid);
+
+        mockMvc.perform(post("/api/relatorios/reprocessar")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"dataInicial\": \"" + diaTeste + "\", \"dataFinal\": \"" + diaTeste + "\"}"))
+                .andExpect(status().isNoContent());
+
+        String respostaClientes = mockMvc.perform(get("/api/relatorios/clientes")
+                        .header("Authorization", "Bearer " + token)
+                        .param("dataInicial", diaTeste.toString())
+                        .param("dataFinal", diaTeste.toString()))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        JsonNode clientes = objectMapper.readTree(respostaClientes);
+        assertThat(clientes.get("clientesNovos").asInt()).isEqualTo(1);
+        assertThat(clientes.get("clientesRecorrentes").asInt()).isEqualTo(1);
+        assertThat(clientes.get("atendimentosTotais").asInt()).isEqualTo(2);
+        assertThat(clientes.get("taxaDeRetorno").asDouble()).isEqualTo(50.00);
+
+        String respostaAgenda = mockMvc.perform(get("/api/relatorios/agenda")
+                        .header("Authorization", "Bearer " + token)
+                        .param("dataInicial", diaTeste.toString())
+                        .param("dataFinal", diaTeste.toString())
+                        .param("profissionalUuid", profissionalUuid.toString()))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        JsonNode agenda = objectMapper.readTree(respostaAgenda);
+        assertThat(agenda.get("quantidadeFinalizados").asInt()).isEqualTo(2);
+        assertThat(agenda.get("quantidadeCancelados").asInt()).isEqualTo(1);
+        assertThat(agenda.get("quantidadeNaoCompareceu").asInt()).isEqualTo(1);
+        assertThat(agenda.get("taxaOcupacao").asDouble()).isGreaterThan(0).isLessThan(100);
+        assertThat(agenda.get("porProfissional")).anySatisfy(item ->
+                assertThat(item.get("profissionalNome").asText()).isEqualTo("Prof Agenda"));
+    }
+
+    private UUID agendarConfirmarEFechar(String token, UUID clienteUuid, UUID profissionalUuid, UUID servicoUuid,
+            int indiceSlot) throws Exception {
+        UUID agendamentoUuid = criarAgendamento(token, clienteUuid, profissionalUuid, servicoUuid, indiceSlot);
         confirmar(token, agendamentoUuid);
         UUID comandaUuid = abrirComanda(token, agendamentoUuid);
         definirFormaPagamento(token, comandaUuid, "PIX");
         fecharComanda(token, comandaUuid);
-
-        MvcResult resultado = mockMvc.perform(get("/api/dashboard/resumo")
-                        .header("Authorization", "Bearer " + token))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.cards.faturamentoDia").value(100.00))
-                .andExpect(jsonPath("$.cards.atendimentosDia").value(1))
-                .andExpect(jsonPath("$.cards.ticketMedioDia").value(100.00))
-                .andExpect(jsonPath("$.graficos.faturamentoUltimos12Meses.length()").value(12))
-                .andReturn();
-
-        JsonNode corpo = objectMapper.readTree(resultado.getResponse().getContentAsString());
-
-        assertThat(corpo.get("cards").get("taxaOcupacaoHoje").asDouble()).isGreaterThan(0).isLessThan(100);
-        assertThat(corpo.get("cards").get("faturamentoMes").asDouble()).isEqualTo(100.00);
-
-        JsonNode ultimoPontoMensal = corpo.get("graficos").get("faturamentoUltimos12Meses").get(11);
-        assertThat(ultimoPontoMensal.get("valor").asDouble()).isEqualTo(100.00);
-
-        assertThat(corpo.get("graficos").get("servicosMaisVendidos")).anySatisfy(item ->
-                assertThat(item.get("nome").asText()).isEqualTo("Corte Dashboard"));
-
-        assertThat(corpo.get("graficos").get("atendimentosPorProfissional")).anySatisfy(item ->
-                assertThat(item.get("nome").asText()).isEqualTo("Prof Dashboard"));
-
-        assertThat(corpo.get("graficos").get("distribuicaoFormaPagamento")).anySatisfy(item ->
-                assertThat(item.get("formaPagamento").asText()).isEqualTo("PIX"));
-
-        assertThat(corpo.get("graficos").get("agendamentosPorOrigem")).anySatisfy(item ->
-                assertThat(item.get("nome").asText()).isEqualTo("Painel"));
-
-        assertThat(corpo.get("indicadoresSaude").get("clientesNovosMes").asLong()).isGreaterThanOrEqualTo(1);
+        return comandaUuid;
     }
 
-    /**
-     * O container Postgres e' compartilhado por toda a suite (ver
-     * IntegrationTestBase) e outros testes de assinatura podem deixar
-     * fixtures permanentes (ex.: transacoes REQUIRES_NEW de
-     * AssinaturaRenovacaoScheduler nao participam do rollback do
-     * @Transactional do metodo de teste que as disparou) - por isso as
-     * asserções abaixo comparam o "antes" com o "depois" da propria
-     * chamada, em vez de valor absoluto (mesma classe de problema corrigida
-     * em f148a72, "contagem global de clientes no teste do portal").
-     */
-    @Test
-    void resumoDeveRefletirReceitaRecorrenteETaxaDeChurnDeAssinaturas() throws Exception {
-        String token = autenticar("admin.dashboard2@teste.com", "198.51.105.2");
+    /** Move o agendamento/comanda recem-criados para uma data no passado, preservando o horario do dia. */
+    private void backdatarAgendamentoEComanda(UUID comandaUuid, LocalDate novaData) {
+        Comanda comanda = comandaRepository.findByUuidPublico(comandaUuid).orElseThrow();
+        backdatarEntidadeAgendamento(comanda.getAgendamento(), novaData);
+        comanda.setFechadaEm(comanda.getAgendamento().getInicio());
+        comandaRepository.save(comanda);
+    }
 
-        double receitaAntes = indicadoresAssinatura(token).get("receitaRecorrente").asDouble();
+    private void backdatarAgendamento(UUID agendamentoUuid, LocalDate novaData) {
+        Agendamento agendamento = agendamentoRepository.findByUuidPublico(agendamentoUuid).orElseThrow();
+        backdatarEntidadeAgendamento(agendamento, novaData);
+    }
 
-        UUID clienteUuid = criarCliente(token, "Cliente Assinante Dashboard", "(19) 99000-5002");
-        UUID servicoUuid = criarServico(token, "Corte Clube Dashboard", 30, "60.00");
-        UUID planoUuid = criarPlano(token, "Plano Dashboard", "80.00", 1, List.of(servicoUuid));
-        UUID assinaturaUuid = assinar(token, clienteUuid, planoUuid);
+    private void backdatarEntidadeAgendamento(Agendamento agendamento, LocalDate novaData) {
+        ZonedDateTime novoInicioZoned = ZonedDateTime.of(novaData, agendamento.getInicio().atZone(FUSO).toLocalTime(),
+                FUSO);
+        long duracaoMinutos = Duration.between(agendamento.getInicio(), agendamento.getFim()).toMinutes();
+        agendamento.setInicio(novoInicioZoned.toInstant());
+        agendamento.setFim(novoInicioZoned.plusMinutes(duracaoMinutos).toInstant());
+        agendamentoRepository.save(agendamento);
+    }
 
-        JsonNode indicadoresAposAssinar = indicadoresAssinatura(token);
-        assertThat(indicadoresAposAssinar.get("receitaRecorrente").asDouble()).isEqualTo(receitaAntes + 80.00);
-        double churnAposAssinar = indicadoresAposAssinar.get("taxaChurnMes").asDouble();
-
-        mockMvc.perform(post("/api/assinaturas/" + assinaturaUuid + "/cancelar")
+    private void cancelar(String token, UUID agendamentoUuid) throws Exception {
+        mockMvc.perform(post("/api/agendamentos/" + agendamentoUuid + "/cancelar")
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"motivo\": \"Teste dashboard\", \"dataEfeito\": \"" + LocalDate.now(FUSO) + "\"}"))
+                        .content("{\"motivo\": \"Teste relatorio\"}"))
                 .andExpect(status().isOk());
-
-        JsonNode indicadoresAposCancelar = indicadoresAssinatura(token);
-        assertThat(indicadoresAposCancelar.get("receitaRecorrente").asDouble()).isEqualTo(receitaAntes);
-        assertThat(indicadoresAposCancelar.get("taxaChurnMes").asDouble()).isGreaterThan(churnAposAssinar);
     }
 
-    private JsonNode indicadoresAssinatura(String token) throws Exception {
-        String resposta = mockMvc.perform(get("/api/dashboard/resumo")
+    private void marcarNaoComparecimento(String token, UUID agendamentoUuid) throws Exception {
+        mockMvc.perform(post("/api/agendamentos/" + agendamentoUuid + "/nao-compareceu")
                         .header("Authorization", "Bearer " + token))
-                .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString();
-        return objectMapper.readTree(resposta).get("indicadoresAssinatura");
+                .andExpect(status().isOk());
     }
 
     private UUID abrirComanda(String token, UUID agendamentoUuid) throws Exception {
@@ -169,8 +196,19 @@ class DashboardControllerIntegrationTest extends IntegrationTestBase {
                 .andExpect(status().isOk());
     }
 
+    /**
+     * Slot fixo em "amanha" as 09:00 + indiceSlot*40min (nunca "agora + N min"):
+     * o teste retroage esses agendamentos para o dia de teste logo em seguida,
+     * entao o horario real de criacao e' irrelevante — so precisa ser um
+     * horario futuro valido que nunca atravesse a virada do dia, o que "agora
+     * + N min" nao garante se o teste rodar perto da meia-noite local.
+     */
     private UUID criarAgendamento(String token, UUID clienteUuid, UUID profissionalUuid, UUID servicoUuid,
-            Instant inicio) throws Exception {
+            int indiceSlot) throws Exception {
+        LocalDate amanha = LocalDate.now(FUSO).plusDays(1);
+        Instant inicio = ZonedDateTime.of(amanha, LocalTime.of(9, 0), FUSO)
+                .plusMinutes(indiceSlot * 40L)
+                .toInstant();
         String corpo = """
                 {
                   "clienteUuid": "%s",
@@ -233,7 +271,7 @@ class DashboardControllerIntegrationTest extends IntegrationTestBase {
         String corpo = """
                 {
                   "nome": "%s",
-                  "email": "profissional.dashboard@teste.com",
+                  "email": "profissional.relatorioag@teste.com",
                   "telefone": "11900000000",
                   "corAgenda": "#3F51B5",
                   "comissaoPercentualPadrao": 20.00
@@ -259,65 +297,27 @@ class DashboardControllerIntegrationTest extends IntegrationTestBase {
     }
 
     /**
-     * "Agora + 5 min" cruza a virada do dia se a suite rodar perto da meia-noite
-     * local (falha real observada, nao teorica). Usa o mais tardar entre
-     * "agora + 5 min" e o ultimo horario que ainda cabe o servico hoje.
-     */
-    private Instant horarioSeguroHoje(int duracaoServicoMinutos) {
-        ZonedDateTime agora = ZonedDateTime.now(FUSO);
-        ZonedDateTime desejado = agora.plusMinutes(5).truncatedTo(ChronoUnit.MINUTES);
-        ZonedDateTime ultimoSlotHoje = agora.toLocalDate().atTime(23, 59).atZone(FUSO)
-                .minusMinutes(duracaoServicoMinutos).truncatedTo(ChronoUnit.MINUTES);
-        return (desejado.isAfter(ultimoSlotHoje) ? ultimoSlotHoje : desejado).toInstant();
-    }
-
-    /**
-     * Janela cobrindo o dia inteiro (00:00-23:59) no dia da semana de hoje, pra
-     * que o agendamento de teste caiba independentemente do horario em que a
-     * suite roda.
+     * Sincroniza os 7 dias da semana (nao so' hoje): os agendamentos deste teste
+     * sao criados com deslocamentos de ate 165 minutos a partir de "agora" (antes
+     * de serem retroagidos para o dia de teste) e podem cair no dia seguinte se o
+     * teste rodar tarde da noite — sincronizar so' hoje falharia por falta de
+     * janela nesse caso.
      */
     private void sincronizarGradeDiaInteiroHoje(String token, UUID profissionalUuid) throws Exception {
-        int diaSemanaHoje = LocalDate.now(FUSO).getDayOfWeek().getValue();
-        String corpo = "[{\"diaSemana\": " + diaSemanaHoje + ", \"horaInicio\": \"00:00\", \"horaFim\": \"23:59\"}]";
+        StringBuilder corpo = new StringBuilder("[");
+        for (int diaSemana = 1; diaSemana <= 7; diaSemana++) {
+            if (diaSemana > 1) {
+                corpo.append(",");
+            }
+            corpo.append("{\"diaSemana\": ").append(diaSemana).append(", \"horaInicio\": \"00:00\", \"horaFim\": \"23:59\"}");
+        }
+        corpo.append("]");
 
         mockMvc.perform(put("/api/profissionais/" + profissionalUuid + "/grade-horaria")
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(corpo))
+                        .content(corpo.toString()))
                 .andExpect(status().isOk());
-    }
-
-    private UUID criarPlano(String token, String nome, String precoMensal, int cortesIncluidos,
-            List<UUID> servicosUuids) throws Exception {
-        String servicosJson = servicosUuids.stream().map(uuid -> "\"" + uuid + "\"")
-                .reduce((a, b) -> a + "," + b).orElse("");
-        String corpo = """
-                {
-                  "nome": "%s",
-                  "precoMensal": %s,
-                  "cortesIncluidosPorCiclo": %d,
-                  "percentualDescontoAdicional": 0,
-                  "servicosInclusosUuids": [%s]
-                }
-                """.formatted(nome, precoMensal, cortesIncluidos, servicosJson);
-
-        String resposta = mockMvc.perform(post("/api/planos-assinatura")
-                        .header("Authorization", "Bearer " + token)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(corpo))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-        return UUID.fromString(objectMapper.readTree(resposta).get("uuid").asText());
-    }
-
-    private UUID assinar(String token, UUID clienteUuid, UUID planoUuid) throws Exception {
-        String resposta = mockMvc.perform(post("/api/assinaturas")
-                        .header("Authorization", "Bearer " + token)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"clienteUuid\": \"" + clienteUuid + "\", \"planoUuid\": \"" + planoUuid + "\"}"))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-        return UUID.fromString(objectMapper.readTree(resposta).get("uuid").asText());
     }
 
     private String autenticar(String email, String ipSimulado) throws Exception {

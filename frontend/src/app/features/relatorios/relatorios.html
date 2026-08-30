@@ -141,5 +141,69 @@
         </mat-card>
       </div>
     }
+
+    <div class="relatorios__grade">
+      @if (clientes(); as dadosClientes) {
+        <mat-card class="relatorios__card">
+          <mat-card-content>
+            <h2>Clientes no período</h2>
+            <dl class="relatorios__lista-indicadores">
+              <div>
+                <dt>Novos</dt>
+                <dd>{{ dadosClientes.clientesNovos }}</dd>
+              </div>
+              <div>
+                <dt>Recorrentes</dt>
+                <dd>{{ dadosClientes.clientesRecorrentes }}</dd>
+              </div>
+              <div>
+                <dt>Taxa de retorno</dt>
+                <dd>{{ dadosClientes.taxaDeRetorno }}%</dd>
+              </div>
+            </dl>
+          </mat-card-content>
+        </mat-card>
+      }
+
+      @if (agenda(); as dadosAgenda) {
+        <mat-card class="relatorios__card relatorios__card--larga">
+          <mat-card-content>
+            <h2>Agenda no período</h2>
+            <dl class="relatorios__lista-indicadores">
+              <div>
+                <dt>Finalizados</dt>
+                <dd>{{ dadosAgenda.quantidadeFinalizados }}</dd>
+              </div>
+              <div>
+                <dt>Cancelados</dt>
+                <dd>{{ dadosAgenda.quantidadeCancelados }}</dd>
+              </div>
+              <div>
+                <dt>Não comparecimentos</dt>
+                <dd>{{ dadosAgenda.quantidadeNaoCompareceu }}</dd>
+              </div>
+              <div>
+                <dt>Taxa de ocupação</dt>
+                <dd>{{ dadosAgenda.taxaOcupacao }}%</dd>
+              </div>
+            </dl>
+
+            @if (dadosAgenda.porProfissional.length > 0) {
+              <ul class="relatorios__lista-profissionais">
+                @for (linha of dadosAgenda.porProfissional; track linha.profissionalNome) {
+                  <li>
+                    <strong>{{ linha.profissionalNome }}</strong>
+                    <span>
+                      {{ linha.quantidadeFinalizados }} finalizados · {{ linha.quantidadeCancelados }} cancelados ·
+                      {{ linha.quantidadeNaoCompareceu }} faltas · {{ linha.taxaOcupacao }}% ocupação
+                    </span>
+                  </li>
+                }
+              </ul>
+            }
+          </mat-card-content>
+        </mat-card>
+      }
+    </div>
   }
 </section>
