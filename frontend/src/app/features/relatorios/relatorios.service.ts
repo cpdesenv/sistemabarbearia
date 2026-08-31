@@ -9,6 +9,7 @@ import {
   RelatorioClientes,
   RelatorioFaturamento,
   RelatorioHeatmap,
+  RelatorioPrevisao,
   RelatorioProduto,
 } from './relatorios.model';
 
@@ -49,6 +50,10 @@ export class RelatoriosService {
   heatmapHorarios(dataInicial: string, dataFinal: string): Observable<RelatorioHeatmap> {
     const params = new HttpParams().set('dataInicial', dataInicial).set('dataFinal', dataFinal);
     return this.http.get<RelatorioHeatmap>('/api/relatorios/heatmap-horarios', { params });
+  }
+
+  previsaoCompromissos(): Observable<RelatorioPrevisao> {
+    return this.http.get<RelatorioPrevisao>('/api/relatorios/previsao-compromissos');
   }
 
   private paramsComuns(filtro: FiltroRelatorioFaturamento): HttpParams {

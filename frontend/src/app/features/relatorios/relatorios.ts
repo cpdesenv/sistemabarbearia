@@ -1,4 +1,4 @@
-import { CurrencyPipe } from '@angular/common';
+import { CurrencyPipe, DatePipe } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -11,7 +11,8 @@ import { MatSelectModule } from '@angular/material/select';
 
 import { GraficoBarras } from '../dashboard/graficos/grafico-barras/grafico-barras';
 import { GraficoRosca } from '../dashboard/graficos/grafico-rosca/grafico-rosca';
-import { FormaPagamento, RUTULOS_FORMA_PAGAMENTO } from '../financeiro/financeiro.model';
+import { FinanceiroService } from '../financeiro/financeiro.service';
+import { FluxoCaixa, FormaPagamento, RUTULOS_FORMA_PAGAMENTO } from '../financeiro/financeiro.model';
 import { Profissional } from '../profissionais/profissionais.model';
 import { ProfissionaisService } from '../profissionais/profissionais.service';
 import { Servico } from '../servicos/servicos.model';
@@ -22,6 +23,7 @@ import {
   RelatorioClientes,
   RelatorioFaturamento,
   RelatorioHeatmap,
+  RelatorioPrevisao,
   RelatorioProduto,
 } from './relatorios.model';
 import { RelatoriosService } from './relatorios.service';
@@ -55,6 +57,7 @@ function mesAtualIso(): string {
   imports: [
     ReactiveFormsModule,
     CurrencyPipe,
+    DatePipe,
     MatButtonModule,
     MatCardModule,
     MatFormFieldModule,
@@ -70,6 +73,7 @@ function mesAtualIso(): string {
 })
 export class Relatorios {
   private readonly relatoriosService = inject(RelatoriosService);
+  private readonly financeiroService = inject(FinanceiroService);
   private readonly profissionaisService = inject(ProfissionaisService);
   private readonly servicosService = inject(ServicosService);
   private readonly formBuilder = inject(FormBuilder);
@@ -85,6 +89,8 @@ export class Relatorios {
   protected readonly clientes = signal<RelatorioClientes | null>(null);
   protected readonly produtos = signal<RelatorioProduto | null>(null);
   protected readonly heatmap = signal<RelatorioHeatmap | null>(null);
+  protected readonly previsao = signal<RelatorioPrevisao | null>(null);
+  protected readonly fluxoCaixa = signal<FluxoCaixa | null>(null);
   protected readonly carregando = signal(true);
 
   protected readonly nomesDiaSemana = NOMES_DIA_SEMANA;
@@ -105,6 +111,8 @@ export class Relatorios {
     this.servicosService.listar({ ativo: true, size: 200 }).subscribe((resposta) => {
       this.servicos.set(resposta.content);
     });
+    this.relatoriosService.previsaoCompromissos().subscribe((previsao) => this.previsao.set(previsao));
+    this.financeiroService.fluxoCaixa().subscribe((fluxoCaixa) => this.fluxoCaixa.set(fluxoCaixa));
     this.buscar();
   }
 

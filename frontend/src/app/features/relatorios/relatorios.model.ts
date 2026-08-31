@@ -1,4 +1,5 @@
-import { FormaPagamento, TotalPorFormaPagamento } from '../financeiro/financeiro.model';
+import { ContaPagar, FormaPagamento, TotalPorFormaPagamento } from '../financeiro/financeiro.model';
+import { Produto } from '../produtos/produtos.model';
 
 export interface LinhaFaturamento {
   nome: string;
@@ -91,4 +92,11 @@ export interface RelatorioHeatmap {
   dataInicial: string;
   dataFinal: string;
   celulas: CelulaHeatmap[];
+}
+
+export interface RelatorioPrevisao {
+  comissaoTotalMes: number;
+  comissaoPorProfissional: LinhaFaturamento[];
+  produtosParaRepor: Produto[];
+  contasVencidas: ContaPagar[];
 }
