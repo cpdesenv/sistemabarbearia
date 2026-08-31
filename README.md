@@ -441,6 +441,12 @@ curl "http://localhost:8080/api/relatorios/produtos?dataInicial=2026-08-01&dataF
 curl "http://localhost:8080/api/relatorios/heatmap-horarios?dataInicial=2026-08-01&dataFinal=2026-08-31" \
   -H "Authorization: Bearer <accessToken>"
 
+# Previsao de compromissos: comissao apurada no mes corrente, estoque a
+# repor e contas a pagar vencidas - um snapshot do momento atual, sem
+# parametro de periodo
+curl http://localhost:8080/api/relatorios/previsao-compromissos \
+  -H "Authorization: Bearer <accessToken>"
+
 # Reprocessar agregacao de um intervalo (ADMIN/GERENTE) - backfill ou correcao
 curl -X POST http://localhost:8080/api/relatorios/reprocessar \
   -H "Authorization: Bearer <accessToken>" -H "Content-Type: application/json" \
@@ -450,15 +456,17 @@ curl -X POST http://localhost:8080/api/relatorios/reprocessar \
 Painel: tela **Relatórios** (rota `/relatorios`), com filtro de período e
 profissional; comparativo mensal do faturamento, indicadores de clientes
 no período, indicadores de agenda (geral e por profissional), produtos
-mais vendidos com margem e heatmap de horários de maior movimento.
+mais vendidos com margem, heatmap de horários de maior movimento e, sem
+filtro de período (são um snapshot do momento atual, mesmo padrão do
+Fluxo de Caixa da Fase 5): fluxo de caixa, comissão apurada no mês
+corrente por profissional, estoque a repor e contas a pagar vencidas.
+"Comissão a pagar" não rastreia pago/não pago — o sistema não tem essa
+entidade, então é sempre a comissão apurada no mês em curso.
 
-**Ainda pendente nesta fase** (próximas etapas): comissões a pagar,
-fluxo de caixa mensal comparativo, previsão de compromissos, análise de
-assinaturas (LTV), filtro por serviço/forma de pagamento nos relatórios de
-agenda/clientes, e exportação para Excel/PDF. Fluxo de caixa "atual"
-(caixa em mãos + a receber − a pagar) e estoque abaixo do mínimo já
-existem desde a Fase 5, fora da tela de Relatórios (ver seções de
-Financeiro e Estoque).
+**Ainda pendente nesta fase** (próximas etapas): análise de assinaturas
+(receita recorrente vs. avulso, churn, LTV), filtro por serviço/forma de
+pagamento nos relatórios de agenda/clientes, exportação para Excel/PDF, e
+o teste de carga com 50.000 atendimentos.
 
 ## Como executar os testes
 

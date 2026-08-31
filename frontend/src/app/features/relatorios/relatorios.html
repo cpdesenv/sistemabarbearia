@@ -51,6 +51,98 @@
       <mat-spinner diameter="32" />
     </div>
   } @else {
+    @if (fluxoCaixa(); as caixa) {
+      <div class="relatorios__grade">
+        <mat-card class="relatorios__card">
+          <mat-card-content>
+            <p class="relatorios__rotulo">Caixa em mãos</p>
+            <p class="relatorios__valor">{{ caixa.caixaEmMaos | currency: 'BRL' }}</p>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="relatorios__card">
+          <mat-card-content>
+            <p class="relatorios__rotulo">Contas a receber esperadas</p>
+            <p class="relatorios__valor">{{ caixa.contasAReceberEsperadas | currency: 'BRL' }}</p>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="relatorios__card">
+          <mat-card-content>
+            <p class="relatorios__rotulo">Contas a pagar vencidas</p>
+            <p class="relatorios__valor">{{ caixa.contasAPagarVencidas | currency: 'BRL' }}</p>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="relatorios__card">
+          <mat-card-content>
+            <p class="relatorios__rotulo">Fluxo de caixa</p>
+            <p class="relatorios__valor">{{ caixa.fluxoCaixa | currency: 'BRL' }}</p>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    }
+
+    @if (previsao(); as dadosPrevisao) {
+      <div class="relatorios__grade">
+        <mat-card class="relatorios__card relatorios__card--larga">
+          <mat-card-content>
+            <h2>Previsão de compromissos</h2>
+
+            <p class="relatorios__rotulo">Comissão apurada no mês corrente</p>
+            <p class="relatorios__valor">{{ dadosPrevisao.comissaoTotalMes | currency: 'BRL' }}</p>
+
+            @if (dadosPrevisao.comissaoPorProfissional.length > 0) {
+              <ul class="relatorios__lista-profissionais">
+                @for (linha of dadosPrevisao.comissaoPorProfissional; track linha.nome) {
+                  <li>
+                    <strong>{{ linha.nome }}</strong>
+                    <span>{{ linha.comissaoTotal | currency: 'BRL' }}</span>
+                  </li>
+                }
+              </ul>
+            }
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="relatorios__card">
+          <mat-card-content>
+            <h2>Estoque a repor</h2>
+            @if (dadosPrevisao.produtosParaRepor.length > 0) {
+              <ul class="relatorios__lista-profissionais">
+                @for (produto of dadosPrevisao.produtosParaRepor; track produto.uuid) {
+                  <li>
+                    <strong>{{ produto.nome }}</strong>
+                    <span>{{ produto.estoqueAtual }} em estoque (mínimo {{ produto.estoqueMinimo }})</span>
+                  </li>
+                }
+              </ul>
+            } @else {
+              <p class="relatorios__vazio">Nenhum produto abaixo do estoque mínimo.</p>
+            }
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="relatorios__card">
+          <mat-card-content>
+            <h2>Contas a pagar vencidas</h2>
+            @if (dadosPrevisao.contasVencidas.length > 0) {
+              <ul class="relatorios__lista-profissionais">
+                @for (conta of dadosPrevisao.contasVencidas; track conta.uuid) {
+                  <li>
+                    <strong>{{ conta.descricao }}</strong>
+                    <span>{{ conta.valor | currency: 'BRL' }} · venceu em {{ conta.dataVencimento | date: 'dd/MM/yyyy' }}</span>
+                  </li>
+                }
+              </ul>
+            } @else {
+              <p class="relatorios__vazio">Nenhuma conta a pagar vencida.</p>
+            }
+          </mat-card-content>
+        </mat-card>
+      </div>
+    }
+
     @if (comparativo(); as comp) {
       <div class="relatorios__grade relatorios__grade--comparativo">
         <mat-card class="relatorios__card">

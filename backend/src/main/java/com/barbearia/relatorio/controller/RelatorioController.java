@@ -25,6 +25,7 @@ import com.barbearia.relatorio.dto.RelatorioAgendaDto;
 import com.barbearia.relatorio.dto.RelatorioClientesDto;
 import com.barbearia.relatorio.dto.RelatorioFaturamentoDto;
 import com.barbearia.relatorio.dto.RelatorioHeatmapDto;
+import com.barbearia.relatorio.dto.RelatorioPrevisaoDto;
 import com.barbearia.relatorio.dto.RelatorioProdutoDto;
 import com.barbearia.relatorio.dto.ReprocessarRelatorioRequest;
 import com.barbearia.relatorio.service.RelatorioAgendaService;
@@ -32,6 +33,7 @@ import com.barbearia.relatorio.service.RelatorioAgregacaoService;
 import com.barbearia.relatorio.service.RelatorioClienteService;
 import com.barbearia.relatorio.service.RelatorioFaturamentoService;
 import com.barbearia.relatorio.service.RelatorioHeatmapService;
+import com.barbearia.relatorio.service.RelatorioPrevisaoService;
 import com.barbearia.relatorio.service.RelatorioProdutoService;
 
 @RestController
@@ -45,6 +47,7 @@ public class RelatorioController {
     private final RelatorioClienteService relatorioClienteService;
     private final RelatorioProdutoService relatorioProdutoService;
     private final RelatorioHeatmapService relatorioHeatmapService;
+    private final RelatorioPrevisaoService relatorioPrevisaoService;
     private final RelatorioAgregacaoService relatorioAgregacaoService;
 
     @GetMapping("/faturamento")
@@ -94,6 +97,11 @@ public class RelatorioController {
             @RequestParam LocalDate dataInicial,
             @RequestParam LocalDate dataFinal) {
         return relatorioHeatmapService.consultar(dataInicial, dataFinal);
+    }
+
+    @GetMapping("/previsao-compromissos")
+    public RelatorioPrevisaoDto previsaoCompromissos() {
+        return relatorioPrevisaoService.consultar();
     }
 
     @PostMapping("/reprocessar")
